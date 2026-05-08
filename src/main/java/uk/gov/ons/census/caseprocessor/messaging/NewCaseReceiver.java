@@ -3,10 +3,7 @@ package uk.gov.ons.census.caseprocessor.messaging;
 import static uk.gov.ons.census.caseprocessor.utils.JsonHelper.convertJsonBytesToEvent;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.integration.annotation.MessageEndpoint;
@@ -19,11 +16,13 @@ import uk.gov.ons.census.caseprocessor.model.dto.NewCase;
 import uk.gov.ons.census.caseprocessor.model.repository.CaseRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.CollectionExerciseRepository;
 import uk.gov.ons.census.caseprocessor.service.CaseService;
+import uk.gov.ons.census.caseprocessor.utils.CaseFieldMapper;
 import uk.gov.ons.census.caseprocessor.utils.CaseRefGenerator;
 import uk.gov.ons.census.common.model.entity.Case;
 import uk.gov.ons.census.common.model.entity.CollectionExercise;
 import uk.gov.ons.census.common.model.entity.EventType;
 import uk.gov.ons.census.common.validation.ColumnValidator;
+import uk.gov.ons.census.common.validation.SampleFieldValidators;
 
 @MessageEndpoint
 public class NewCaseReceiver {
@@ -68,19 +67,12 @@ public class NewCaseReceiver {
                             + newCasePayload.getCollectionExerciseId()
                             + "' not found"));
 
-    ColumnValidator[] columnValidators = collex.getSurvey().getSampleValidationRules();
-    checkNewSampleWithinSampleDefinition(columnValidators, newCasePayload);
-    checkNewSensitiveWithinSampleSensitiveDefinition(columnValidators, newCasePayload);
-
-    validateNewCase(newCasePayload, columnValidators);
-
-    Map<String, String> sample = newCasePayload.getSample();
+    validateNewCase(newCasePayload);
 
     Case newCase = new Case();
     newCase.setId(newCasePayload.getCaseId());
     newCase.setCollectionExercise(collex);
-    newCase.setSample(sample);
-    newCase.setSampleSensitive(newCasePayload.getSampleSensitive());
+    CaseFieldMapper.mapPayloadSampleFieldsToNewCase(newCasePayload, newCase);
 
     newCase = saveNewCaseAndStampCaseRef(newCase);
     caseService.emitCaseUpdate(
@@ -89,45 +81,150 @@ public class NewCaseReceiver {
     eventLogger.logCaseEvent(newCase, "New case created", EventType.NEW_CASE, event, message);
   }
 
-  private Set<String> checkNewSensitiveWithinSampleSensitiveDefinition(
-      ColumnValidator[] columnValidators, NewCase newCasePayload) {
-    Set<String> sensitiveColumns =
-        Arrays.stream(columnValidators)
-            .filter(ColumnValidator::isSensitive)
-            .map(ColumnValidator::getColumnName)
-            .collect(Collectors.toSet());
-    if (!sensitiveColumns.containsAll(newCasePayload.getSampleSensitive().keySet())) {
-      throw new RuntimeException(
-          "Attempt to send sensitive data to RM which was not part of defined sample");
-    }
-
-    return sensitiveColumns;
-  }
-
-  private void checkNewSampleWithinSampleDefinition(
-      ColumnValidator[] columnValidators, NewCase newCasePayload) {
-    Set<String> nonSensitiveColumns =
-        Arrays.stream(columnValidators)
-            .filter(columnValidator -> !columnValidator.isSensitive())
-            .map(ColumnValidator::getColumnName)
-            .collect(Collectors.toSet());
-    if (!nonSensitiveColumns.containsAll(newCasePayload.getSample().keySet())) {
-      throw new RuntimeException("Attempt to send data to RM which was not part of defined sample");
-    }
-  }
-
-  private void validateNewCase(NewCase newCasePayload, ColumnValidator[] columnValidators) {
+  private void validateNewCase(NewCase newCasePayload) {
+    ColumnValidator[] columnValidators = SampleFieldValidators.getValidators();
     List<String> validationErrors = new ArrayList<>();
 
     for (ColumnValidator columnValidator : columnValidators) {
-      if (columnValidator.isSensitive()) {
-        columnValidator
-            .validateRow(newCasePayload.getSampleSensitive(), true)
-            .ifPresent(validationErrors::add);
-      } else {
-        columnValidator
-            .validateRow(newCasePayload.getSample(), true)
-            .ifPresent(validationErrors::add);
+      switch (columnValidator.getColumnName()) {
+        case "UPRN":
+          columnValidator
+              .validateData(newCasePayload.getUprn(), false)
+              .ifPresent(validationErrors::add);
+          break;
+        case "ESTAB_UPRN":
+          columnValidator
+              .validateData(newCasePayload.getEstabUprn(), false)
+              .ifPresent(validationErrors::add);
+          break;
+        case "ADDRESS_TYPE":
+          columnValidator
+              .validateData(newCasePayload.getAddressType(), false)
+              .ifPresent(validationErrors::add);
+          break;
+        case "ESTAB_TYPE":
+          columnValidator
+              .validateData(newCasePayload.getEstabType(), false)
+              .ifPresent(validationErrors::add);
+          break;
+        case "ADDRESS_LEVEL":
+          columnValidator
+              .validateData(newCasePayload.getAddressLevel(), false)
+              .ifPresent(validationErrors::add);
+          break;
+        case "ABP_CODE":
+          columnValidator
+              .validateData(newCasePayload.getAbpCode(), false)
+              .ifPresent(validationErrors::add);
+          break;
+        case "ORGANISATION_NAME":
+          columnValidator
+              .validateData(newCasePayload.getOrganisationName(), false)
+              .ifPresent(validationErrors::add);
+          break;
+        case "ADDRESS_LINE1":
+          columnValidator
+              .validateData(newCasePayload.getAddressLine1(), false)
+              .ifPresent(validationErrors::add);
+          break;
+        case "ADDRESS_LINE2":
+          columnValidator
+              .validateData(newCasePayload.getAddressLine2(), false)
+              .ifPresent(validationErrors::add);
+          break;
+        case "ADDRESS_LINE3":
+          columnValidator
+              .validateData(newCasePayload.getAddressLine3(), false)
+              .ifPresent(validationErrors::add);
+          break;
+        case "TOWN_NAME":
+          columnValidator
+              .validateData(newCasePayload.getTownName(), false)
+              .ifPresent(validationErrors::add);
+          break;
+        case "POSTCODE":
+          columnValidator
+              .validateData(newCasePayload.getPostcode(), false)
+              .ifPresent(validationErrors::add);
+          break;
+        case "LATITUDE":
+          columnValidator
+              .validateData(newCasePayload.getLatitude(), false)
+              .ifPresent(validationErrors::add);
+          break;
+        case "LONGITUDE":
+          columnValidator
+              .validateData(newCasePayload.getLongitude(), false)
+              .ifPresent(validationErrors::add);
+          break;
+        case "OA":
+          columnValidator
+              .validateData(newCasePayload.getOa(), false)
+              .ifPresent(validationErrors::add);
+          break;
+        case "LSOA":
+          columnValidator
+              .validateData(newCasePayload.getLsoa(), false)
+              .ifPresent(validationErrors::add);
+          break;
+        case "MSOA":
+          columnValidator
+              .validateData(newCasePayload.getMsoa(), false)
+              .ifPresent(validationErrors::add);
+          break;
+        case "LAD":
+          columnValidator
+              .validateData(newCasePayload.getLad(), false)
+              .ifPresent(validationErrors::add);
+          break;
+        case "REGION":
+          columnValidator
+              .validateData(newCasePayload.getRegion(), false)
+              .ifPresent(validationErrors::add);
+          break;
+        case "HTC_WILLINGNESS":
+          columnValidator
+              .validateData(newCasePayload.getHtcWillingness(), false)
+              .ifPresent(validationErrors::add);
+          break;
+        case "HTC_DIGITAL":
+          columnValidator
+              .validateData(newCasePayload.getHtcDigital(), false)
+              .ifPresent(validationErrors::add);
+          break;
+        case "TREATMENT_CODE":
+          columnValidator
+              .validateData(newCasePayload.getTreatmentCode(), false)
+              .ifPresent(validationErrors::add);
+          break;
+        case "FIELDCOORDINATOR_ID":
+          columnValidator
+              .validateData(newCasePayload.getFieldCoordinatorId(), false)
+              .ifPresent(validationErrors::add);
+          break;
+        case "FIELDOFFICER_ID":
+          columnValidator
+              .validateData(newCasePayload.getFieldOfficerId(), false)
+              .ifPresent(validationErrors::add);
+          break;
+        case "CE_EXPECTED_CAPACITY":
+          columnValidator
+              .validateData(newCasePayload.getCeExpectedCapacity(), false)
+              .ifPresent(validationErrors::add);
+          break;
+        case "CE_SECURE":
+          columnValidator
+              .validateData(newCasePayload.isSecureEstablishment(), false)
+              .ifPresent(validationErrors::add);
+          break;
+        case "PRINT_BATCH":
+          columnValidator
+              .validateData(newCasePayload.getPrintBatch(), false)
+              .ifPresent(validationErrors::add);
+          break;
+        default:
+          throw new RuntimeException(
+              "Unsupported column type in column validators: " + columnValidator.getColumnName());
       }
     }
 

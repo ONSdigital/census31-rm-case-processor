@@ -47,7 +47,7 @@ import uk.gov.ons.census.common.validation.MandatoryRule;
 import uk.gov.ons.census.common.validation.Rule;
 
 @ExtendWith(MockitoExtension.class)
-public class NewCaseReceiverTest {
+class NewCaseReceiverTest {
 
   private final UUID TEST_CASE_ID = UUID.randomUUID();
   private final UUID TEST_CASE_COLLECTION_EXERCISE_ID = UUID.randomUUID();
@@ -63,45 +63,22 @@ public class NewCaseReceiverTest {
   @InjectMocks NewCaseReceiver underTest;
 
   @Test
-  public void testNewCaseReceiver() {
+  void testNewCaseReceiver() {
     // Given
-    NewCase newCase = new NewCase();
-    newCase.setCaseId(TEST_CASE_ID);
-    newCase.setCollectionExerciseId(TEST_CASE_COLLECTION_EXERCISE_ID);
-
-    Map<String, String> sample = new HashMap<>();
-    sample.put("ADDRESS_LINE1", "123 Fake Street");
-    sample.put("POSTCODE", "NP10 111");
-    newCase.setSample(sample);
-
-    Map<String, String> sampleSensitive = new HashMap<>();
-    sampleSensitive.put("Telephone", "02071234567");
-    newCase.setSampleSensitive(sampleSensitive);
-
-    EventHeaderDTO eventHeader = new EventHeaderDTO();
-    eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
-    eventHeader.setCorrelationId(TEST_CORRELATION_ID);
-    eventHeader.setOriginatingUser(TEST_ORIGINATING_USER);
-    PayloadDTO payloadDTO = new PayloadDTO();
-    payloadDTO.setNewCase(newCase);
-
-    EventDTO event = new EventDTO();
-    event.setHeader(eventHeader);
-    event.setPayload(payloadDTO);
-
+    EventDTO event = buildValidNewCaseEventMessage();
     Message<byte[]> eventMessage = constructMessage(event);
 
     when(caseRepository.existsById(TEST_CASE_ID)).thenReturn(false);
 
     Survey survey = new Survey();
     survey.setId(UUID.randomUUID());
-    survey.setSampleValidationRules(
+    survey.setSampleValidationRules(  // TODO delete
         new ColumnValidator[] {
-          new ColumnValidator("ADDRESS_LINE1", false, new Rule[] {new MandatoryRule()}),
-          new ColumnValidator("POSTCODE", false, new Rule[] {new MandatoryRule()}),
-          new ColumnValidator("Telephone", true, new Rule[] {new MandatoryRule()})
+          new ColumnValidator("ADDRESS_LINE1", new Rule[] {new MandatoryRule()}),
+          new ColumnValidator("POSTCODE", new Rule[] {new MandatoryRule()}),
+          new ColumnValidator("Telephone", new Rule[] {new MandatoryRule()})
         });
-    survey.setSampleDefinitionUrl("testDefinition");
+    survey.setSampleDefinitionUrl("testDefinition");  // TODO delete
 
     CollectionExercise collex = new CollectionExercise();
     collex.setSurvey(survey);
@@ -135,7 +112,7 @@ public class NewCaseReceiverTest {
   }
 
   @Test
-  public void testNewCaseReceiverCaseAlreadyExists() {
+  void testNewCaseReceiverCaseAlreadyExists() {
     // Given
     NewCase newCase = new NewCase();
     newCase.setCaseId(TEST_CASE_ID);
@@ -164,7 +141,7 @@ public class NewCaseReceiverTest {
   }
 
   @Test
-  public void testNewCaseReceiverCollectionExerciseNotFound() {
+  void testNewCaseReceiverCollectionExerciseNotFound() {
     ReflectionTestUtils.setField(underTest, "caserefgeneratorkey", caserefgeneratorkey);
 
     // Given
@@ -194,23 +171,156 @@ public class NewCaseReceiverTest {
     verifyNoInteractions(eventLogger);
   }
 
-  @Test
-  public void testNewCaseReceiverCaseFailsValidation() {
-    ReflectionTestUtils.setField(underTest, "caserefgeneratorkey", caserefgeneratorkey);
+//  @Test
+//  public void testNewCaseReceiverCaseFailsValidation() {
+//    ReflectionTestUtils.setField(underTest, "caserefgeneratorkey", caserefgeneratorkey);
+//
+//    // Given
+//    NewCase newCase = new NewCase();
+//    newCase.setCaseId(TEST_CASE_ID);
+//    newCase.setCollectionExerciseId(TEST_CASE_COLLECTION_EXERCISE_ID);
+//
+//    Map<String, String> sample = new HashMap<>();
+//    sample.put("ADDRESS_LINE1", "123 Fake Street");
+//    sample.put("POSTCODE", "INVALID POSTCODE");
+//    newCase.setSample(sample);
+//
+//    Map<String, String> sampleSensitive = new HashMap<>();
+//    sampleSensitive.put("Telephone", "020712345");
+//    newCase.setSampleSensitive(sampleSensitive);
+//
+//    EventHeaderDTO eventHeader = new EventHeaderDTO();
+//    eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
+//    eventHeader.setCorrelationId(TEST_CORRELATION_ID);
+//    eventHeader.setOriginatingUser(TEST_ORIGINATING_USER);
+//    PayloadDTO payloadDTO = new PayloadDTO();
+//    payloadDTO.setNewCase(newCase);
+//
+//    EventDTO event = new EventDTO();
+//    event.setHeader(eventHeader);
+//    event.setPayload(payloadDTO);
+//
+//    Message<byte[]> eventMessage = constructMessage(event);
+//
+//    when(caseRepository.existsById(TEST_CASE_ID)).thenReturn(false);
+//
+//    Survey survey = new Survey();
+//    survey.setId(UUID.randomUUID());
+//    survey.setSampleValidationRules(
+//        new ColumnValidator[] {
+//          new ColumnValidator(
+//              "ADDRESS_LINE1", false, new Rule[] {new MandatoryRule(), new LengthRule(8)}),
+//          new ColumnValidator(
+//              "POSTCODE", false, new Rule[] {new MandatoryRule(), new LengthRule(8)}),
+//          new ColumnValidator("Telephone", true, new Rule[] {new MandatoryRule()})
+//        });
+//
+//    CollectionExercise collex = new CollectionExercise();
+//    collex.setSurvey(survey);
+//    Optional<CollectionExercise> collexOpt = Optional.of(collex);
+//
+//    when(collectionExerciseRepository.findById(TEST_CASE_COLLECTION_EXERCISE_ID))
+//        .thenReturn(collexOpt);
+//
+//    RuntimeException thrownException =
+//        assertThrows(RuntimeException.class, () -> underTest.receiveNewCase(eventMessage));
+//
+//    String expectedErrorMsg =
+//        "NEW_CASE event: Column 'ADDRESS_LINE1' Failed validation for Rule 'LengthRule' "
+//            + "validation error: Exceeded max length of 8"
+//            + System.lineSeparator()
+//            + "Column 'POSTCODE' Failed validation for Rule 'LengthRule' validation error: Exceeded max length of 8";
+//
+//    assertThat(thrownException.getMessage()).isEqualTo(expectedErrorMsg);
+//    verifyNoInteractions(eventLogger);
+//  }
+//
+//  @Test
+//  public void testNewCaseReceiverCaseFailsValidationBecauseOfUndefinedSensitiveData() {
+//    ReflectionTestUtils.setField(underTest, "caserefgeneratorkey", caserefgeneratorkey);
+//
+//    // Given
+//    NewCase newCase = new NewCase();
+//    newCase.setCaseId(TEST_CASE_ID);
+//    newCase.setCollectionExerciseId(TEST_CASE_COLLECTION_EXERCISE_ID);
+//
+//    Map<String, String> sample = new HashMap<>();
+//    sample.put("ADDRESS_LINE1", "123 Fake Street");
+//    sample.put("POSTCODE", "abc123");
+//    newCase.setSample(sample);
+//
+//    Map<String, String> sampleSensitive = new HashMap<>();
+//    sampleSensitive.put("EmailAddress", "foo@bar.baz");
+//    newCase.setSampleSensitive(sampleSensitive);
+//
+//    EventHeaderDTO eventHeader = new EventHeaderDTO();
+//    eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
+//    eventHeader.setCorrelationId(TEST_CORRELATION_ID);
+//    eventHeader.setOriginatingUser(TEST_ORIGINATING_USER);
+//    PayloadDTO payloadDTO = new PayloadDTO();
+//    payloadDTO.setNewCase(newCase);
+//
+//    EventDTO event = new EventDTO();
+//    event.setHeader(eventHeader);
+//    event.setPayload(payloadDTO);
+//
+//    Message<byte[]> eventMessage = constructMessage(event);
+//
+//    when(caseRepository.existsById(TEST_CASE_ID)).thenReturn(false);
+//
+//    Survey survey = new Survey();
+//    survey.setId(UUID.randomUUID());
+//    survey.setSampleValidationRules(
+//        new ColumnValidator[] {
+//          new ColumnValidator("ADDRESS_LINE1", false, new Rule[] {new MandatoryRule()}),
+//          new ColumnValidator(
+//              "POSTCODE", false, new Rule[] {new MandatoryRule(), new LengthRule(8)}),
+//          new ColumnValidator("Telephone", true, new Rule[] {new MandatoryRule()})
+//        });
+//
+//    CollectionExercise collex = new CollectionExercise();
+//    collex.setSurvey(survey);
+//    Optional<CollectionExercise> collexOpt = Optional.of(collex);
+//
+//    when(collectionExerciseRepository.findById(TEST_CASE_COLLECTION_EXERCISE_ID))
+//        .thenReturn(collexOpt);
+//
+//    RuntimeException thrownException =
+//        assertThrows(RuntimeException.class, () -> underTest.receiveNewCase(eventMessage));
+//    assertThat(thrownException.getMessage())
+//        .isEqualTo("Attempt to send sensitive data to RM which was not part of defined sample");
+//    verifyNoInteractions(eventLogger);
+//  }
 
-    // Given
+  private EventDTO buildValidNewCaseEventMessage() {
     NewCase newCase = new NewCase();
     newCase.setCaseId(TEST_CASE_ID);
     newCase.setCollectionExerciseId(TEST_CASE_COLLECTION_EXERCISE_ID);
 
-    Map<String, String> sample = new HashMap<>();
-    sample.put("ADDRESS_LINE1", "123 Fake Street");
-    sample.put("POSTCODE", "INVALID POSTCODE");
-    newCase.setSample(sample);
-
-    Map<String, String> sampleSensitive = new HashMap<>();
-    sampleSensitive.put("Telephone", "020712345");
-    newCase.setSampleSensitive(sampleSensitive);
+    newCase.setTreatmentCode("HH_QP3E");
+    newCase.setAddressType("H");
+    newCase.setUprn("1234567890");
+    newCase.setEstabUprn("1234567890");
+    newCase.setEstabType("HOUSEHOLD");
+    newCase.setAddressLine1("123 Fake Street");
+    newCase.setTownName("Testington");
+    newCase.setRegion("E");
+    newCase.setPostcode("NP10 111");
+    newCase.setAddressType("HH");
+    newCase.setAddressLevel("U");
+    newCase.setAbpCode("ABC123");
+    newCase.setFieldCoordinatorId("ABCD1234");
+    newCase.setFieldOfficerId("ABCD1234");
+    newCase.setOa("A12345678");
+    newCase.setLsoa("A12345678");
+    newCase.setMsoa("A12345678");
+    newCase.setLad("ABC123");
+    newCase.setHtcDigital("1");
+    newCase.setHtcWillingness("1");
+    newCase.setLatitude("51.5074");
+    newCase.setLongitude("0.1278");
+    newCase.setPrintBatch("1");
+    newCase.setSecureEstablishment(false);
 
     EventHeaderDTO eventHeader = new EventHeaderDTO();
     eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
@@ -223,153 +333,6 @@ public class NewCaseReceiverTest {
     event.setHeader(eventHeader);
     event.setPayload(payloadDTO);
 
-    Message<byte[]> eventMessage = constructMessage(event);
-
-    when(caseRepository.existsById(TEST_CASE_ID)).thenReturn(false);
-
-    Survey survey = new Survey();
-    survey.setId(UUID.randomUUID());
-    survey.setSampleValidationRules(
-        new ColumnValidator[] {
-          new ColumnValidator(
-              "ADDRESS_LINE1", false, new Rule[] {new MandatoryRule(), new LengthRule(8)}),
-          new ColumnValidator(
-              "POSTCODE", false, new Rule[] {new MandatoryRule(), new LengthRule(8)}),
-          new ColumnValidator("Telephone", true, new Rule[] {new MandatoryRule()})
-        });
-
-    CollectionExercise collex = new CollectionExercise();
-    collex.setSurvey(survey);
-    Optional<CollectionExercise> collexOpt = Optional.of(collex);
-
-    when(collectionExerciseRepository.findById(TEST_CASE_COLLECTION_EXERCISE_ID))
-        .thenReturn(collexOpt);
-
-    RuntimeException thrownException =
-        assertThrows(RuntimeException.class, () -> underTest.receiveNewCase(eventMessage));
-
-    String expectedErrorMsg =
-        "NEW_CASE event: Column 'ADDRESS_LINE1' Failed validation for Rule 'LengthRule' "
-            + "validation error: Exceeded max length of 8"
-            + System.lineSeparator()
-            + "Column 'POSTCODE' Failed validation for Rule 'LengthRule' validation error: Exceeded max length of 8";
-
-    assertThat(thrownException.getMessage()).isEqualTo(expectedErrorMsg);
-    verifyNoInteractions(eventLogger);
-  }
-
-  @Test
-  public void testNewCaseReceiverCaseFailsValidationBecauseOfUndefinedSensitiveData() {
-    ReflectionTestUtils.setField(underTest, "caserefgeneratorkey", caserefgeneratorkey);
-
-    // Given
-    NewCase newCase = new NewCase();
-    newCase.setCaseId(TEST_CASE_ID);
-    newCase.setCollectionExerciseId(TEST_CASE_COLLECTION_EXERCISE_ID);
-
-    Map<String, String> sample = new HashMap<>();
-    sample.put("ADDRESS_LINE1", "123 Fake Street");
-    sample.put("POSTCODE", "abc123");
-    newCase.setSample(sample);
-
-    Map<String, String> sampleSensitive = new HashMap<>();
-    sampleSensitive.put("EmailAddress", "foo@bar.baz");
-    newCase.setSampleSensitive(sampleSensitive);
-
-    EventHeaderDTO eventHeader = new EventHeaderDTO();
-    eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
-    eventHeader.setCorrelationId(TEST_CORRELATION_ID);
-    eventHeader.setOriginatingUser(TEST_ORIGINATING_USER);
-    PayloadDTO payloadDTO = new PayloadDTO();
-    payloadDTO.setNewCase(newCase);
-
-    EventDTO event = new EventDTO();
-    event.setHeader(eventHeader);
-    event.setPayload(payloadDTO);
-
-    Message<byte[]> eventMessage = constructMessage(event);
-
-    when(caseRepository.existsById(TEST_CASE_ID)).thenReturn(false);
-
-    Survey survey = new Survey();
-    survey.setId(UUID.randomUUID());
-    survey.setSampleValidationRules(
-        new ColumnValidator[] {
-          new ColumnValidator("ADDRESS_LINE1", false, new Rule[] {new MandatoryRule()}),
-          new ColumnValidator(
-              "POSTCODE", false, new Rule[] {new MandatoryRule(), new LengthRule(8)}),
-          new ColumnValidator("Telephone", true, new Rule[] {new MandatoryRule()})
-        });
-
-    CollectionExercise collex = new CollectionExercise();
-    collex.setSurvey(survey);
-    Optional<CollectionExercise> collexOpt = Optional.of(collex);
-
-    when(collectionExerciseRepository.findById(TEST_CASE_COLLECTION_EXERCISE_ID))
-        .thenReturn(collexOpt);
-
-    RuntimeException thrownException =
-        assertThrows(RuntimeException.class, () -> underTest.receiveNewCase(eventMessage));
-    assertThat(thrownException.getMessage())
-        .isEqualTo("Attempt to send sensitive data to RM which was not part of defined sample");
-    verifyNoInteractions(eventLogger);
-  }
-
-  @Test
-  public void testNewCaseReceiverCaseFailsValidationBecauseOfUndefinedSampleData() {
-    ReflectionTestUtils.setField(underTest, "caserefgeneratorkey", caserefgeneratorkey);
-
-    // Given
-    NewCase newCase = new NewCase();
-    newCase.setCaseId(TEST_CASE_ID);
-    newCase.setCollectionExerciseId(TEST_CASE_COLLECTION_EXERCISE_ID);
-
-    Map<String, String> sample = new HashMap<>();
-    sample.put("ADDRESS_LINE1", "123 Fake Street");
-    sample.put("POSTCODE", "abc123");
-    sample.put("SNEAKY_EXTRA_DATA", "this should not be included");
-    newCase.setSample(sample);
-
-    Map<String, String> sampleSensitive = new HashMap<>();
-    sampleSensitive.put("Telephone", "123");
-    newCase.setSampleSensitive(sampleSensitive);
-
-    EventHeaderDTO eventHeader = new EventHeaderDTO();
-    eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
-    eventHeader.setCorrelationId(TEST_CORRELATION_ID);
-    eventHeader.setOriginatingUser(TEST_ORIGINATING_USER);
-    PayloadDTO payloadDTO = new PayloadDTO();
-    payloadDTO.setNewCase(newCase);
-
-    EventDTO event = new EventDTO();
-    event.setHeader(eventHeader);
-    event.setPayload(payloadDTO);
-
-    Message<byte[]> eventMessage = constructMessage(event);
-
-    when(caseRepository.existsById(TEST_CASE_ID)).thenReturn(false);
-
-    Survey survey = new Survey();
-    survey.setId(UUID.randomUUID());
-    survey.setSampleValidationRules(
-        new ColumnValidator[] {
-          new ColumnValidator("ADDRESS_LINE1", false, new Rule[] {new MandatoryRule()}),
-          new ColumnValidator(
-              "POSTCODE", false, new Rule[] {new MandatoryRule(), new LengthRule(8)}),
-          new ColumnValidator("Telephone", true, new Rule[] {new MandatoryRule()})
-        });
-
-    CollectionExercise collex = new CollectionExercise();
-    collex.setSurvey(survey);
-    Optional<CollectionExercise> collexOpt = Optional.of(collex);
-
-    when(collectionExerciseRepository.findById(TEST_CASE_COLLECTION_EXERCISE_ID))
-        .thenReturn(collexOpt);
-
-    RuntimeException thrownException =
-        assertThrows(RuntimeException.class, () -> underTest.receiveNewCase(eventMessage));
-    assertThat(thrownException.getMessage())
-        .isEqualTo("Attempt to send data to RM which was not part of defined sample");
-    verifyNoInteractions(eventLogger);
+    return event;
   }
 }

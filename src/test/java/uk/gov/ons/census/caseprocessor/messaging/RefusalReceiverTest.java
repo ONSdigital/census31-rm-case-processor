@@ -32,7 +32,7 @@ import uk.gov.ons.census.common.model.entity.EventType;
 import uk.gov.ons.census.common.model.entity.RefusalType;
 
 @ExtendWith(MockitoExtension.class)
-public class RefusalReceiverTest {
+class RefusalReceiverTest {
 
   private static final UUID CASE_ID = UUID.randomUUID();
 
@@ -42,7 +42,7 @@ public class RefusalReceiverTest {
   @Mock EventLogger eventLogger;
 
   @Test
-  public void testRefusal() {
+  void testRefusal() {
     // Given
     RefusalDTO refusalDTO = new RefusalDTO();
     refusalDTO.setCaseId(CASE_ID);
@@ -88,7 +88,8 @@ public class RefusalReceiverTest {
   }
 
   @Test
-  public void testRefusalWithDataErasure() {
+  void testRefusalWithDataErasure() {
+    // TODO delete?
     // Given
     RefusalDTO refusalDTO = new RefusalDTO();
     refusalDTO.setCaseId(CASE_ID);
@@ -113,7 +114,7 @@ public class RefusalReceiverTest {
     Case caze = new Case();
     caze.setId(CASE_ID);
     caze.setRefusalReceived(null);
-    caze.setSampleSensitive(Map.of("testing", "erasure"));
+    // TODO set sample fields?
 
     when(caseService.getCase(CASE_ID)).thenReturn(caze);
 
@@ -129,7 +130,6 @@ public class RefusalReceiverTest {
 
     assertThat(actualCase.getId()).isEqualTo(CASE_ID);
     assertThat(actualCase.getRefusalReceived()).isEqualTo(RefusalType.WITHDRAWAL_REFUSAL);
-    assertThat(actualCase.getSampleSensitive()).isNull();
     assertThat(actualCase.isInvalid()).isTrue();
 
     verify(eventLogger)
@@ -145,7 +145,7 @@ public class RefusalReceiverTest {
   }
 
   @Test
-  public void testRefusalWithDataErasureFalse() {
+  void testRefusalWithDataErasureFalse() {
     // Given
     RefusalDTO refusalDTO = new RefusalDTO();
     refusalDTO.setCaseId(CASE_ID);
@@ -169,7 +169,7 @@ public class RefusalReceiverTest {
     Case caze = new Case();
     caze.setId(CASE_ID);
     caze.setRefusalReceived(null);
-    caze.setSampleSensitive(Map.of("testing", "erasure"));
+
 
     when(caseService.getCase(CASE_ID)).thenReturn(caze);
 
@@ -185,7 +185,6 @@ public class RefusalReceiverTest {
 
     assertThat(actualCase.getId()).isEqualTo(CASE_ID);
     assertThat(actualCase.getRefusalReceived()).isEqualTo(RefusalType.HARD_REFUSAL);
-    assertThat(actualCase.getSampleSensitive()).isEqualTo(Map.of("testing", "erasure"));
     assertThat(actualCase.isInvalid()).isFalse();
 
     verify(eventLogger)

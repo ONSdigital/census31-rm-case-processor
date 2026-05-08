@@ -13,8 +13,26 @@ public class CaseUpdateDTO {
   private UUID surveyId;
   private boolean invalid;
   private RefusalTypeDTO refusalReceived;
-  private Map<String, String> sample;
-  private Map<String, String> sampleSensitive;
+  private boolean surveyLaunched;
+  private boolean receiptReceived;
   private OffsetDateTime createdAt;
   private OffsetDateTime lastUpdatedAt;
+
+  // Sample Fields and Address
+  private String caseType;
+
+  private Address address;
+
+  private String oa;
+  private String lsoa;
+  private String msoa;
+  private String lad;
+  private String htcWillingness;
+  private String htcDigital;
+  private String fieldCoordinatorId;
+  private String fieldOfficerId;
+  private String treatmentCode;
+  private Integer ceExpectedCapacity;
+  private boolean secureEstablishment;
+  private String printBatch;
 }

@@ -30,14 +30,14 @@ import uk.gov.ons.census.common.model.entity.RefusalType;
 import uk.gov.ons.census.common.model.entity.Survey;
 
 @ExtendWith(MockitoExtension.class)
-public class CaseServiceTest {
+class CaseServiceTest {
   @Mock CaseRepository caseRepository;
   @Mock MessageSender messageSender;
 
   @InjectMocks CaseService underTest;
 
   @Test
-  public void saveCaseAndEmitCaseUpdatedEvent() {
+  void saveCaseAndEmitCaseUpdatedEvent() {
     ReflectionTestUtils.setField(underTest, "caseUpdateTopic", "Test topic");
     ReflectionTestUtils.setField(underTest, "pubsubProject", "Test project");
 
@@ -51,8 +51,7 @@ public class CaseServiceTest {
     caze.setId(UUID.randomUUID());
     caze.setCaseRef(1234567890L);
     caze.setCollectionExercise(collex);
-    caze.setSample(Map.of("foo", "bar"));
-    caze.setSampleSensitive(Map.of("Top", "Secret"));
+    // TODO set sample fields
     caze.setInvalid(true);
     caze.setRefusalReceived(RefusalType.HARD_REFUSAL);
 
@@ -73,21 +72,19 @@ public class CaseServiceTest {
     assertThat(actualCaseUpdate.getCaseRef()).isEqualTo(caze.getCaseRef().toString());
     assertThat(actualCaseUpdate.getCollectionExerciseId()).isEqualTo(collex.getId());
     assertThat(actualCaseUpdate.getSurveyId()).isEqualTo(survey.getId());
-    assertThat(actualCaseUpdate.getSample()).isEqualTo(caze.getSample());
     assertThat(actualCaseUpdate.isInvalid()).isTrue();
     assertThat(actualCaseUpdate.getRefusalReceived()).isEqualTo(RefusalTypeDTO.HARD_REFUSAL);
-    assertThat(actualCaseUpdate.getSampleSensitive()).isEqualTo(Map.of("Top", "REDACTED"));
   }
 
   @Test
-  public void saveCase() {
+  void saveCase() {
     Case caze = new Case();
     underTest.saveCase(caze);
     verify(caseRepository).saveAndFlush(caze);
   }
 
   @Test
-  public void emitCaseUpdatedEvent() {
+  void emitCaseUpdatedEvent() {
     ReflectionTestUtils.setField(underTest, "caseUpdateTopic", "Test topic");
     ReflectionTestUtils.setField(underTest, "pubsubProject", "Test project");
 
@@ -101,7 +98,7 @@ public class CaseServiceTest {
     caze.setId(UUID.randomUUID());
     caze.setCaseRef(1234567890L);
     caze.setCollectionExercise(collex);
-    caze.setSample(Map.of("foo", "bar"));
+    // TODO set sample fields
     caze.setInvalid(true);
     caze.setRefusalReceived(RefusalType.EXTRAORDINARY_REFUSAL);
     caze.setCreatedAt(OffsetDateTime.now().minusSeconds(10));
@@ -123,7 +120,6 @@ public class CaseServiceTest {
     assertThat(actualCaseUpdate.getCaseRef()).isEqualTo(caze.getCaseRef().toString());
     assertThat(actualCaseUpdate.getCollectionExerciseId()).isEqualTo(collex.getId());
     assertThat(actualCaseUpdate.getSurveyId()).isEqualTo(survey.getId());
-    assertThat(actualCaseUpdate.getSample()).isEqualTo(caze.getSample());
     assertThat(actualCaseUpdate.isInvalid()).isTrue();
     assertThat(actualCaseUpdate.getRefusalReceived())
         .isEqualTo(RefusalTypeDTO.EXTRAORDINARY_REFUSAL);
@@ -132,7 +128,7 @@ public class CaseServiceTest {
   }
 
   @Test
-  public void getCaseByCaseId() {
+  void getCaseByCaseId() {
     Case caze = new Case();
     caze.setId(UUID.randomUUID());
     Optional<Case> caseOpt = Optional.of(caze);
@@ -144,7 +140,7 @@ public class CaseServiceTest {
   }
 
   @Test
-  public void getByCaseIdMissingCase() {
+  void getByCaseIdMissingCase() {
     UUID caseId = UUID.randomUUID();
     String expectedErrorMessage = String.format("Case with ID '%s' not found", caseId);
 

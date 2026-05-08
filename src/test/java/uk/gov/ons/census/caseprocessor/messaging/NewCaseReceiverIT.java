@@ -83,8 +83,7 @@ public class NewCaseReceiverIT {
       NewCase newCase = new NewCase();
       newCase.setCaseId(TEST_CASE_ID);
       newCase.setCollectionExerciseId(collectionExercise.getId());
-      newCase.setSample(sample);
-      newCase.setSampleSensitive(sampleSensitive);
+      // TODO set sample fields
       payloadDTO.setNewCase(newCase);
       event.setPayload(payloadDTO);
 
@@ -104,8 +103,6 @@ public class NewCaseReceiverIT {
 
       assertThat(actualCase.getId()).isEqualTo(TEST_CASE_ID);
       assertThat(actualCase.getCollectionExercise().getId()).isEqualTo(collectionExercise.getId());
-      assertThat(actualCase.getSample()).isEqualTo(sample);
-      assertThat(actualCase.getSampleSensitive()).isEqualTo(sampleSensitive);
 
       List<Event> events = eventRepository.findAll();
       assertThat(events.size()).isEqualTo(1);

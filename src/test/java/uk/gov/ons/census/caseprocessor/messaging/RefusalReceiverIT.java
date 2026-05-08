@@ -32,7 +32,7 @@ import uk.gov.ons.census.common.model.entity.EventType;
 @ActiveProfiles("test")
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
-public class RefusalReceiverIT {
+class RefusalReceiverIT {
   private static final String INBOUND_REFUSAL_TOPIC = "event_refusal";
 
   @Value("${queueconfig.case-update-topic}")
@@ -45,13 +45,13 @@ public class RefusalReceiverIT {
   @Autowired private EventRepository eventRepository;
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     pubsubHelper.purgePubsubProjectMessages(OUTBOUND_CASE_SUBSCRIPTION, caseUpdateTopic);
     deleteDataHelper.deleteAllData();
   }
 
   @Test
-  public void testRefusal() throws Exception {
+  void testRefusal() throws Exception {
     try (QueueSpy<EventDTO> outboundCaseQueueSpy =
         pubsubHelper.pubsubProjectListen(OUTBOUND_CASE_SUBSCRIPTION, EventDTO.class)) {
       // GIVEN
@@ -89,7 +89,7 @@ public class RefusalReceiverIT {
   }
 
   @Test
-  public void testRefusalWithErasure() throws Exception {
+  void testRefusalWithErasure() throws Exception {
     try (QueueSpy<EventDTO> outboundCaseQueueSpy =
         pubsubHelper.pubsubProjectListen(OUTBOUND_CASE_SUBSCRIPTION, EventDTO.class)) {
       // GIVEN
@@ -120,7 +120,6 @@ public class RefusalReceiverIT {
       CaseUpdateDTO emittedCase = actualEvent.getPayload().getCaseUpdate();
       assertThat(emittedCase.getCaseId()).isEqualTo(caze.getId());
       assertThat(emittedCase.getRefusalReceived()).isEqualTo(RefusalTypeDTO.EXTRAORDINARY_REFUSAL);
-      assertThat(emittedCase.getSampleSensitive()).isNull();
       assertThat(emittedCase.isInvalid()).isTrue();
 
       assertThat(eventRepository.findAll().size()).isEqualTo(2);

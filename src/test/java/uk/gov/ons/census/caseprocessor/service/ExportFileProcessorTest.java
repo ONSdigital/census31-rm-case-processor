@@ -19,7 +19,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.ons.census.caseprocessor.cache.UacQidCache;
-import uk.gov.ons.census.caseprocessor.collectioninstrument.CollectionInstrumentHelper;
 import uk.gov.ons.census.caseprocessor.logging.EventLogger;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.EventHeaderDTO;
@@ -33,7 +32,6 @@ class ExportFileProcessorTest {
   @Mock private UacService uacService;
   @Mock private EventLogger eventLogger;
   @Mock private ExportFileRowRepository exportFileRowRepository;
-  @Mock private CollectionInstrumentHelper collectionInstrumentHelper;
 
   @InjectMocks ExportFileProcessor underTest;
 
@@ -46,7 +44,7 @@ class ExportFileProcessorTest {
   void testProcessExportFileRow() {
     // Given
     Case caze = new Case();
-    caze.setSample(Map.of("foo", "bar"));
+    // TODO set sample fields
     caze.setCaseRef(123L);
 
     ExportFileTemplate exportFileTemplate = new ExportFileTemplate();
@@ -70,8 +68,6 @@ class ExportFileProcessorTest {
     uacQidDTO.setQid(QID);
 
     when(uacQidCache.getUacQidPair()).thenReturn(uacQidDTO);
-    when(collectionInstrumentHelper.getCollectionInstrumentUrl(caze, TEST_UAC_METADATA))
-        .thenReturn("testCollectionInstrumentUrl");
 
     // When
     underTest.processExportFileRow(
@@ -125,7 +121,7 @@ class ExportFileProcessorTest {
   void testProcessExportFileRowWithSensitiveField() {
     // Given
     Case caze = new Case();
-    caze.setSampleSensitive(Map.of("foo", "bar"));
+    // TODO set sample fields
     caze.setCaseRef(123L);
 
     ExportFileTemplate exportFileTemplate = new ExportFileTemplate();
@@ -188,7 +184,7 @@ class ExportFileProcessorTest {
     exportFileTemplate.setTemplate(new String[] {"__caseref__", "__uac__", "foo"});
 
     Case caze = new Case();
-    caze.setSample(Map.of("foo", "bar"));
+    // TODO set sample fields
     caze.setCaseRef(123L);
 
     FulfilmentToProcess fulfilmentToProcess = new FulfilmentToProcess();
@@ -253,7 +249,7 @@ class ExportFileProcessorTest {
         new String[] {"__caseref__", "__uac__", "__request__.foo", "__request__.spam"});
 
     Case caze = new Case();
-    caze.setSample(Map.of("foo", "bar"));
+    // TODO set sample fields
     caze.setCaseRef(123L);
 
     FulfilmentToProcess fulfilmentToProcess = new FulfilmentToProcess();
@@ -318,7 +314,7 @@ class ExportFileProcessorTest {
     exportFileTemplate.setTemplate(new String[] {"__caseref__", "__uac__", "__request__.foo"});
 
     Case caze = new Case();
-    caze.setSample(Map.of("foo", "bar"));
+    // TODO set sample fields
     caze.setCaseRef(123L);
 
     FulfilmentToProcess fulfilmentToProcess = new FulfilmentToProcess();

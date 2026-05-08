@@ -6,7 +6,6 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import uk.gov.ons.census.caseprocessor.collectioninstrument.CollectionInstrumentHelper;
 import uk.gov.ons.census.caseprocessor.messaging.MessageSender;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.EventHeaderDTO;
@@ -22,7 +21,6 @@ import uk.gov.ons.census.common.model.entity.UacQidLink;
 public class UacService {
   private final UacQidLinkRepository uacQidLinkRepository;
   private final MessageSender messageSender;
-  private final CollectionInstrumentHelper collectionInstrumentHelper;
 
   @Value("${queueconfig.uac-update-topic}")
   private String uacUpdateTopic;
@@ -32,11 +30,9 @@ public class UacService {
 
   public UacService(
       UacQidLinkRepository uacQidLinkRepository,
-      MessageSender messageSender,
-      CollectionInstrumentHelper collectionInstrumentHelper) {
+      MessageSender messageSender) {
     this.messageSender = messageSender;
     this.uacQidLinkRepository = uacQidLinkRepository;
-    this.collectionInstrumentHelper = collectionInstrumentHelper;
   }
 
   public UacQidLink saveAndEmitUacUpdateEvent(
@@ -92,10 +88,6 @@ public class UacService {
       UUID correlationId,
       String originatingUser) {
 
-    // TODO: this way is no good if we want to immediately return the CI URL to an API caller
-    String collectionInstrumentUrl =
-        collectionInstrumentHelper.getCollectionInstrumentUrl(caze, metadata);
-
     UacQidLink uacQidLink = new UacQidLink();
     uacQidLink.setId(UUID.randomUUID());
     uacQidLink.setUac(uac);
@@ -103,7 +95,6 @@ public class UacService {
     uacQidLink.setQid(qid);
     uacQidLink.setMetadata(metadata);
     uacQidLink.setCaze(caze);
-    uacQidLink.setCollectionInstrumentUrl(collectionInstrumentUrl);
     saveAndEmitUacUpdateEvent(uacQidLink, correlationId, originatingUser);
   }
 }

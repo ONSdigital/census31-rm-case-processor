@@ -13,8 +13,8 @@ import uk.gov.ons.census.caseprocessor.model.dto.EventHeaderDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.PayloadDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.RefusalTypeDTO;
 import uk.gov.ons.census.caseprocessor.model.repository.CaseRepository;
+import uk.gov.ons.census.caseprocessor.utils.CaseFieldMapper;
 import uk.gov.ons.census.caseprocessor.utils.EventHelper;
-import uk.gov.ons.census.caseprocessor.utils.RedactHelper;
 import uk.gov.ons.census.common.model.entity.Case;
 
 @Service
@@ -59,21 +59,19 @@ public class CaseService {
     caseUpdate.setCaseRef(Long.toString(caze.getCaseRef()));
     caseUpdate.setCollectionExerciseId(caze.getCollectionExercise().getId());
     caseUpdate.setSurveyId(caze.getCollectionExercise().getSurvey().getId());
-    caseUpdate.setSample(caze.getSample());
     caseUpdate.setCreatedAt(caze.getCreatedAt());
     caseUpdate.setLastUpdatedAt(caze.getLastUpdatedAt());
-
+    caseUpdate.setReceiptReceived(caze.isReceiptReceived());
+    caseUpdate.setSurveyLaunched(caze.isSurveyLaunched());
     caseUpdate.setInvalid(caze.isInvalid());
+
     if (caze.getRefusalReceived() != null) {
       caseUpdate.setRefusalReceived(RefusalTypeDTO.valueOf(caze.getRefusalReceived().name()));
     } else {
       caseUpdate.setRefusalReceived(null);
     }
-    caseUpdate.setSampleSensitive(caze.getSampleSensitive());
 
-    if (caseUpdate.getSampleSensitive() != null) {
-      caseUpdate = (CaseUpdateDTO) RedactHelper.redact(caseUpdate);
-    }
+    CaseFieldMapper.mapCaseSampleFieldsToCaseUpdateDTO(caze, caseUpdate);
 
     payloadDTO.setCaseUpdate(caseUpdate);
     EventDTO event = new EventDTO();

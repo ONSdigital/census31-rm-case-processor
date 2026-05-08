@@ -34,7 +34,7 @@ public class RefusalReceiver {
     refusedCase.setRefusalReceived(RefusalType.valueOf(refusal.getType().name()));
 
     if (refusal.isEraseData()) {
-      refusedCase.setSampleSensitive(null);
+      // TODO delete this functionality?
       refusedCase.setInvalid(true);
       eventLogger.logCaseEvent(
           refusedCase, "Data erasure request received", EventType.ERASE_DATA, event, message);

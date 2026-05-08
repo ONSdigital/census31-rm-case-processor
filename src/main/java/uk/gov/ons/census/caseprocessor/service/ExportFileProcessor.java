@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 import uk.gov.ons.census.caseprocessor.cache.UacQidCache;
-import uk.gov.ons.census.caseprocessor.collectioninstrument.CollectionInstrumentHelper;
 import uk.gov.ons.census.caseprocessor.logging.EventLogger;
 import uk.gov.ons.census.caseprocessor.model.dto.ExportFileDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.PayloadDTO;
@@ -26,7 +25,6 @@ public class ExportFileProcessor {
   private final UacService uacService;
   private final EventLogger eventLogger;
   private final ExportFileRowRepository exportFileRowRepository;
-  private final CollectionInstrumentHelper collectionInstrumentHelper;
 
   private final StringWriter stringWriter = new StringWriter();
   private final CSVWriter csvWriter =
@@ -41,13 +39,11 @@ public class ExportFileProcessor {
       UacQidCache uacQidCache,
       UacService uacService,
       EventLogger eventLogger,
-      ExportFileRowRepository exportFileRowRepository,
-      CollectionInstrumentHelper collectionInstrumentHelper) {
+      ExportFileRowRepository exportFileRowRepository) {
     this.uacQidCache = uacQidCache;
     this.uacService = uacService;
     this.eventLogger = eventLogger;
     this.exportFileRowRepository = exportFileRowRepository;
-    this.collectionInstrumentHelper = collectionInstrumentHelper;
   }
 
   public void process(FulfilmentToProcess fulfilmentToProcess) {
@@ -133,12 +129,9 @@ public class ExportFileProcessor {
                     ? personalisation.get(
                         templateItem.substring(REQUEST_PERSONALISATION_PREFIX.length()))
                     : null;
-          } else if (templateItem.startsWith(SENSITIVE_FIELD_PREFIX)) {
-            rowStrings[i] =
-                caze.getSampleSensitive()
-                    .get(templateItem.substring(SENSITIVE_FIELD_PREFIX.length()));
           } else {
-            rowStrings[i] = caze.getSample().get(templateItem);
+            // TODO get field from case
+            rowStrings[i] = caze.getTreatmentCode();
           }
       }
     }
@@ -175,9 +168,6 @@ public class ExportFileProcessor {
   private UacQidDTO getUacQidForCase(
       Case caze, UUID correlationId, String originatingUser, Object metadata) {
 
-    String collectionInstrumentUrl =
-        collectionInstrumentHelper.getCollectionInstrumentUrl(caze, metadata);
-
     UacQidDTO uacQidDTO = uacQidCache.getUacQidPair();
     UacQidLink uacQidLink = new UacQidLink();
     uacQidLink.setId(UUID.randomUUID());
@@ -186,7 +176,6 @@ public class ExportFileProcessor {
     uacQidLink.setUacHash(HashHelper.hash(uacQidDTO.getUac()));
     uacQidLink.setMetadata(metadata);
     uacQidLink.setCaze(caze);
-    uacQidLink.setCollectionInstrumentUrl(collectionInstrumentUrl);
     uacService.saveAndEmitUacUpdateEvent(uacQidLink, correlationId, originatingUser);
 
     return uacQidDTO;
