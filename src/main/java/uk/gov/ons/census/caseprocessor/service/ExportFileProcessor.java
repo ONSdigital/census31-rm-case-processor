@@ -130,8 +130,7 @@ public class ExportFileProcessor {
                         templateItem.substring(REQUEST_PERSONALISATION_PREFIX.length()))
                     : null;
           } else {
-            // TODO get field from case
-            rowStrings[i] = caze.getTreatmentCode();
+            rowStrings[i] = caze.getSampleFieldValueAsString(SampleField.valueOf(templateItem));
           }
       }
     }

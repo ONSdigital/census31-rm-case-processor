@@ -7,34 +7,35 @@ import uk.gov.ons.census.common.model.entity.Case;
 
 public class CaseFieldMapper {
 
-  public static void mapPayloadSampleFieldsToNewCase(NewCase newCasePayload, Case newCase) {
-    newCase.setUprn(newCasePayload.getUprn());
-    newCase.setEstabUprn(newCasePayload.getEstabUprn());
-    newCase.setCaseType(newCasePayload.getAddressType()); // Case type is set from address ype, do we need both?
-    newCase.setAddressType(newCasePayload.getAddressType());
-    newCase.setEstabType(newCasePayload.getEstabType());
-    newCase.setAddressLevel(newCasePayload.getAddressLevel());
-    newCase.setAbpCode(newCasePayload.getAbpCode());
-    newCase.setOrganisationName(newCasePayload.getOrganisationName());
-    newCase.setAddressLine1(newCasePayload.getAddressLine1());
-    newCase.setAddressLine2(newCasePayload.getAddressLine2());
-    newCase.setAddressLine3(newCasePayload.getAddressLine3());
-    newCase.setTownName(newCasePayload.getTownName());
-    newCase.setPostcode(newCasePayload.getPostcode());
-    newCase.setLatitude(newCasePayload.getLatitude());
-    newCase.setLongitude(newCasePayload.getLongitude());
-    newCase.setOa(newCasePayload.getOa());
-    newCase.setLsoa(newCasePayload.getLsoa());
-    newCase.setMsoa(newCasePayload.getMsoa());
-    newCase.setLad(newCasePayload.getLad());
-    newCase.setRegion(newCasePayload.getRegion());
-    newCase.setHtcWillingness(newCasePayload.getHtcWillingness());
-    newCase.setHtcDigital(newCasePayload.getHtcDigital());
-    newCase.setFieldCoordinatorId(newCasePayload.getFieldCoordinatorId());
-    newCase.setFieldOfficerId(newCasePayload.getFieldOfficerId());
-    newCase.setTreatmentCode(newCasePayload.getTreatmentCode());
-    newCase.setCeExpectedCapacity(newCasePayload.getCeExpectedCapacity());
-    newCase.setSecureEstablishment(newCasePayload.isSecureEstablishment());
+  public static void mapPayloadSampleFieldsToCase(NewCase newCasePayload, Case caze) {
+    caze.setUprn(newCasePayload.getUprn());
+    caze.setEstabUprn(newCasePayload.getEstabUprn());
+    caze.setCaseType(newCasePayload.getAddressType()); // Case type is set from address ype, do we need both?
+    caze.setAddressType(newCasePayload.getAddressType());
+    caze.setEstabType(newCasePayload.getEstabType());
+    caze.setAddressLevel(newCasePayload.getAddressLevel());
+    caze.setAbpCode(newCasePayload.getAbpCode());
+    caze.setOrganisationName(newCasePayload.getOrganisationName());
+    caze.setAddressLine1(newCasePayload.getAddressLine1());
+    caze.setAddressLine2(newCasePayload.getAddressLine2());
+    caze.setAddressLine3(newCasePayload.getAddressLine3());
+    caze.setTownName(newCasePayload.getTownName());
+    caze.setPostcode(newCasePayload.getPostcode());
+    caze.setLatitude(newCasePayload.getLatitude());
+    caze.setLongitude(newCasePayload.getLongitude());
+    caze.setOa(newCasePayload.getOa());
+    caze.setLsoa(newCasePayload.getLsoa());
+    caze.setMsoa(newCasePayload.getMsoa());
+    caze.setLad(newCasePayload.getLad());
+    caze.setRegion(newCasePayload.getRegion());
+    caze.setHtcWillingness(newCasePayload.getHtcWillingness());
+    caze.setHtcDigital(newCasePayload.getHtcDigital());
+    caze.setFieldCoordinatorId(newCasePayload.getFieldCoordinatorId());
+    caze.setFieldOfficerId(newCasePayload.getFieldOfficerId());
+    caze.setTreatmentCode(newCasePayload.getTreatmentCode());
+    caze.setCeExpectedCapacity(newCasePayload.getCeExpectedCapacity());
+    caze.setSecureEstablishment(newCasePayload.isSecureEstablishment());
+    caze.setPrintBatch(newCasePayload.getPrintBatch());
   }
 
   public static void mapCaseSampleFieldsToCaseUpdateDTO(Case caze, CaseUpdateDTO caseUpdate) {
@@ -69,5 +70,6 @@ public class CaseFieldMapper {
     caseUpdate.setFieldCoordinatorId(caze.getFieldCoordinatorId());
     caseUpdate.setFieldOfficerId(caze.getFieldOfficerId());
     caseUpdate.setCaseType(caze.getCaseType());
+    caseUpdate.setPrintBatch(caze.getPrintBatch());
   }
 }

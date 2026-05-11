@@ -72,7 +72,7 @@ public class NewCaseReceiver {
     Case newCase = new Case();
     newCase.setId(newCasePayload.getCaseId());
     newCase.setCollectionExercise(collex);
-    CaseFieldMapper.mapPayloadSampleFieldsToNewCase(newCasePayload, newCase);
+    CaseFieldMapper.mapPayloadSampleFieldsToCase(newCasePayload, newCase);
 
     newCase = saveNewCaseAndStampCaseRef(newCase);
     caseService.emitCaseUpdate(

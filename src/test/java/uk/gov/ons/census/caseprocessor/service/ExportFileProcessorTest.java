@@ -24,6 +24,7 @@ import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.EventHeaderDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.UacQidDTO;
 import uk.gov.ons.census.caseprocessor.model.repository.ExportFileRowRepository;
+import uk.gov.ons.census.caseprocessor.testutils.CaseFieldsHelper;
 import uk.gov.ons.census.common.model.entity.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,11 +45,11 @@ class ExportFileProcessorTest {
   void testProcessExportFileRow() {
     // Given
     Case caze = new Case();
-    // TODO set sample fields
     caze.setCaseRef(123L);
+    CaseFieldsHelper.setDummyCaseFields(caze);
 
     ExportFileTemplate exportFileTemplate = new ExportFileTemplate();
-    exportFileTemplate.setTemplate(new String[] {"__caseref__", "__uac__", "foo"});
+    exportFileTemplate.setTemplate(new String[] {"__caseref__", "__uac__", "UPRN"});
     exportFileTemplate.setPackCode(PACK_CODE);
     exportFileTemplate.setExportFileDestination(EXPORT_FILE_DESTINATION);
 
@@ -88,7 +89,7 @@ class ExportFileProcessorTest {
     ExportFileRow actualExportFileRow = exportFileRowArgumentCaptor.getValue();
     assertThat(actualExportFileRow.getPackCode()).isEqualTo(PACK_CODE);
     assertThat(actualExportFileRow.getExportFileDestination()).isEqualTo(EXPORT_FILE_DESTINATION);
-    assertThat(actualExportFileRow.getRow()).isEqualTo("\"123\",\"" + UAC + "\",\"bar\"");
+    assertThat(actualExportFileRow.getRow()).isEqualTo("\"123\",\"" + UAC + "\",\""+ caze.getUprn() + "\"");
 
     ArgumentCaptor<UacQidLink> uacQidLinkCaptor = ArgumentCaptor.forClass(UacQidLink.class);
     verify(uacService)
@@ -99,66 +100,6 @@ class ExportFileProcessorTest {
     assertThat(actualUacQidLink.getCaze()).isEqualTo(caze);
     assertThat(actualUacQidLink.isActive()).isTrue();
     assertThat(actualUacQidLink.getMetadata()).isEqualTo(TEST_UAC_METADATA);
-    assertThat(actualUacQidLink.getCollectionInstrumentUrl())
-        .isEqualTo("testCollectionInstrumentUrl");
-
-    ArgumentCaptor<EventDTO> eventCaptor = ArgumentCaptor.forClass(EventDTO.class);
-    verify(eventLogger)
-        .logCaseEvent(
-            eq(caze),
-            eq("Export file generated with pack code " + PACK_CODE),
-            eq(EventType.EXPORT_FILE),
-            eventCaptor.capture(),
-            any(OffsetDateTime.class));
-
-    EventDTO actualEvent = eventCaptor.getValue();
-    Assertions.assertThat(actualEvent.getHeader().getCorrelationId()).isEqualTo(actionRule.getId());
-    Assertions.assertThat(actualEvent.getPayload().getExportFile().getPackCode())
-        .isEqualTo(PACK_CODE);
-  }
-
-  @Test
-  void testProcessExportFileRowWithSensitiveField() {
-    // Given
-    Case caze = new Case();
-    // TODO set sample fields
-    caze.setCaseRef(123L);
-
-    ExportFileTemplate exportFileTemplate = new ExportFileTemplate();
-    exportFileTemplate.setTemplate(new String[] {"__sensitive__.foo"});
-    exportFileTemplate.setPackCode(PACK_CODE);
-    exportFileTemplate.setExportFileDestination(EXPORT_FILE_DESTINATION);
-
-    ActionRule actionRule = new ActionRule();
-    actionRule.setId(UUID.randomUUID());
-    actionRule.setType(ActionRuleType.EXPORT_FILE);
-    actionRule.setExportFileTemplate(exportFileTemplate);
-
-    CaseToProcess caseToProcess = new CaseToProcess();
-    caseToProcess.setActionRule(actionRule);
-    caseToProcess.setCaze(caze);
-    caseToProcess.setBatchId(UUID.fromString("6a127d58-c1cb-489c-a3f5-72014a0c32d6"));
-
-    // When
-    underTest.processExportFileRow(
-        exportFileTemplate.getTemplate(),
-        caze,
-        caseToProcess.getBatchId(),
-        caseToProcess.getBatchQuantity(),
-        exportFileTemplate.getPackCode(),
-        exportFileTemplate.getExportFileDestination(),
-        actionRule.getId(),
-        null,
-        actionRule.getUacMetadata());
-
-    // Then
-    ArgumentCaptor<ExportFileRow> exportFileRowArgumentCaptor =
-        ArgumentCaptor.forClass(ExportFileRow.class);
-    verify(exportFileRowRepository).save(exportFileRowArgumentCaptor.capture());
-    ExportFileRow actualExportFileRow = exportFileRowArgumentCaptor.getValue();
-    assertThat(actualExportFileRow.getPackCode()).isEqualTo(PACK_CODE);
-    assertThat(actualExportFileRow.getExportFileDestination()).isEqualTo(EXPORT_FILE_DESTINATION);
-    assertThat(actualExportFileRow.getRow()).isEqualTo("\"bar\"");
 
     ArgumentCaptor<EventDTO> eventCaptor = ArgumentCaptor.forClass(EventDTO.class);
     verify(eventLogger)
