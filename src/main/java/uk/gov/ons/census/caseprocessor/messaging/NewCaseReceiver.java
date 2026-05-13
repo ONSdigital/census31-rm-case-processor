@@ -21,6 +21,7 @@ import uk.gov.ons.census.caseprocessor.utils.CaseRefGenerator;
 import uk.gov.ons.census.common.model.entity.Case;
 import uk.gov.ons.census.common.model.entity.CollectionExercise;
 import uk.gov.ons.census.common.model.entity.EventType;
+import uk.gov.ons.census.common.model.entity.SampleField;
 import uk.gov.ons.census.common.validation.ColumnValidator;
 import uk.gov.ons.census.common.validation.SampleFieldValidators;
 
@@ -86,146 +87,10 @@ public class NewCaseReceiver {
     List<String> validationErrors = new ArrayList<>();
 
     for (ColumnValidator columnValidator : columnValidators) {
-      switch (columnValidator.getColumnName()) {
-        case "UPRN":
-          columnValidator
-              .validateData(newCasePayload.getUprn(), false)
-              .ifPresent(validationErrors::add);
-          break;
-        case "ESTAB_UPRN":
-          columnValidator
-              .validateData(newCasePayload.getEstabUprn(), false)
-              .ifPresent(validationErrors::add);
-          break;
-        case "ADDRESS_TYPE":
-          columnValidator
-              .validateData(newCasePayload.getAddressType(), false)
-              .ifPresent(validationErrors::add);
-          break;
-        case "ESTAB_TYPE":
-          columnValidator
-              .validateData(newCasePayload.getEstabType(), false)
-              .ifPresent(validationErrors::add);
-          break;
-        case "ADDRESS_LEVEL":
-          columnValidator
-              .validateData(newCasePayload.getAddressLevel(), false)
-              .ifPresent(validationErrors::add);
-          break;
-        case "ABP_CODE":
-          columnValidator
-              .validateData(newCasePayload.getAbpCode(), false)
-              .ifPresent(validationErrors::add);
-          break;
-        case "ORGANISATION_NAME":
-          columnValidator
-              .validateData(newCasePayload.getOrganisationName(), false)
-              .ifPresent(validationErrors::add);
-          break;
-        case "ADDRESS_LINE1":
-          columnValidator
-              .validateData(newCasePayload.getAddressLine1(), false)
-              .ifPresent(validationErrors::add);
-          break;
-        case "ADDRESS_LINE2":
-          columnValidator
-              .validateData(newCasePayload.getAddressLine2(), false)
-              .ifPresent(validationErrors::add);
-          break;
-        case "ADDRESS_LINE3":
-          columnValidator
-              .validateData(newCasePayload.getAddressLine3(), false)
-              .ifPresent(validationErrors::add);
-          break;
-        case "TOWN_NAME":
-          columnValidator
-              .validateData(newCasePayload.getTownName(), false)
-              .ifPresent(validationErrors::add);
-          break;
-        case "POSTCODE":
-          columnValidator
-              .validateData(newCasePayload.getPostcode(), false)
-              .ifPresent(validationErrors::add);
-          break;
-        case "LATITUDE":
-          columnValidator
-              .validateData(newCasePayload.getLatitude(), false)
-              .ifPresent(validationErrors::add);
-          break;
-        case "LONGITUDE":
-          columnValidator
-              .validateData(newCasePayload.getLongitude(), false)
-              .ifPresent(validationErrors::add);
-          break;
-        case "OA":
-          columnValidator
-              .validateData(newCasePayload.getOa(), false)
-              .ifPresent(validationErrors::add);
-          break;
-        case "LSOA":
-          columnValidator
-              .validateData(newCasePayload.getLsoa(), false)
-              .ifPresent(validationErrors::add);
-          break;
-        case "MSOA":
-          columnValidator
-              .validateData(newCasePayload.getMsoa(), false)
-              .ifPresent(validationErrors::add);
-          break;
-        case "LAD":
-          columnValidator
-              .validateData(newCasePayload.getLad(), false)
-              .ifPresent(validationErrors::add);
-          break;
-        case "REGION":
-          columnValidator
-              .validateData(newCasePayload.getRegion(), false)
-              .ifPresent(validationErrors::add);
-          break;
-        case "HTC_WILLINGNESS":
-          columnValidator
-              .validateData(newCasePayload.getHtcWillingness(), false)
-              .ifPresent(validationErrors::add);
-          break;
-        case "HTC_DIGITAL":
-          columnValidator
-              .validateData(newCasePayload.getHtcDigital(), false)
-              .ifPresent(validationErrors::add);
-          break;
-        case "TREATMENT_CODE":
-          columnValidator
-              .validateData(newCasePayload.getTreatmentCode(), false)
-              .ifPresent(validationErrors::add);
-          break;
-        case "FIELDCOORDINATOR_ID":
-          columnValidator
-              .validateData(newCasePayload.getFieldCoordinatorId(), false)
-              .ifPresent(validationErrors::add);
-          break;
-        case "FIELDOFFICER_ID":
-          columnValidator
-              .validateData(newCasePayload.getFieldOfficerId(), false)
-              .ifPresent(validationErrors::add);
-          break;
-        case "CE_EXPECTED_CAPACITY":
-          columnValidator
-              .validateData(newCasePayload.getCeExpectedCapacity(), false)
-              .ifPresent(validationErrors::add);
-          break;
-        case "CE_SECURE":
-          columnValidator
-              .validateData(newCasePayload.isSecureEstablishment(), false)
-              .ifPresent(validationErrors::add);
-          break;
-        case "PRINT_BATCH":
-          columnValidator
-              .validateData(newCasePayload.getPrintBatch(), false)
-              .ifPresent(validationErrors::add);
-          break;
-        default:
-          throw new RuntimeException(
-              "Unsupported column type in column validators: " + columnValidator.getColumnName());
-      }
+      SampleField sampleField = SampleField.valueOf(columnValidator.getColumnName());
+      columnValidator
+          .validateData(newCasePayload.getSampleFieldValue(sampleField), false)
+          .ifPresent(validationErrors::add);
     }
 
     if (!validationErrors.isEmpty()) {

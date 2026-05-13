@@ -2,6 +2,7 @@ package uk.gov.ons.census.caseprocessor.model.dto;
 
 import java.util.UUID;
 import lombok.Data;
+import uk.gov.ons.census.common.model.entity.SampleField;
 
 @Data
 public class NewCase {
@@ -37,4 +38,36 @@ public class NewCase {
   private Integer ceExpectedCapacity;
   private boolean secureEstablishment;
   private String printBatch;
+
+  public Object getSampleFieldValue(SampleField sampleField) {
+    return switch (sampleField) {
+      case UPRN -> this.getUprn();
+      case ESTAB_UPRN -> this.getEstabUprn();
+      case ESTAB_TYPE -> this.getEstabType();
+      case ADDRESS_TYPE -> this.getAddressType();
+      case ABP_CODE -> this.getAbpCode();
+      case ORGANISATION_NAME -> this.getOrganisationName();
+      case ADDRESS_LINE1 -> this.getAddressLine1();
+      case ADDRESS_LINE2 -> this.getAddressLine2();
+      case ADDRESS_LINE3 -> this.getAddressLine3();
+      case ADDRESS_LEVEL -> this.getAddressLevel();
+      case TOWN_NAME -> this.getTownName();
+      case POSTCODE -> this.getPostcode();
+      case LATITUDE -> this.getLatitude();
+      case LONGITUDE -> this.getLongitude();
+      case OA -> this.getOa();
+      case LSOA -> this.getLsoa();
+      case MSOA -> this.getMsoa();
+      case LAD -> this.getLad();
+      case REGION -> this.getRegion();
+      case HTC_WILLINGNESS -> this.getHtcWillingness();
+      case HTC_DIGITAL -> this.getHtcDigital();
+      case TREATMENT_CODE -> this.getTreatmentCode();
+      case FIELDCOORDINATOR_ID -> this.getFieldCoordinatorId();
+      case FIELDOFFICER_ID -> this.getFieldOfficerId();
+      case CE_EXPECTED_CAPACITY -> this.getCeExpectedCapacity();
+      case PRINT_BATCH -> this.getPrintBatch();
+      case CE_SECURE -> this.isSecureEstablishment();
+    };
+  }
 }
