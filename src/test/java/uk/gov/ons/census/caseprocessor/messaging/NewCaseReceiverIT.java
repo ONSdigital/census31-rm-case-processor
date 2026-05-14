@@ -5,9 +5,7 @@ import static uk.gov.ons.census.caseprocessor.testutils.TestConstants.NEW_CASE_T
 import static uk.gov.ons.census.caseprocessor.testutils.TestConstants.OUTBOUND_CASE_SUBSCRIPTION;
 import static uk.gov.ons.census.caseprocessor.utils.Constants.OUTBOUND_EVENT_SCHEMA_VERSION;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,10 +24,7 @@ import uk.gov.ons.census.caseprocessor.model.dto.NewCase;
 import uk.gov.ons.census.caseprocessor.model.dto.PayloadDTO;
 import uk.gov.ons.census.caseprocessor.model.repository.CaseRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.EventRepository;
-import uk.gov.ons.census.caseprocessor.testutils.DeleteDataHelper;
-import uk.gov.ons.census.caseprocessor.testutils.JunkDataHelper;
-import uk.gov.ons.census.caseprocessor.testutils.PubsubHelper;
-import uk.gov.ons.census.caseprocessor.testutils.QueueSpy;
+import uk.gov.ons.census.caseprocessor.testutils.*;
 import uk.gov.ons.census.common.model.entity.Case;
 import uk.gov.ons.census.common.model.entity.CollectionExercise;
 import uk.gov.ons.census.common.model.entity.Event;
@@ -73,17 +68,35 @@ public class NewCaseReceiverIT {
 
       CollectionExercise collectionExercise = junkDataHelper.setupJunkCollex();
 
-      Map<String, String> sample = new HashMap<>();
-      sample.put("Junk", "YesYouCan");
-
-      Map<String, String> sampleSensitive = new HashMap<>();
-      sampleSensitive.put("SensitiveJunk", "02071234567");
-
       PayloadDTO payloadDTO = new PayloadDTO();
       NewCase newCase = new NewCase();
       newCase.setCaseId(TEST_CASE_ID);
       newCase.setCollectionExerciseId(collectionExercise.getId());
-      // TODO set sample fields
+      newCase.setTreatmentCode("HH_QP3E");
+      newCase.setAddressType("H");
+      newCase.setUprn("1234567890");
+      newCase.setEstabUprn("1234567890");
+      newCase.setEstabType("HOUSEHOLD");
+      newCase.setAddressLine1("123 Fake Street");
+      newCase.setTownName("Testington");
+      newCase.setRegion("E");
+      newCase.setPostcode("NP10 111");
+      newCase.setAddressType("HH");
+      newCase.setAddressLevel("U");
+      newCase.setAbpCode("ABC123");
+      newCase.setFieldCoordinatorId("ABCD1234");
+      newCase.setFieldOfficerId("ABCD1234");
+      newCase.setOa("A12345678");
+      newCase.setLsoa("A12345678");
+      newCase.setMsoa("A12345678");
+      newCase.setLad("ABC123");
+      newCase.setHtcDigital("1");
+      newCase.setHtcWillingness("1");
+      newCase.setLatitude("51.5074");
+      newCase.setLongitude("0.1278");
+      newCase.setPrintBatch("1");
+      newCase.setSecureEstablishment(false);
+
       payloadDTO.setNewCase(newCase);
       event.setPayload(payloadDTO);
 
@@ -103,11 +116,18 @@ public class NewCaseReceiverIT {
 
       assertThat(actualCase.getId()).isEqualTo(TEST_CASE_ID);
       assertThat(actualCase.getCollectionExercise().getId()).isEqualTo(collectionExercise.getId());
+      assertThat(actualCase.getUprn()).isEqualTo(newCase.getUprn());
+      assertThat(actualCase.getEstabUprn()).isEqualTo(newCase.getEstabUprn());
+      assertThat(actualCase.getAddressType()).isEqualTo(newCase.getAddressType());
+      assertThat(actualCase.getEstabType()).isEqualTo(newCase.getEstabType());
+      assertThat(actualCase.getAddressLine1()).isEqualTo(newCase.getAddressLine1());
+      assertThat(actualCase.getTownName()).isEqualTo(newCase.getTownName());
+      assertThat(actualCase.getRegion()).isEqualTo(newCase.getRegion());
+      assertThat(actualCase.isSecureEstablishment()).isEqualTo(newCase.isSecureEstablishment());
 
       List<Event> events = eventRepository.findAll();
       assertThat(events.size()).isEqualTo(1);
       assertThat(events.get(0).getType()).isEqualTo(EventType.NEW_CASE);
-      assertThat(events.get(0).getPayload()).contains("{\"SensitiveJunk\": \"REDACTED\"}");
     }
   }
 }

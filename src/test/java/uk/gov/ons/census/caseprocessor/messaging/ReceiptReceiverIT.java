@@ -73,7 +73,6 @@ public class ReceiptReceiverIT {
       uacQidLink.setActive(true);
       uacQidLink.setReceiptReceived(false);
       uacQidLink.setEqLaunched(false);
-      uacQidLink.setCollectionInstrumentUrl("dummyUrl");
       uacQidLinkRepository.saveAndFlush(uacQidLink);
 
       ReceiptDTO receiptDTO = new ReceiptDTO();

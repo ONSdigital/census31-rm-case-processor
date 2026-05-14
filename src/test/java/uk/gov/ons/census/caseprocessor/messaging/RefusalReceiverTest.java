@@ -11,7 +11,6 @@ import static uk.gov.ons.census.caseprocessor.utils.Constants.OUTBOUND_EVENT_SCH
 
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -169,7 +168,6 @@ class RefusalReceiverTest {
     Case caze = new Case();
     caze.setId(CASE_ID);
     caze.setRefusalReceived(null);
-
 
     when(caseService.getCase(CASE_ID)).thenReturn(caze);
 

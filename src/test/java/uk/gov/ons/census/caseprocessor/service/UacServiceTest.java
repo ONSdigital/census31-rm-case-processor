@@ -152,8 +152,6 @@ class UacServiceTest {
     assertThat(actualSavedUacQidLink.getUacHash()).isEqualTo(HashHelper.hash(uac));
     assertThat(actualSavedUacQidLink.getMetadata()).isEqualTo(TEST_UAC_METADATA);
     assertThat(actualSavedUacQidLink.getCaze()).isEqualTo(testCase);
-    assertThat(actualSavedUacQidLink.getCollectionInstrumentUrl())
-        .isEqualTo("testCollectionInstrument");
 
     ArgumentCaptor<EventDTO> eventArgumentCaptor = ArgumentCaptor.forClass(EventDTO.class);
     verify(messageSender).sendMessage(any(), eventArgumentCaptor.capture());
@@ -166,6 +164,5 @@ class UacServiceTest {
     assertThat(uacUpdateDto.getUacHash()).isEqualTo(HashHelper.hash(uac));
     assertThat(uacUpdateDto.getQid()).isEqualTo(qid);
     assertThat(uacUpdateDto.getCaseId()).isEqualTo(testCase.getId());
-    assertThat(uacUpdateDto.getCollectionInstrumentUrl()).isEqualTo("testCollectionInstrument");
   }
 }

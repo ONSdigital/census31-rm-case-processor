@@ -37,7 +37,24 @@ public class JunkDataHelper {
     junkCase.setInvalid(false);
     junkCase.setCollectionExercise(setupJunkCollex());
     junkCase.setCaseRef(RANDOM.nextLong());
-    // TODO set sample fields
+    junkCase.setAbpCode("abp");
+    junkCase.setAddressLevel("1 Address street");
+    junkCase.setAddressType("HH");
+    junkCase.setCeExpectedCapacity(0);
+    junkCase.setFieldCoordinatorId("fcor_id");
+    junkCase.setFieldOfficerId("foff_id");
+    junkCase.setHtcDigital("0");
+    junkCase.setHtcWillingness("0");
+    junkCase.setLad("0000");
+    junkCase.setLatitude("0.0.0.0.0.0");
+    junkCase.setLsoa("0000");
+    junkCase.setRegion("EN");
+    junkCase.setOa("0000");
+    junkCase.setMsoa("0000");
+    junkCase.setPostcode("CFXX XXX");
+    junkCase.setTreatmentCode("BLJF_FEJG");
+    junkCase.setUprn("000000");
+    junkCase.setTownName("Best Town");
     caseRepository.save(junkCase);
 
     return junkCase;
@@ -48,7 +65,6 @@ public class JunkDataHelper {
     junkSurvey.setId(UUID.randomUUID());
     junkSurvey.setName("Junk survey");
     junkSurvey.setSampleSeparator('j');
-    junkSurvey.setSampleDefinitionUrl("http://junk");
     surveyRepository.saveAndFlush(junkSurvey);
 
     CollectionExercise junkCollectionExercise = new CollectionExercise();
@@ -104,5 +120,27 @@ public class JunkDataHelper {
     if (eventHeaderDTO.getDateTime() == null) {
       eventHeaderDTO.setDateTime(OffsetDateTime.now());
     }
+  }
+
+  public static Case getCaseObject(Case caze) {
+    caze.setAbpCode("abp");
+    caze.setAddressLevel("1 Address street");
+    caze.setAddressType("HH");
+    caze.setCeExpectedCapacity(0);
+    caze.setFieldCoordinatorId("fcor_id");
+    caze.setFieldOfficerId("foff_id");
+    caze.setHtcDigital("0");
+    caze.setHtcWillingness("0");
+    caze.setLad("0000");
+    caze.setLatitude("0.0.0.0.0.0");
+    caze.setLsoa("0000");
+    caze.setRegion("EN");
+    caze.setOa("0000");
+    caze.setMsoa("0000");
+    caze.setPostcode("CFXX XXX");
+    caze.setTreatmentCode("BLJF_FEJG");
+    caze.setUprn("000000");
+    caze.setTownName("Best Town");
+    return caze;
   }
 }

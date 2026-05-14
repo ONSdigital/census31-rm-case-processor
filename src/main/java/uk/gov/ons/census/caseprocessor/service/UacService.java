@@ -28,9 +28,7 @@ public class UacService {
   @Value("${spring.cloud.gcp.pubsub.project-id}")
   private String pubsubProject;
 
-  public UacService(
-      UacQidLinkRepository uacQidLinkRepository,
-      MessageSender messageSender) {
+  public UacService(UacQidLinkRepository uacQidLinkRepository, MessageSender messageSender) {
     this.messageSender = messageSender;
     this.uacQidLinkRepository = uacQidLinkRepository;
   }
@@ -48,7 +46,6 @@ public class UacService {
     uac.setActive(savedUacQidLink.isActive());
     uac.setReceiptReceived(savedUacQidLink.isReceiptReceived());
     uac.setEqLaunched(savedUacQidLink.isEqLaunched());
-    uac.setCollectionInstrumentUrl(savedUacQidLink.getCollectionInstrumentUrl());
 
     uac.setCaseId(savedUacQidLink.getCaze().getId());
     uac.setCollectionExerciseId(savedUacQidLink.getCaze().getCollectionExercise().getId());

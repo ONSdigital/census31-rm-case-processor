@@ -1,7 +1,6 @@
 package uk.gov.ons.census.caseprocessor.service;
 
 import static uk.gov.ons.census.caseprocessor.utils.Constants.REQUEST_PERSONALISATION_PREFIX;
-import static uk.gov.ons.census.caseprocessor.utils.Constants.SENSITIVE_FIELD_PREFIX;
 
 import com.opencsv.CSVWriter;
 import java.io.StringWriter;

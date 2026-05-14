@@ -152,10 +152,10 @@ class PrintFulfilmentReceiverIT {
     // check the logging
     List<ILoggingEvent> logsList = listAppender.list;
     assertThat(logsList.size()).isEqualTo(1);
-    String expecetedLogMessage =
+    String expectedLogMessage =
         String.format(
             "Received duplicate fulfilment message ID, ignoring and acking the duplicate message");
-    assertThat(logsList.get(0).getMessage()).isEqualTo(expecetedLogMessage);
+    assertThat(logsList.get(0).getMessage()).isEqualTo(expectedLogMessage);
   }
 
   private List<FulfilmentToProcess> getFulfilmentsToProcess() throws InterruptedException {

@@ -9,7 +9,6 @@ import static uk.gov.ons.census.caseprocessor.testutils.TestConstants.TEST_CORRE
 import static uk.gov.ons.census.caseprocessor.testutils.TestConstants.TEST_ORIGINATING_USER;
 
 import java.time.OffsetDateTime;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -24,6 +23,7 @@ import uk.gov.ons.census.caseprocessor.model.dto.CaseUpdateDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.RefusalTypeDTO;
 import uk.gov.ons.census.caseprocessor.model.repository.CaseRepository;
+import uk.gov.ons.census.caseprocessor.testutils.CaseFieldsHelper;
 import uk.gov.ons.census.common.model.entity.Case;
 import uk.gov.ons.census.common.model.entity.CollectionExercise;
 import uk.gov.ons.census.common.model.entity.RefusalType;
@@ -51,7 +51,7 @@ class CaseServiceTest {
     caze.setId(UUID.randomUUID());
     caze.setCaseRef(1234567890L);
     caze.setCollectionExercise(collex);
-    // TODO set sample fields
+    CaseFieldsHelper.setDummyCaseFields(caze);
     caze.setInvalid(true);
     caze.setRefusalReceived(RefusalType.HARD_REFUSAL);
 
@@ -98,7 +98,8 @@ class CaseServiceTest {
     caze.setId(UUID.randomUUID());
     caze.setCaseRef(1234567890L);
     caze.setCollectionExercise(collex);
-    // TODO set sample fields
+    CaseFieldsHelper.setDummyCaseFields(caze);
+
     caze.setInvalid(true);
     caze.setRefusalReceived(RefusalType.EXTRAORDINARY_REFUSAL);
     caze.setCreatedAt(OffsetDateTime.now().minusSeconds(10));

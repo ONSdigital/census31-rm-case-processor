@@ -17,10 +17,10 @@ public class NewCase {
   private String estabType;
   private String addressLevel;
   private String abpCode;
-  private String organisationName="";  // Defaulted to prevent nulls, is this the best approach?
+  private String organisationName = ""; // Defaulted to prevent nulls, is this the best approach?
   private String addressLine1;
-  private String addressLine2="";
-  private String addressLine3="";
+  private String addressLine2 = "";
+  private String addressLine3 = "";
   private String townName;
   private String postcode;
   private String latitude;

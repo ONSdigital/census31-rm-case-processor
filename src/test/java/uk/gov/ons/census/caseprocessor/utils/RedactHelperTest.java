@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
-import uk.gov.ons.census.caseprocessor.model.dto.NewCase;
 import uk.gov.ons.census.caseprocessor.model.dto.PayloadDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.SmsRequest;
 import uk.gov.ons.census.common.model.entity.FulfilmentToProcess;
@@ -20,13 +19,16 @@ class RedactHelperTest {
 
     // WHEN
     // Cast the object back to it's original type, just for the test
-    FulfilmentToProcess fulfilmentToProcessRedacted = (FulfilmentToProcess) RedactHelper.redact(fulfilmentToProcess);
+    FulfilmentToProcess fulfilmentToProcessRedacted =
+        (FulfilmentToProcess) RedactHelper.redact(fulfilmentToProcess);
 
     // THEN
-    assertThat(fulfilmentToProcessRedacted.getPersonalisation()).isEqualTo(Map.of("PHONE_NUMBER", "REDACTED"));
+    assertThat(fulfilmentToProcessRedacted.getPersonalisation())
+        .isEqualTo(Map.of("PHONE_NUMBER", "REDACTED"));
 
     // Extra check to make sure the original object wasn't accidentally mutated
-    assertThat(fulfilmentToProcess.getPersonalisation()).isEqualTo(Map.of("PHONE_NUMBER", "999999"));
+    assertThat(fulfilmentToProcess.getPersonalisation())
+        .isEqualTo(Map.of("PHONE_NUMBER", "999999"));
   }
 
   @Test

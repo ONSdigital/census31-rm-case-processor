@@ -15,8 +15,6 @@ import static uk.gov.ons.census.caseprocessor.testutils.TestConstants.TEST_CORRE
 import static uk.gov.ons.census.caseprocessor.testutils.TestConstants.TEST_ORIGINATING_USER;
 import static uk.gov.ons.census.caseprocessor.utils.Constants.OUTBOUND_EVENT_SCHEMA_VERSION;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -41,10 +39,6 @@ import uk.gov.ons.census.common.model.entity.Case;
 import uk.gov.ons.census.common.model.entity.CollectionExercise;
 import uk.gov.ons.census.common.model.entity.EventType;
 import uk.gov.ons.census.common.model.entity.Survey;
-import uk.gov.ons.census.common.validation.ColumnValidator;
-import uk.gov.ons.census.common.validation.LengthRule;
-import uk.gov.ons.census.common.validation.MandatoryRule;
-import uk.gov.ons.census.common.validation.Rule;
 
 @ExtendWith(MockitoExtension.class)
 class NewCaseReceiverTest {
@@ -72,13 +66,6 @@ class NewCaseReceiverTest {
 
     Survey survey = new Survey();
     survey.setId(UUID.randomUUID());
-    survey.setSampleValidationRules(  // TODO delete
-        new ColumnValidator[] {
-          new ColumnValidator("ADDRESS_LINE1", new Rule[] {new MandatoryRule()}),
-          new ColumnValidator("POSTCODE", new Rule[] {new MandatoryRule()}),
-          new ColumnValidator("Telephone", new Rule[] {new MandatoryRule()})
-        });
-    survey.setSampleDefinitionUrl("testDefinition");  // TODO delete
 
     CollectionExercise collex = new CollectionExercise();
     collex.setSurvey(survey);
@@ -171,126 +158,75 @@ class NewCaseReceiverTest {
     verifyNoInteractions(eventLogger);
   }
 
-//  @Test
-//  public void testNewCaseReceiverCaseFailsValidation() {
-//    ReflectionTestUtils.setField(underTest, "caserefgeneratorkey", caserefgeneratorkey);
-//
-//    // Given
-//    NewCase newCase = new NewCase();
-//    newCase.setCaseId(TEST_CASE_ID);
-//    newCase.setCollectionExerciseId(TEST_CASE_COLLECTION_EXERCISE_ID);
-//
-//    Map<String, String> sample = new HashMap<>();
-//    sample.put("ADDRESS_LINE1", "123 Fake Street");
-//    sample.put("POSTCODE", "INVALID POSTCODE");
-//    newCase.setSample(sample);
-//
-//    Map<String, String> sampleSensitive = new HashMap<>();
-//    sampleSensitive.put("Telephone", "020712345");
-//    newCase.setSampleSensitive(sampleSensitive);
-//
-//    EventHeaderDTO eventHeader = new EventHeaderDTO();
-//    eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
-//    eventHeader.setCorrelationId(TEST_CORRELATION_ID);
-//    eventHeader.setOriginatingUser(TEST_ORIGINATING_USER);
-//    PayloadDTO payloadDTO = new PayloadDTO();
-//    payloadDTO.setNewCase(newCase);
-//
-//    EventDTO event = new EventDTO();
-//    event.setHeader(eventHeader);
-//    event.setPayload(payloadDTO);
-//
-//    Message<byte[]> eventMessage = constructMessage(event);
-//
-//    when(caseRepository.existsById(TEST_CASE_ID)).thenReturn(false);
-//
-//    Survey survey = new Survey();
-//    survey.setId(UUID.randomUUID());
-//    survey.setSampleValidationRules(
-//        new ColumnValidator[] {
-//          new ColumnValidator(
-//              "ADDRESS_LINE1", false, new Rule[] {new MandatoryRule(), new LengthRule(8)}),
-//          new ColumnValidator(
-//              "POSTCODE", false, new Rule[] {new MandatoryRule(), new LengthRule(8)}),
-//          new ColumnValidator("Telephone", true, new Rule[] {new MandatoryRule()})
-//        });
-//
-//    CollectionExercise collex = new CollectionExercise();
-//    collex.setSurvey(survey);
-//    Optional<CollectionExercise> collexOpt = Optional.of(collex);
-//
-//    when(collectionExerciseRepository.findById(TEST_CASE_COLLECTION_EXERCISE_ID))
-//        .thenReturn(collexOpt);
-//
-//    RuntimeException thrownException =
-//        assertThrows(RuntimeException.class, () -> underTest.receiveNewCase(eventMessage));
-//
-//    String expectedErrorMsg =
-//        "NEW_CASE event: Column 'ADDRESS_LINE1' Failed validation for Rule 'LengthRule' "
-//            + "validation error: Exceeded max length of 8"
-//            + System.lineSeparator()
-//            + "Column 'POSTCODE' Failed validation for Rule 'LengthRule' validation error: Exceeded max length of 8";
-//
-//    assertThat(thrownException.getMessage()).isEqualTo(expectedErrorMsg);
-//    verifyNoInteractions(eventLogger);
-//  }
-//
-//  @Test
-//  public void testNewCaseReceiverCaseFailsValidationBecauseOfUndefinedSensitiveData() {
-//    ReflectionTestUtils.setField(underTest, "caserefgeneratorkey", caserefgeneratorkey);
-//
-//    // Given
-//    NewCase newCase = new NewCase();
-//    newCase.setCaseId(TEST_CASE_ID);
-//    newCase.setCollectionExerciseId(TEST_CASE_COLLECTION_EXERCISE_ID);
-//
-//    Map<String, String> sample = new HashMap<>();
-//    sample.put("ADDRESS_LINE1", "123 Fake Street");
-//    sample.put("POSTCODE", "abc123");
-//    newCase.setSample(sample);
-//
-//    Map<String, String> sampleSensitive = new HashMap<>();
-//    sampleSensitive.put("EmailAddress", "foo@bar.baz");
-//    newCase.setSampleSensitive(sampleSensitive);
-//
-//    EventHeaderDTO eventHeader = new EventHeaderDTO();
-//    eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
-//    eventHeader.setCorrelationId(TEST_CORRELATION_ID);
-//    eventHeader.setOriginatingUser(TEST_ORIGINATING_USER);
-//    PayloadDTO payloadDTO = new PayloadDTO();
-//    payloadDTO.setNewCase(newCase);
-//
-//    EventDTO event = new EventDTO();
-//    event.setHeader(eventHeader);
-//    event.setPayload(payloadDTO);
-//
-//    Message<byte[]> eventMessage = constructMessage(event);
-//
-//    when(caseRepository.existsById(TEST_CASE_ID)).thenReturn(false);
-//
-//    Survey survey = new Survey();
-//    survey.setId(UUID.randomUUID());
-//    survey.setSampleValidationRules(
-//        new ColumnValidator[] {
-//          new ColumnValidator("ADDRESS_LINE1", false, new Rule[] {new MandatoryRule()}),
-//          new ColumnValidator(
-//              "POSTCODE", false, new Rule[] {new MandatoryRule(), new LengthRule(8)}),
-//          new ColumnValidator("Telephone", true, new Rule[] {new MandatoryRule()})
-//        });
-//
-//    CollectionExercise collex = new CollectionExercise();
-//    collex.setSurvey(survey);
-//    Optional<CollectionExercise> collexOpt = Optional.of(collex);
-//
-//    when(collectionExerciseRepository.findById(TEST_CASE_COLLECTION_EXERCISE_ID))
-//        .thenReturn(collexOpt);
-//
-//    RuntimeException thrownException =
-//        assertThrows(RuntimeException.class, () -> underTest.receiveNewCase(eventMessage));
-//    assertThat(thrownException.getMessage())
-//        .isEqualTo("Attempt to send sensitive data to RM which was not part of defined sample");
-//    verifyNoInteractions(eventLogger);
-//  }
+  @Test
+  public void testNewCaseReceiverCaseFailsValidation() {
+    ReflectionTestUtils.setField(underTest, "caserefgeneratorkey", caserefgeneratorkey);
+
+    // Given
+    NewCase newCase = new NewCase();
+    newCase.setCaseId(TEST_CASE_ID);
+    newCase.setCollectionExerciseId(TEST_CASE_COLLECTION_EXERCISE_ID);
+    newCase.setTreatmentCode("HH_QP3E");
+    newCase.setAddressType("H");
+    newCase.setUprn("1234567890123456789");
+    newCase.setEstabUprn("1234567890");
+    newCase.setEstabType("HOUSEHOLD");
+    newCase.setAddressLine1("123 Fake Street");
+    newCase.setTownName("Testington");
+    newCase.setRegion("E");
+    newCase.setPostcode("NP10 111111111");
+    newCase.setAddressType("HH");
+    newCase.setAddressLevel("U");
+    newCase.setAbpCode("ABC123");
+    newCase.setFieldCoordinatorId("ABCD1234");
+    newCase.setFieldOfficerId("ABCD1234");
+    newCase.setOa("A12345678");
+    newCase.setLsoa("A12345678");
+    newCase.setMsoa("A12345678");
+    newCase.setLad("ABC123");
+    newCase.setHtcDigital("1");
+    newCase.setHtcWillingness("1");
+    newCase.setLatitude("51.5074");
+    newCase.setLongitude("0.1278");
+    newCase.setPrintBatch("1");
+    newCase.setSecureEstablishment(false);
+
+    EventHeaderDTO eventHeader = new EventHeaderDTO();
+    eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
+    eventHeader.setCorrelationId(TEST_CORRELATION_ID);
+    eventHeader.setOriginatingUser(TEST_ORIGINATING_USER);
+    PayloadDTO payloadDTO = new PayloadDTO();
+    payloadDTO.setNewCase(newCase);
+
+    EventDTO event = new EventDTO();
+    event.setHeader(eventHeader);
+    event.setPayload(payloadDTO);
+
+    Message<byte[]> eventMessage = constructMessage(event);
+
+    when(caseRepository.existsById(TEST_CASE_ID)).thenReturn(false);
+
+    Survey survey = new Survey();
+    survey.setId(UUID.randomUUID());
+
+    CollectionExercise collex = new CollectionExercise();
+    collex.setSurvey(survey);
+    Optional<CollectionExercise> collexOpt = Optional.of(collex);
+
+    when(collectionExerciseRepository.findById(TEST_CASE_COLLECTION_EXERCISE_ID))
+        .thenReturn(collexOpt);
+
+    RuntimeException thrownException =
+        assertThrows(RuntimeException.class, () -> underTest.receiveNewCase(eventMessage));
+
+    String expectedErrorMsg =
+        "NEW_CASE event: Column 'UPRN' value '1234567890123456789' validation error: Exceeded max length of 13"
+            + System.lineSeparator()
+            + "Column 'POSTCODE' value 'NP10 111111111' validation error: Exceeded max length of 8";
+
+    assertThat(thrownException.getMessage()).isEqualTo(expectedErrorMsg);
+    verifyNoInteractions(eventLogger);
+  }
 
   private EventDTO buildValidNewCaseEventMessage() {
     NewCase newCase = new NewCase();

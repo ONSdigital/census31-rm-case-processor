@@ -45,7 +45,7 @@ class ExportFileProcessorTest {
   void testProcessExportFileRow() {
     // Given
     Case caze = new Case();
-    caze.setCaseRef(123L);
+
     CaseFieldsHelper.setDummyCaseFields(caze);
 
     ExportFileTemplate exportFileTemplate = new ExportFileTemplate();
@@ -89,7 +89,8 @@ class ExportFileProcessorTest {
     ExportFileRow actualExportFileRow = exportFileRowArgumentCaptor.getValue();
     assertThat(actualExportFileRow.getPackCode()).isEqualTo(PACK_CODE);
     assertThat(actualExportFileRow.getExportFileDestination()).isEqualTo(EXPORT_FILE_DESTINATION);
-    assertThat(actualExportFileRow.getRow()).isEqualTo("\"123\",\"" + UAC + "\",\""+ caze.getUprn() + "\"");
+    assertThat(actualExportFileRow.getRow())
+        .isEqualTo("\"123\",\"" + UAC + "\",\"" + caze.getUprn() + "\"");
 
     ArgumentCaptor<UacQidLink> uacQidLinkCaptor = ArgumentCaptor.forClass(UacQidLink.class);
     verify(uacService)
@@ -122,11 +123,10 @@ class ExportFileProcessorTest {
     ExportFileTemplate exportFileTemplate = new ExportFileTemplate();
     exportFileTemplate.setPackCode(PACK_CODE);
     exportFileTemplate.setExportFileDestination(EXPORT_FILE_DESTINATION);
-    exportFileTemplate.setTemplate(new String[] {"__caseref__", "__uac__", "foo"});
+    exportFileTemplate.setTemplate(new String[] {"__caseref__", "__uac__", "UPRN"});
 
     Case caze = new Case();
-    // TODO set sample fields
-    caze.setCaseRef(123L);
+    CaseFieldsHelper.setDummyCaseFields(caze);
 
     FulfilmentToProcess fulfilmentToProcess = new FulfilmentToProcess();
     fulfilmentToProcess.setExportFileTemplate(exportFileTemplate);
@@ -153,7 +153,8 @@ class ExportFileProcessorTest {
     ExportFileRow actualExportFileRow = exportFileRowArgumentCaptor.getValue();
     assertThat(actualExportFileRow.getPackCode()).isEqualTo(PACK_CODE);
     assertThat(actualExportFileRow.getExportFileDestination()).isEqualTo(EXPORT_FILE_DESTINATION);
-    assertThat(actualExportFileRow.getRow()).isEqualTo("\"123\",\"" + UAC + "\",\"bar\"");
+    assertThat(actualExportFileRow.getRow())
+        .isEqualTo("\"123\",\"" + UAC + "\",\"" + caze.getUprn() + "\"");
 
     ArgumentCaptor<UacQidLink> uacQidLinkCaptor = ArgumentCaptor.forClass(UacQidLink.class);
     verify(uacService)
@@ -190,8 +191,7 @@ class ExportFileProcessorTest {
         new String[] {"__caseref__", "__uac__", "__request__.foo", "__request__.spam"});
 
     Case caze = new Case();
-    // TODO set sample fields
-    caze.setCaseRef(123L);
+    CaseFieldsHelper.setDummyCaseFields(caze);
 
     FulfilmentToProcess fulfilmentToProcess = new FulfilmentToProcess();
     fulfilmentToProcess.setExportFileTemplate(exportFileTemplate);
@@ -255,8 +255,7 @@ class ExportFileProcessorTest {
     exportFileTemplate.setTemplate(new String[] {"__caseref__", "__uac__", "__request__.foo"});
 
     Case caze = new Case();
-    // TODO set sample fields
-    caze.setCaseRef(123L);
+    CaseFieldsHelper.setDummyCaseFields(caze);
 
     FulfilmentToProcess fulfilmentToProcess = new FulfilmentToProcess();
     fulfilmentToProcess.setExportFileTemplate(exportFileTemplate);

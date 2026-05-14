@@ -5,7 +5,7 @@ import uk.gov.ons.census.common.model.entity.Case;
 public class CaseFieldsHelper {
 
   public static Case setDummyCaseFields(Case caseToUpdate) {
-
+    caseToUpdate.setCaseRef(123L);
     caseToUpdate.setTreatmentCode("HH_QP3E");
     caseToUpdate.setAddressType("H");
     caseToUpdate.setUprn("1234567890");
@@ -32,5 +32,4 @@ public class CaseFieldsHelper {
     caseToUpdate.setSecureEstablishment(false);
     return caseToUpdate;
   }
-
 }

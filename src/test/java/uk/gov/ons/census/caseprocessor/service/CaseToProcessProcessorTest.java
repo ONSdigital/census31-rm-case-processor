@@ -2,13 +2,13 @@ package uk.gov.ons.census.caseprocessor.service;
 
 import static org.mockito.Mockito.verify;
 
-import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.ons.census.caseprocessor.testutils.CaseFieldsHelper;
 import uk.gov.ons.census.common.model.entity.ActionRule;
 import uk.gov.ons.census.common.model.entity.ActionRuleType;
 import uk.gov.ons.census.common.model.entity.Case;
@@ -26,7 +26,7 @@ class CaseToProcessProcessorTest {
   void testProcessExportFileActionRule() {
     // Given
     Case caze = new Case();
-    // TODO set sample fields
+    CaseFieldsHelper.setDummyCaseFields(caze);
     caze.setCaseRef(123L);
 
     ExportFileTemplate exportFileTemplate = new ExportFileTemplate();

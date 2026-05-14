@@ -8,7 +8,6 @@ import static uk.gov.ons.census.caseprocessor.testutils.TestConstants.TEST_CORRE
 import static uk.gov.ons.census.caseprocessor.testutils.TestConstants.TEST_ORIGINATING_USER;
 
 import java.time.OffsetDateTime;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -65,7 +64,6 @@ class EventLoggerTest {
     assertThat("Test channel").isEqualTo(actualEvent.getChannel());
     assertThat(EventType.NEW_CASE).isEqualTo(actualEvent.getType());
     assertThat("Test description").isEqualTo(actualEvent.getDescription());
-    assertThat(actualEvent.getPayload()).contains("REDACTED");
     assertThat(eventHeader.getMessageId()).isEqualTo(actualEvent.getMessageId());
     assertThat(eventHeader.getCorrelationId()).isEqualTo(actualEvent.getCorrelationId());
     assertThat(eventHeader.getOriginatingUser()).isEqualTo(actualEvent.getCreatedBy());
@@ -113,7 +111,6 @@ class EventLoggerTest {
     assertThat("Test channel").isEqualTo(actualEvent.getChannel());
     assertThat(EventType.NEW_CASE).isEqualTo(actualEvent.getType());
     assertThat("Test description").isEqualTo(actualEvent.getDescription());
-    assertThat(actualEvent.getPayload()).contains("REDACTED");
     assertThat(eventHeader.getMessageId()).isEqualTo(actualEvent.getMessageId());
     assertThat(eventHeader.getCorrelationId()).isEqualTo(actualEvent.getCorrelationId());
     assertThat(eventHeader.getOriginatingUser()).isEqualTo(actualEvent.getCreatedBy());
