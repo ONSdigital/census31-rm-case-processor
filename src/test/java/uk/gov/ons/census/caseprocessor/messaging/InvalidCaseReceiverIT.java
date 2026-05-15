@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static uk.gov.ons.census.caseprocessor.testutils.TestConstants.OUTBOUND_CASE_SUBSCRIPTION;
 import static uk.gov.ons.census.caseprocessor.utils.Constants.OUTBOUND_EVENT_SCHEMA_VERSION;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -80,6 +81,12 @@ public class InvalidCaseReceiverIT {
       CaseUpdateDTO emittedCase = actualEvent.getPayload().getCaseUpdate();
       assertThat(emittedCase.getCaseId()).isEqualTo(caze.getId());
       assertThat(emittedCase.isInvalid()).isTrue();
+      Assertions.assertThat(emittedCase.getAddress().getAddressLine1())
+          .isEqualTo(caze.getAddressLine1());
+      Assertions.assertThat(emittedCase.getAddress().getAddressType())
+          .isEqualTo(caze.getAddressType());
+      Assertions.assertThat(emittedCase.getAddress().getPostcode()).isEqualTo(caze.getPostcode());
+      Assertions.assertThat(emittedCase.getAddress().getRegion()).isEqualTo(caze.getRegion());
 
       assertThat(eventRepository.findAll().size()).isEqualTo(1);
       Event databaseEvent = eventRepository.findAll().get(0);

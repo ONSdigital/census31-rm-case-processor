@@ -80,6 +80,9 @@ class RefusalReceiverIT {
       CaseUpdateDTO emittedCase = actualEvent.getPayload().getCaseUpdate();
       assertThat(emittedCase.getCaseId()).isEqualTo(caze.getId());
       assertThat(emittedCase.getRefusalReceived()).isEqualTo(RefusalTypeDTO.EXTRAORDINARY_REFUSAL);
+      assertThat(emittedCase.getAddress().getAddressLine1()).isEqualTo(caze.getAddressLine1());
+      assertThat(emittedCase.getAddress().getAddressType()).isEqualTo(caze.getAddressType());
+      assertThat(emittedCase.getAddress().getPostcode()).isEqualTo(caze.getPostcode());
 
       assertThat(eventRepository.findAll().size()).isEqualTo(1);
       Event databaseEvent = eventRepository.findAll().get(0);

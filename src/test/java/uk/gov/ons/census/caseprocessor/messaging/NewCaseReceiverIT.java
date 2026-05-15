@@ -111,6 +111,13 @@ public class NewCaseReceiverIT {
           .isEqualTo(collectionExercise.getId());
       Assertions.assertThat(emittedCase.getSurveyId())
           .isEqualTo(collectionExercise.getSurvey().getId());
+      Assertions.assertThat(emittedCase.getAddress().getAddressLine1())
+          .isEqualTo(newCase.getAddressLine1());
+      Assertions.assertThat(emittedCase.getAddress().getAddressType())
+          .isEqualTo(newCase.getAddressType());
+      Assertions.assertThat(emittedCase.getAddress().getPostcode())
+          .isEqualTo(newCase.getPostcode());
+      Assertions.assertThat(emittedCase.getAddress().getRegion()).isEqualTo(newCase.getRegion());
 
       Case actualCase = caseRepository.findById(TEST_CASE_ID).get();
 

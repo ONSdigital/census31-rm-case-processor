@@ -74,6 +74,11 @@ class CaseServiceTest {
     assertThat(actualCaseUpdate.getSurveyId()).isEqualTo(survey.getId());
     assertThat(actualCaseUpdate.isInvalid()).isTrue();
     assertThat(actualCaseUpdate.getRefusalReceived()).isEqualTo(RefusalTypeDTO.HARD_REFUSAL);
+    assertThat(actualCaseUpdate.getAddress().getAddressLine1()).isEqualTo(caze.getAddressLine1());
+    assertThat(actualCaseUpdate.getAddress().getAddressType()).isEqualTo(caze.getAddressType());
+    assertThat(actualCaseUpdate.getAddress().getTownName()).isEqualTo(caze.getTownName());
+    assertThat(actualCaseUpdate.getAddress().getPostcode()).isEqualTo(caze.getPostcode());
+    assertThat(actualCaseUpdate.getAddress().getRegion()).isEqualTo(caze.getRegion());
   }
 
   @Test
@@ -126,6 +131,11 @@ class CaseServiceTest {
         .isEqualTo(RefusalTypeDTO.EXTRAORDINARY_REFUSAL);
     assertThat(actualCaseUpdate.getCreatedAt()).isEqualTo(caze.getCreatedAt());
     assertThat(actualCaseUpdate.getLastUpdatedAt()).isEqualTo(caze.getLastUpdatedAt());
+    assertThat(actualCaseUpdate.getAddress().getAddressLine1()).isEqualTo(caze.getAddressLine1());
+    assertThat(actualCaseUpdate.getAddress().getAddressType()).isEqualTo(caze.getAddressType());
+    assertThat(actualCaseUpdate.getAddress().getTownName()).isEqualTo(caze.getTownName());
+    assertThat(actualCaseUpdate.getAddress().getPostcode()).isEqualTo(caze.getPostcode());
+    assertThat(actualCaseUpdate.getAddress().getRegion()).isEqualTo(caze.getRegion());
   }
 
   @Test
