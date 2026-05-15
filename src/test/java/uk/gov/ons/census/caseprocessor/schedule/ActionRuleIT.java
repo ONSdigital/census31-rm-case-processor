@@ -57,12 +57,6 @@ class ActionRuleIT {
   @Value("${queueconfig.uac-update-topic}")
   private String uacUpdateTopic;
 
-  @Value("${queueconfig.sms-request-topic}")
-  private String smsRequestTopic;
-
-  @Value("${queueconfig.email-request-topic}")
-  private String emailRequestTopic;
-
   @Autowired private DeleteDataHelper deleteDataHelper;
   @Autowired private JunkDataHelper junkDataHelper;
 
@@ -140,74 +134,6 @@ class ActionRuleIT {
     }
   }
 
-  //  @Test
-  //  void testSmsRule() throws Exception {
-  //    try (QueueSpy<EventDTO> smsRequestQueue =
-  //        pubsubHelper.listen(OUTBOUND_SMS_REQUEST_SUBSCRIPTION, EventDTO.class)) {
-  //      // Given
-  //      Case caze = junkDataHelper.setupJunkCase();
-  //
-  //      SmsTemplate smsTemplate = setupSmsTemplate();
-  //
-  //      // When
-  //      setUpActionRule(
-  //          ActionRuleType.SMS, caze.getCollectionExercise(), null, smsTemplate, null, null);
-  //      EventDTO rme = smsRequestQueue.getQueue().poll(20, TimeUnit.SECONDS);
-  //
-  //      // Then
-  //      assertThat(rme).isNotNull();
-  //      assertThat(rme.getHeader().getTopic()).isEqualTo(smsRequestTopic);
-  //      assertThat(rme.getPayload().getSmsRequest().getCaseId()).isEqualTo(caze.getId());
-  //      assertThat(rme.getPayload().getSmsRequest().getPackCode()).isEqualTo("Test pack code");
-  //      assertThat(rme.getPayload().getSmsRequest().getPhoneNumber()).isEqualTo("123");
-  //
-  // assertThat(rme.getPayload().getSmsRequest().getUacMetadata()).isEqualTo(TEST_UAC_METADATA);
-  //
-  //      List<Event> events = eventRepository.findAll();
-  //      assertThat(events.size()).isOne();
-  //      Event actualEvent = events.get(0);
-  //      assertThat(actualEvent.getType()).isEqualTo(EventType.ACTION_RULE_SMS_REQUEST);
-  //      PayloadDTO payloadDTO =
-  //          JsonHelper.convertJsonBytesToObject(
-  //              actualEvent.getPayload().getBytes(), PayloadDTO.class);
-  //      assertThat(payloadDTO.getSmsRequest().getPhoneNumber()).isEqualTo("REDACTED");
-  //    }
-  //  }
-
-  //  @Test
-  //  void testEmailRule() throws Exception {
-  //    try (QueueSpy<EventDTO> emailRequestQueue =
-  //        pubsubHelper.listen(OUTBOUND_EMAIL_REQUEST_SUBSCRIPTION, EventDTO.class)) {
-  //      // Given
-  //      Case caze = junkDataHelper.setupJunkCase();
-  //
-  //      EmailTemplate emailTemplate = setupEmailTemplate();
-  //
-  //      // When
-  //      setUpActionRule(
-  //          ActionRuleType.EMAIL, caze.getCollectionExercise(), null, null, emailTemplate, null);
-  //      EventDTO rme = emailRequestQueue.getQueue().poll(20, TimeUnit.SECONDS);
-  //
-  //      // Then
-  //      assertThat(rme).isNotNull();
-  //      assertThat(rme.getHeader().getTopic()).isEqualTo(emailRequestTopic);
-  //      assertThat(rme.getPayload().getEmailRequest().getCaseId()).isEqualTo(caze.getId());
-  //      assertThat(rme.getPayload().getEmailRequest().getPackCode()).isEqualTo("Test pack code");
-  //      assertThat(rme.getPayload().getEmailRequest().getEmail()).isEqualTo("junk@junk.com");
-  //
-  // assertThat(rme.getPayload().getEmailRequest().getUacMetadata()).isEqualTo(TEST_UAC_METADATA);
-  //
-  //      List<Event> events = eventRepository.findAll();
-  //      assertThat(events.size()).isOne();
-  //      Event actualEvent = events.get(0);
-  //      assertThat(actualEvent.getType()).isEqualTo(EventType.ACTION_RULE_EMAIL_REQUEST);
-  //      PayloadDTO payloadDTO =
-  //          JsonHelper.convertJsonBytesToObject(
-  //              actualEvent.getPayload().getBytes(), PayloadDTO.class);
-  //      assertThat(payloadDTO.getEmailRequest().getEmail()).isEqualTo("REDACTED");
-  //    }
-  //  }
-
   @Test
   void testBadSQLIsHandled(CapturedOutput output) throws Exception {
     Case caze = junkDataHelper.setupJunkCase();
@@ -263,16 +189,6 @@ class ActionRuleIT {
     actionRule.setSelectedCaseCount(null);
     actionRule.setActionRuleStatus(ActionRuleStatus.SCHEDULED);
 
-    if (smsTemplate != null) {
-      actionRule.setSmsTemplate(smsTemplate);
-      actionRule.setPhoneNumberColumn("phoneNumber");
-    }
-
-    if (emailTemplate != null) {
-      actionRule.setEmailTemplate(emailTemplate);
-      actionRule.setEmailColumn("emailAddress");
-    }
-
     return actionRuleRepository.saveAndFlush(actionRule);
   }
 
@@ -285,25 +201,5 @@ class ActionRuleIT {
     uacQidLink.setActive(true);
     uacQidLink.setCaze(caze);
     return uacQidLinkRepository.saveAndFlush(uacQidLink);
-  }
-
-  private SmsTemplate setupSmsTemplate() {
-    SmsTemplate smsTemplate = new SmsTemplate();
-    smsTemplate.setPackCode("Test pack code");
-    smsTemplate.setNotifyTemplateId(UUID.randomUUID());
-    smsTemplate.setTemplate(new String[] {"FOO", "BAR"});
-    smsTemplate.setDescription("Test description");
-    smsTemplate.setNotifyServiceRef("Dummy_service");
-    return smsTemplateRepository.saveAndFlush(smsTemplate);
-  }
-
-  private EmailTemplate setupEmailTemplate() {
-    EmailTemplate emailTemplate = new EmailTemplate();
-    emailTemplate.setPackCode("Test pack code");
-    emailTemplate.setNotifyTemplateId(UUID.randomUUID());
-    emailTemplate.setTemplate(new String[] {"FOO", "BAR"});
-    emailTemplate.setDescription("Test description");
-    emailTemplate.setNotifyServiceRef("Dummy_service");
-    return emailTemplateRepository.saveAndFlush(emailTemplate);
   }
 }
