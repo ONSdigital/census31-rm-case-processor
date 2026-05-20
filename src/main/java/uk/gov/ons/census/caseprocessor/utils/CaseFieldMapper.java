@@ -11,7 +11,7 @@ public class CaseFieldMapper {
     caze.setUprn(newCasePayload.getUprn());
     caze.setEstabUprn(newCasePayload.getEstabUprn());
     caze.setCaseType(
-        newCasePayload.getAddressType()); // Case type is set from address ype, do we need both?
+        newCasePayload.getAddressType());
     caze.setAddressType(newCasePayload.getAddressType());
     caze.setEstabType(newCasePayload.getEstabType());
     caze.setAddressLevel(newCasePayload.getAddressLevel());
