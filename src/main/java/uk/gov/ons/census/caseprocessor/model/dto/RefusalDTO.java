@@ -12,5 +12,4 @@ import lombok.NoArgsConstructor;
 public class RefusalDTO {
   private UUID caseId;
   private RefusalTypeDTO type;
-  private boolean eraseData;
 }
