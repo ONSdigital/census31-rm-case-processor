@@ -38,9 +38,13 @@ public class JunkDataHelper {
     junkCase.setCollectionExercise(setupJunkCollex());
     junkCase.setCaseRef(RANDOM.nextLong());
     junkCase.setAbpCode("abp");
-    junkCase.setAddressLevel("1 Address street");
+    junkCase.setAddressLevel("U");
+    junkCase.setAddressLine1("10 test street");
     junkCase.setAddressType("HH");
-    junkCase.setCeExpectedCapacity(0);
+    junkCase.setCaseType("HH");
+    junkCase.setEstabType("HOUSEHOLD");
+    junkCase.setEstabUprn("000000");
+    junkCase.setPrintBatch("1");
     junkCase.setFieldCoordinatorId("fcor_id");
     junkCase.setFieldOfficerId("foff_id");
     junkCase.setHtcDigital("0");
