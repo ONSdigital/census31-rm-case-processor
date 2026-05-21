@@ -32,7 +32,7 @@ import uk.gov.ons.census.common.model.entity.EventType;
 @ActiveProfiles("test")
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
-public class RefusalReceiverIT {
+class RefusalReceiverIT {
   private static final String INBOUND_REFUSAL_TOPIC = "event_refusal";
 
   @Value("${queueconfig.case-update-topic}")
@@ -45,13 +45,13 @@ public class RefusalReceiverIT {
   @Autowired private EventRepository eventRepository;
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     pubsubHelper.purgePubsubProjectMessages(OUTBOUND_CASE_SUBSCRIPTION, caseUpdateTopic);
     deleteDataHelper.deleteAllData();
   }
 
   @Test
-  public void testRefusal() throws Exception {
+  void testRefusal() throws Exception {
     try (QueueSpy<EventDTO> outboundCaseQueueSpy =
         pubsubHelper.pubsubProjectListen(OUTBOUND_CASE_SUBSCRIPTION, EventDTO.class)) {
       // GIVEN
@@ -80,56 +80,14 @@ public class RefusalReceiverIT {
       CaseUpdateDTO emittedCase = actualEvent.getPayload().getCaseUpdate();
       assertThat(emittedCase.getCaseId()).isEqualTo(caze.getId());
       assertThat(emittedCase.getRefusalReceived()).isEqualTo(RefusalTypeDTO.EXTRAORDINARY_REFUSAL);
+      assertThat(emittedCase.getAddress().getAddressLine1()).isEqualTo(caze.getAddressLine1());
+      assertThat(emittedCase.getAddress().getAddressType()).isEqualTo(caze.getAddressType());
+      assertThat(emittedCase.getAddress().getPostcode()).isEqualTo(caze.getPostcode());
 
       assertThat(eventRepository.findAll().size()).isEqualTo(1);
       Event databaseEvent = eventRepository.findAll().get(0);
       assertThat(databaseEvent.getCaze().getId()).isEqualTo(caze.getId());
       assertThat(databaseEvent.getType()).isEqualTo(EventType.REFUSAL);
-    }
-  }
-
-  @Test
-  public void testRefusalWithErasure() throws Exception {
-    try (QueueSpy<EventDTO> outboundCaseQueueSpy =
-        pubsubHelper.pubsubProjectListen(OUTBOUND_CASE_SUBSCRIPTION, EventDTO.class)) {
-      // GIVEN
-
-      Case caze = junkDataHelper.setupJunkCase();
-
-      RefusalDTO refusalDTO = new RefusalDTO();
-      refusalDTO.setCaseId(caze.getId());
-      refusalDTO.setType(RefusalTypeDTO.EXTRAORDINARY_REFUSAL);
-      refusalDTO.setEraseData(true);
-      PayloadDTO payloadDTO = new PayloadDTO();
-      payloadDTO.setRefusal(refusalDTO);
-      EventDTO event = new EventDTO();
-      event.setPayload(payloadDTO);
-
-      EventHeaderDTO eventHeader = new EventHeaderDTO();
-      eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
-      eventHeader.setTopic(INBOUND_REFUSAL_TOPIC);
-      junkDataHelper.junkify(eventHeader);
-      event.setHeader(eventHeader);
-
-      // WHEN
-      pubsubHelper.sendMessageToPubsubProject(INBOUND_REFUSAL_TOPIC, event);
-
-      // THEN
-      EventDTO actualEvent = outboundCaseQueueSpy.checkExpectedMessageReceived();
-
-      CaseUpdateDTO emittedCase = actualEvent.getPayload().getCaseUpdate();
-      assertThat(emittedCase.getCaseId()).isEqualTo(caze.getId());
-      assertThat(emittedCase.getRefusalReceived()).isEqualTo(RefusalTypeDTO.EXTRAORDINARY_REFUSAL);
-      assertThat(emittedCase.getSampleSensitive()).isNull();
-      assertThat(emittedCase.isInvalid()).isTrue();
-
-      assertThat(eventRepository.findAll().size()).isEqualTo(2);
-      Event databaseRefusalEvent = eventRepository.findAll().get(1);
-      assertThat(databaseRefusalEvent.getCaze().getId()).isEqualTo(caze.getId());
-      assertThat(databaseRefusalEvent.getType()).isEqualTo(EventType.REFUSAL);
-      Event databaseDataErasureEvent = eventRepository.findAll().get(0);
-      assertThat(databaseDataErasureEvent.getCaze().getId()).isEqualTo(caze.getId());
-      assertThat(databaseDataErasureEvent.getType()).isEqualTo(EventType.ERASE_DATA);
     }
   }
 }

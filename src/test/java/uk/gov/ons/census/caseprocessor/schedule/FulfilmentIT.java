@@ -73,7 +73,7 @@ class FulfilmentIT {
       ExportFileTemplate exportFileTemplate = new ExportFileTemplate();
       exportFileTemplate.setPackCode(PACK_CODE);
       exportFileTemplate.setExportFileDestination(EXPORT_FILE_DESTINATION);
-      exportFileTemplate.setTemplate(new String[] {"__caseref__", "foo", "__uac__"});
+      exportFileTemplate.setTemplate(new String[] {"__caseref__", "ADDRESS_LINE1", "__uac__"});
       exportFileTemplate.setDescription("Test description");
       exportFileTemplateRepository.saveAndFlush(exportFileTemplate);
 
@@ -121,7 +121,8 @@ class FulfilmentIT {
       assertThat(exportFileRow.getBatchQuantity()).isEqualTo(1);
       assertThat(exportFileRow.getPackCode()).isEqualTo(PACK_CODE);
       assertThat(exportFileRow.getExportFileDestination()).isEqualTo(EXPORT_FILE_DESTINATION);
-      assertThat(exportFileRow.getRow()).startsWith("\"" + caze.getCaseRef() + "\",\"bar\",\"");
+      assertThat(exportFileRow.getRow())
+          .startsWith("\"" + caze.getCaseRef() + "\",\"" + caze.getAddressLine1() + "\",\"");
 
       assertThat(rme).isNotNull();
       assertThat(rme.getHeader().getTopic()).isEqualTo(uacUpdateTopic);

@@ -8,7 +8,6 @@ import static uk.gov.ons.census.caseprocessor.testutils.TestConstants.TEST_CORRE
 import static uk.gov.ons.census.caseprocessor.testutils.TestConstants.TEST_ORIGINATING_USER;
 
 import java.time.OffsetDateTime;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -29,13 +28,13 @@ import uk.gov.ons.census.common.model.entity.EventType;
 import uk.gov.ons.census.common.model.entity.UacQidLink;
 
 @ExtendWith(MockitoExtension.class)
-public class EventLoggerTest {
+class EventLoggerTest {
   @Mock EventRepository eventRepository;
 
   @InjectMocks EventLogger underTest;
 
   @Test
-  public void testLogCaseEventSuppliedDateTime() {
+  void testLogCaseEventSuppliedDateTime() {
     Case caze = new Case();
     OffsetDateTime eventTime = OffsetDateTime.now();
     OffsetDateTime messageTime = OffsetDateTime.now().minusSeconds(30);
@@ -48,7 +47,6 @@ public class EventLoggerTest {
     event.setHeader(eventHeader);
 
     NewCase redactMe = new NewCase();
-    redactMe.setSampleSensitive(Map.of("redactThis", "ABC123"));
 
     PayloadDTO payload = new PayloadDTO();
     payload.setNewCase(redactMe);
@@ -66,7 +64,6 @@ public class EventLoggerTest {
     assertThat("Test channel").isEqualTo(actualEvent.getChannel());
     assertThat(EventType.NEW_CASE).isEqualTo(actualEvent.getType());
     assertThat("Test description").isEqualTo(actualEvent.getDescription());
-    assertThat(actualEvent.getPayload()).contains("REDACTED");
     assertThat(eventHeader.getMessageId()).isEqualTo(actualEvent.getMessageId());
     assertThat(eventHeader.getCorrelationId()).isEqualTo(actualEvent.getCorrelationId());
     assertThat(eventHeader.getOriginatingUser()).isEqualTo(actualEvent.getCreatedBy());
@@ -74,7 +71,7 @@ public class EventLoggerTest {
   }
 
   @Test
-  public void testLogCaseEventDateTimeFromMessage() {
+  void testLogCaseEventDateTimeFromMessage() {
     Case caze = new Case();
     OffsetDateTime eventTime = OffsetDateTime.now();
     EventHeaderDTO eventHeader =
@@ -86,7 +83,6 @@ public class EventLoggerTest {
     event.setHeader(eventHeader);
 
     NewCase redactMe = new NewCase();
-    redactMe.setSampleSensitive(Map.of("redactThis", "ABC123"));
 
     PayloadDTO payload = new PayloadDTO();
     payload.setNewCase(redactMe);
@@ -115,7 +111,6 @@ public class EventLoggerTest {
     assertThat("Test channel").isEqualTo(actualEvent.getChannel());
     assertThat(EventType.NEW_CASE).isEqualTo(actualEvent.getType());
     assertThat("Test description").isEqualTo(actualEvent.getDescription());
-    assertThat(actualEvent.getPayload()).contains("REDACTED");
     assertThat(eventHeader.getMessageId()).isEqualTo(actualEvent.getMessageId());
     assertThat(eventHeader.getCorrelationId()).isEqualTo(actualEvent.getCorrelationId());
     assertThat(eventHeader.getOriginatingUser()).isEqualTo(actualEvent.getCreatedBy());
@@ -123,7 +118,7 @@ public class EventLoggerTest {
   }
 
   @Test
-  public void testLogUacQidEvent() {
+  void testLogUacQidEvent() {
     UacQidLink uacQidLink = new UacQidLink();
     OffsetDateTime eventTime = OffsetDateTime.now();
     EventHeaderDTO eventHeader =
@@ -135,7 +130,6 @@ public class EventLoggerTest {
     event.setHeader(eventHeader);
 
     NewCase redactMe = new NewCase();
-    redactMe.setSampleSensitive(Map.of("redactThis", "ABC123"));
 
     PayloadDTO payload = new PayloadDTO();
     payload.setNewCase(redactMe);
@@ -164,8 +158,6 @@ public class EventLoggerTest {
     assertThat("Test channel").isEqualTo(actualEvent.getChannel());
     assertThat(EventType.NEW_CASE).isEqualTo(actualEvent.getType());
     assertThat("Test description").isEqualTo(actualEvent.getDescription());
-    assertThat(actualEvent.getPayload())
-        .contains("\"sampleSensitive\":{\"redactThis\":\"REDACTED\"}");
     assertThat(eventHeader.getMessageId()).isEqualTo(actualEvent.getMessageId());
     assertThat(eventHeader.getCorrelationId()).isEqualTo(actualEvent.getCorrelationId());
     assertThat(eventHeader.getOriginatingUser()).isEqualTo(actualEvent.getCreatedBy());

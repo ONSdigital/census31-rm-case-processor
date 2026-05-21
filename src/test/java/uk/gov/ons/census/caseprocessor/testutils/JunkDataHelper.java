@@ -1,8 +1,6 @@
 package uk.gov.ons.census.caseprocessor.testutils;
 
 import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,13 +14,9 @@ import uk.gov.ons.census.caseprocessor.model.repository.FulfilmentSurveyExportFi
 import uk.gov.ons.census.caseprocessor.model.repository.SurveyRepository;
 import uk.gov.ons.census.common.model.entity.Case;
 import uk.gov.ons.census.common.model.entity.CollectionExercise;
-import uk.gov.ons.census.common.model.entity.CollectionInstrumentSelectionRule;
 import uk.gov.ons.census.common.model.entity.ExportFileTemplate;
 import uk.gov.ons.census.common.model.entity.FulfilmentSurveyExportFileTemplate;
 import uk.gov.ons.census.common.model.entity.Survey;
-import uk.gov.ons.census.common.validation.ColumnValidator;
-import uk.gov.ons.census.common.validation.MandatoryRule;
-import uk.gov.ons.census.common.validation.Rule;
 
 @Component
 @ActiveProfiles("test")
@@ -43,41 +37,39 @@ public class JunkDataHelper {
     junkCase.setInvalid(false);
     junkCase.setCollectionExercise(setupJunkCollex());
     junkCase.setCaseRef(RANDOM.nextLong());
-    junkCase.setSample(Map.of("foo", "bar"));
-    junkCase.setSampleSensitive(Map.of("phoneNumber", "123", "emailAddress", "junk@junk.com"));
+    junkCase.setAbpCode("abp");
+    junkCase.setAddressLevel("U");
+    junkCase.setAddressLine1("10 test street");
+    junkCase.setAddressType("HH");
+    junkCase.setCaseType("HH");
+    junkCase.setEstabType("HOUSEHOLD");
+    junkCase.setEstabUprn("000000");
+    junkCase.setPrintBatch("1");
+    junkCase.setFieldCoordinatorId("fcor_id");
+    junkCase.setFieldOfficerId("foff_id");
+    junkCase.setHtcDigital("0");
+    junkCase.setHtcWillingness("0");
+    junkCase.setLad("0000");
+    junkCase.setLatitude("0.0.0.0.0.0");
+    junkCase.setLongitude("0.1278");
+    junkCase.setLsoa("0000");
+    junkCase.setRegion("EN");
+    junkCase.setOa("0000");
+    junkCase.setMsoa("0000");
+    junkCase.setPostcode("CFXX XXX");
+    junkCase.setTreatmentCode("BLJF_FEJG");
+    junkCase.setUprn("000000");
+    junkCase.setTownName("Best Town");
     caseRepository.save(junkCase);
 
     return junkCase;
   }
 
-  public ColumnValidator[] setUpColumnValidatorsMandatory(
-      List<String> columnNames, boolean sensitive) {
-    ColumnValidator[] columnValidators = new ColumnValidator[columnNames.size()];
-
-    for (int i = 0; i < columnNames.size(); i++) {
-      columnValidators[i] =
-          new ColumnValidator(columnNames.get(i), sensitive, new Rule[] {new MandatoryRule()});
-    }
-
-    return columnValidators;
-  }
-
   public CollectionExercise setupJunkCollex() {
-    return setUpJunkCollexWithThisColumnValidators(
-        new ColumnValidator[] {
-          new ColumnValidator("Junk", false, new Rule[] {new MandatoryRule()}),
-          new ColumnValidator("SensitiveJunk", true, new Rule[] {new MandatoryRule()})
-        });
-  }
-
-  public CollectionExercise setUpJunkCollexWithThisColumnValidators(
-      ColumnValidator[] columnValidators) {
     Survey junkSurvey = new Survey();
     junkSurvey.setId(UUID.randomUUID());
     junkSurvey.setName("Junk survey");
-    junkSurvey.setSampleValidationRules(columnValidators);
     junkSurvey.setSampleSeparator('j');
-    junkSurvey.setSampleDefinitionUrl("http://junk");
     surveyRepository.saveAndFlush(junkSurvey);
 
     CollectionExercise junkCollectionExercise = new CollectionExercise();
@@ -88,10 +80,6 @@ public class JunkDataHelper {
     junkCollectionExercise.setStartDate(OffsetDateTime.now());
     junkCollectionExercise.setEndDate(OffsetDateTime.now().plusDays(2));
     junkCollectionExercise.setMetadata(null);
-    junkCollectionExercise.setCollectionInstrumentSelectionRules(
-        new CollectionInstrumentSelectionRule[] {
-          new CollectionInstrumentSelectionRule(0, null, "junkCollectionInstrumentUrl", null)
-        });
     collectionExerciseRepository.saveAndFlush(junkCollectionExercise);
 
     return junkCollectionExercise;

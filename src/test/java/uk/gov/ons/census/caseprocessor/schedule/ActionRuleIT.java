@@ -1,8 +1,6 @@
 package uk.gov.ons.census.caseprocessor.schedule;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static uk.gov.ons.census.caseprocessor.testutils.TestConstants.OUTBOUND_EMAIL_REQUEST_SUBSCRIPTION;
-import static uk.gov.ons.census.caseprocessor.testutils.TestConstants.OUTBOUND_SMS_REQUEST_SUBSCRIPTION;
 import static uk.gov.ons.census.caseprocessor.testutils.TestConstants.OUTBOUND_UAC_SUBSCRIPTION;
 
 import java.time.OffsetDateTime;
@@ -22,7 +20,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
-import uk.gov.ons.census.caseprocessor.model.dto.PayloadDTO;
 import uk.gov.ons.census.caseprocessor.model.repository.ActionRuleRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.EmailTemplateRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.EventRepository;
@@ -32,7 +29,6 @@ import uk.gov.ons.census.caseprocessor.model.repository.SmsTemplateRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.UacQidLinkRepository;
 import uk.gov.ons.census.caseprocessor.testutils.ActionRulePoller;
 import uk.gov.ons.census.caseprocessor.testutils.DeleteDataHelper;
-import uk.gov.ons.census.caseprocessor.testutils.JsonHelper;
 import uk.gov.ons.census.caseprocessor.testutils.JunkDataHelper;
 import uk.gov.ons.census.caseprocessor.testutils.PubsubHelper;
 import uk.gov.ons.census.caseprocessor.testutils.QueueSpy;
@@ -42,8 +38,6 @@ import uk.gov.ons.census.common.model.entity.ActionRuleType;
 import uk.gov.ons.census.common.model.entity.Case;
 import uk.gov.ons.census.common.model.entity.CollectionExercise;
 import uk.gov.ons.census.common.model.entity.EmailTemplate;
-import uk.gov.ons.census.common.model.entity.Event;
-import uk.gov.ons.census.common.model.entity.EventType;
 import uk.gov.ons.census.common.model.entity.ExportFileRow;
 import uk.gov.ons.census.common.model.entity.ExportFileTemplate;
 import uk.gov.ons.census.common.model.entity.SmsTemplate;
@@ -62,12 +56,6 @@ class ActionRuleIT {
 
   @Value("${queueconfig.uac-update-topic}")
   private String uacUpdateTopic;
-
-  @Value("${queueconfig.sms-request-topic}")
-  private String smsRequestTopic;
-
-  @Value("${queueconfig.email-request-topic}")
-  private String emailRequestTopic;
 
   @Autowired private DeleteDataHelper deleteDataHelper;
   @Autowired private JunkDataHelper junkDataHelper;
@@ -113,7 +101,8 @@ class ActionRuleIT {
       assertThat(exportFileRow.getBatchQuantity()).isEqualTo(1);
       assertThat(exportFileRow.getPackCode()).isEqualTo(PACK_CODE);
       assertThat(exportFileRow.getExportFileDestination()).isEqualTo(EXPORT_FILE_DESTINATION);
-      assertThat(exportFileRow.getRow()).startsWith("\"" + caze.getCaseRef() + "\",\"bar\",\"");
+      assertThat(exportFileRow.getRow())
+          .startsWith("\"" + caze.getCaseRef() + "\",\"" + caze.getAddressLine1() + "\",\"");
 
       assertThat(rme).isNotNull();
       assertThat(rme.getHeader().getTopic()).isEqualTo(uacUpdateTopic);
@@ -146,72 +135,6 @@ class ActionRuleIT {
   }
 
   @Test
-  void testSmsRule() throws Exception {
-    try (QueueSpy<EventDTO> smsRequestQueue =
-        pubsubHelper.listen(OUTBOUND_SMS_REQUEST_SUBSCRIPTION, EventDTO.class)) {
-      // Given
-      Case caze = junkDataHelper.setupJunkCase();
-
-      SmsTemplate smsTemplate = setupSmsTemplate();
-
-      // When
-      setUpActionRule(
-          ActionRuleType.SMS, caze.getCollectionExercise(), null, smsTemplate, null, null);
-      EventDTO rme = smsRequestQueue.getQueue().poll(20, TimeUnit.SECONDS);
-
-      // Then
-      assertThat(rme).isNotNull();
-      assertThat(rme.getHeader().getTopic()).isEqualTo(smsRequestTopic);
-      assertThat(rme.getPayload().getSmsRequest().getCaseId()).isEqualTo(caze.getId());
-      assertThat(rme.getPayload().getSmsRequest().getPackCode()).isEqualTo("Test pack code");
-      assertThat(rme.getPayload().getSmsRequest().getPhoneNumber()).isEqualTo("123");
-      assertThat(rme.getPayload().getSmsRequest().getUacMetadata()).isEqualTo(TEST_UAC_METADATA);
-
-      List<Event> events = eventRepository.findAll();
-      assertThat(events.size()).isOne();
-      Event actualEvent = events.get(0);
-      assertThat(actualEvent.getType()).isEqualTo(EventType.ACTION_RULE_SMS_REQUEST);
-      PayloadDTO payloadDTO =
-          JsonHelper.convertJsonBytesToObject(
-              actualEvent.getPayload().getBytes(), PayloadDTO.class);
-      assertThat(payloadDTO.getSmsRequest().getPhoneNumber()).isEqualTo("REDACTED");
-    }
-  }
-
-  @Test
-  void testEmailRule() throws Exception {
-    try (QueueSpy<EventDTO> emailRequestQueue =
-        pubsubHelper.listen(OUTBOUND_EMAIL_REQUEST_SUBSCRIPTION, EventDTO.class)) {
-      // Given
-      Case caze = junkDataHelper.setupJunkCase();
-
-      EmailTemplate emailTemplate = setupEmailTemplate();
-
-      // When
-      setUpActionRule(
-          ActionRuleType.EMAIL, caze.getCollectionExercise(), null, null, emailTemplate, null);
-      EventDTO rme = emailRequestQueue.getQueue().poll(20, TimeUnit.SECONDS);
-
-      // Then
-      assertThat(rme).isNotNull();
-      assertThat(rme.getHeader().getTopic()).isEqualTo(emailRequestTopic);
-      assertThat(rme.getPayload().getEmailRequest().getCaseId()).isEqualTo(caze.getId());
-      assertThat(rme.getPayload().getEmailRequest().getPackCode()).isEqualTo("Test pack code");
-      assertThat(rme.getPayload().getEmailRequest().getEmail()).isEqualTo("junk@junk.com");
-      assertThat(rme.getPayload().getEmailRequest().getUacMetadata()).isEqualTo(TEST_UAC_METADATA);
-
-      List<Event> events = eventRepository.findAll();
-      assertThat(events.size()).isOne();
-      Event actualEvent = events.get(0);
-      assertThat(actualEvent.getType()).isEqualTo(EventType.ACTION_RULE_EMAIL_REQUEST);
-      PayloadDTO payloadDTO =
-          JsonHelper.convertJsonBytesToObject(
-              actualEvent.getPayload().getBytes(), PayloadDTO.class);
-      assertThat(payloadDTO.getEmailRequest().getEmail()).isEqualTo("REDACTED");
-    }
-  }
-
-  @Test
   void testBadSQLIsHandled(CapturedOutput output) throws Exception {
     Case caze = junkDataHelper.setupJunkCase();
     ExportFileTemplate exportFileTemplate = setUpExportFileTemplate();
@@ -239,7 +162,7 @@ class ActionRuleIT {
 
   private ExportFileTemplate setUpExportFileTemplate() {
     ExportFileTemplate exportFileTemplate = new ExportFileTemplate();
-    exportFileTemplate.setTemplate(new String[] {"__caseref__", "foo", "__uac__"});
+    exportFileTemplate.setTemplate(new String[] {"__caseref__", "ADDRESS_LINE1", "__uac__"});
     exportFileTemplate.setPackCode(PACK_CODE);
     exportFileTemplate.setExportFileDestination(EXPORT_FILE_DESTINATION);
     exportFileTemplate.setDescription("Test description");
@@ -266,16 +189,6 @@ class ActionRuleIT {
     actionRule.setSelectedCaseCount(null);
     actionRule.setActionRuleStatus(ActionRuleStatus.SCHEDULED);
 
-    if (smsTemplate != null) {
-      actionRule.setSmsTemplate(smsTemplate);
-      actionRule.setPhoneNumberColumn("phoneNumber");
-    }
-
-    if (emailTemplate != null) {
-      actionRule.setEmailTemplate(emailTemplate);
-      actionRule.setEmailColumn("emailAddress");
-    }
-
     return actionRuleRepository.saveAndFlush(actionRule);
   }
 
@@ -287,27 +200,6 @@ class ActionRuleIT {
     uacQidLink.setUacHash("fakeHash");
     uacQidLink.setActive(true);
     uacQidLink.setCaze(caze);
-    uacQidLink.setCollectionInstrumentUrl("dummyUrl");
     return uacQidLinkRepository.saveAndFlush(uacQidLink);
-  }
-
-  private SmsTemplate setupSmsTemplate() {
-    SmsTemplate smsTemplate = new SmsTemplate();
-    smsTemplate.setPackCode("Test pack code");
-    smsTemplate.setNotifyTemplateId(UUID.randomUUID());
-    smsTemplate.setTemplate(new String[] {"FOO", "BAR"});
-    smsTemplate.setDescription("Test description");
-    smsTemplate.setNotifyServiceRef("Dummy_service");
-    return smsTemplateRepository.saveAndFlush(smsTemplate);
-  }
-
-  private EmailTemplate setupEmailTemplate() {
-    EmailTemplate emailTemplate = new EmailTemplate();
-    emailTemplate.setPackCode("Test pack code");
-    emailTemplate.setNotifyTemplateId(UUID.randomUUID());
-    emailTemplate.setTemplate(new String[] {"FOO", "BAR"});
-    emailTemplate.setDescription("Test description");
-    emailTemplate.setNotifyServiceRef("Dummy_service");
-    return emailTemplateRepository.saveAndFlush(emailTemplate);
   }
 }

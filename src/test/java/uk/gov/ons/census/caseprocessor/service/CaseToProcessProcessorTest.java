@@ -2,13 +2,13 @@ package uk.gov.ons.census.caseprocessor.service;
 
 import static org.mockito.Mockito.verify;
 
-import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.ons.census.caseprocessor.testutils.CaseFieldsHelper;
 import uk.gov.ons.census.common.model.entity.ActionRule;
 import uk.gov.ons.census.common.model.entity.ActionRuleType;
 import uk.gov.ons.census.common.model.entity.Case;
@@ -19,7 +19,6 @@ import uk.gov.ons.census.common.model.entity.ExportFileTemplate;
 class CaseToProcessProcessorTest {
   @Mock private ExportFileProcessor exportFileProcessor;
   @Mock private DeactivateUacProcessor deactivateUacProcessor;
-  @Mock private SmsProcessor smsProcessor;
 
   @InjectMocks CaseToProcessProcessor underTest;
 
@@ -27,7 +26,7 @@ class CaseToProcessProcessorTest {
   void testProcessExportFileActionRule() {
     // Given
     Case caze = new Case();
-    caze.setSample(Map.of("foo", "bar"));
+    CaseFieldsHelper.setDummyCaseFields(caze);
     caze.setCaseRef(123L);
 
     ExportFileTemplate exportFileTemplate = new ExportFileTemplate();
@@ -79,25 +78,5 @@ class CaseToProcessProcessorTest {
 
     // Then
     verify(deactivateUacProcessor).process(caze, actionRule.getId());
-  }
-
-  @Test
-  void testProcessSmsActionRule() {
-    // Given
-    Case caze = new Case();
-
-    ActionRule actionRule = new ActionRule();
-    actionRule.setId(UUID.randomUUID());
-    actionRule.setType(ActionRuleType.SMS);
-
-    CaseToProcess caseToProcess = new CaseToProcess();
-    caseToProcess.setActionRule(actionRule);
-    caseToProcess.setCaze(caze);
-
-    // When
-    underTest.process(caseToProcess);
-
-    // Then
-    verify(smsProcessor).process(caze, actionRule);
   }
 }

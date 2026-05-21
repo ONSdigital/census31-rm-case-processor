@@ -14,7 +14,7 @@ class SampleValidateHelperTest {
   void testValidateNewValue() {
     // Given
     ColumnValidator columnValidator =
-        new ColumnValidator("testSampleField", false, new Rule[] {new LengthRule(60)});
+        new ColumnValidator("testSampleField", new Rule[] {new LengthRule(60)});
 
     assertThat(SampleValidateHelper.validateNewValue("testSampleField", "Test", columnValidator))
         .isEmpty();
@@ -24,7 +24,7 @@ class SampleValidateHelperTest {
   void testValidateNewValueError() {
     // Given
     ColumnValidator columnValidator =
-        new ColumnValidator("testSampleField", true, new Rule[] {new LengthRule(1)});
+        new ColumnValidator("testSampleField", new Rule[] {new LengthRule(1)});
 
     // When
     assertThat(SampleValidateHelper.validateNewValue("testSampleField", "Test", columnValidator))

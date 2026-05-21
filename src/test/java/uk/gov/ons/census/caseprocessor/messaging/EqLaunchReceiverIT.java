@@ -70,7 +70,6 @@ public class EqLaunchReceiverIT {
       uacQidLink.setQid(TEST_QID);
       uacQidLink.setCaze(caze);
       uacQidLink.setEqLaunched(false);
-      uacQidLink.setCollectionInstrumentUrl("junkInstrumentUrl");
       uacQidLinkRepository.saveAndFlush(uacQidLink);
 
       EventDTO eqLaunchedEvent = new EventDTO();

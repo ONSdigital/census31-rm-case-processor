@@ -5,33 +5,35 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
-import uk.gov.ons.census.caseprocessor.model.dto.NewCase;
 import uk.gov.ons.census.caseprocessor.model.dto.PayloadDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.SmsRequest;
+import uk.gov.ons.census.common.model.entity.FulfilmentToProcess;
 
-public class RedactHelperTest {
+class RedactHelperTest {
   @Test
-  public void testRedactWorksForMap() {
+  void testRedactWorksForMap() {
     // GIVEN
-    NewCase newCase = new NewCase();
+    FulfilmentToProcess fulfilmentToProcess = new FulfilmentToProcess();
 
-    newCase.setSampleSensitive(Map.of("PHONE_NUMBER", "999999"));
+    fulfilmentToProcess.setPersonalisation(Map.of("PHONE_NUMBER", "999999"));
 
     // WHEN
-    // Cast is required for the test, but when we use this we only want Object anyway
-    NewCase newCaseDeepCopy = (NewCase) RedactHelper.redact(newCase);
+    // Cast the object back to it's original type, just for the test
+    FulfilmentToProcess fulfilmentToProcessRedacted =
+        (FulfilmentToProcess) RedactHelper.redact(fulfilmentToProcess);
 
     // THEN
-    assertThat(newCaseDeepCopy.getSampleSensitive()).isEqualTo(Map.of("PHONE_NUMBER", "REDACTED"));
+    assertThat(fulfilmentToProcessRedacted.getPersonalisation())
+        .isEqualTo(Map.of("PHONE_NUMBER", "REDACTED"));
 
     // Extra check to make sure the original object wasn't accidentally mutated
-    assertThat(newCase.getSampleSensitive()).isEqualTo(Map.of("PHONE_NUMBER", "999999"));
+    assertThat(fulfilmentToProcess.getPersonalisation())
+        .isEqualTo(Map.of("PHONE_NUMBER", "999999"));
   }
 
   @Test
-  public void testRedactWorksForString() {
+  void testRedactWorksForString() {
     // GIVEN
-
     SmsRequest smsRequest = new SmsRequest();
 
     smsRequest.setPhoneNumber("SUPER SECRET VALUE");
@@ -43,7 +45,7 @@ public class RedactHelperTest {
     eventDto.setPayload(payloadDto);
 
     // WHEN
-    // Cast is required for the test, but when we use this we only want Object anyway
+    // Cast the object back to it's original type, just for the test
     EventDTO eventDeepCopy = (EventDTO) RedactHelper.redact(eventDto);
 
     // THEN

@@ -22,7 +22,6 @@ class CaseClassifierTest {
     CaseClassifier underTest = new CaseClassifier(jdbcTemplate);
     String classifiers = "foo IN ('bar')";
     Survey survey = new Survey();
-    survey.setSampleDefinitionUrl("testDefinition");
     CollectionExercise collectionExercise = new CollectionExercise();
     collectionExercise.setId(UUID.randomUUID());
     collectionExercise.setSurvey(survey);
