@@ -47,6 +47,7 @@ public class JunkDataHelper {
     junkCase.setHtcWillingness("0");
     junkCase.setLad("0000");
     junkCase.setLatitude("0.0.0.0.0.0");
+    junkCase.setLongitude("0.1278");
     junkCase.setLsoa("0000");
     junkCase.setRegion("EN");
     junkCase.setOa("0000");
@@ -120,27 +121,5 @@ public class JunkDataHelper {
     if (eventHeaderDTO.getDateTime() == null) {
       eventHeaderDTO.setDateTime(OffsetDateTime.now());
     }
-  }
-
-  public static Case getCaseObject(Case caze) {
-    caze.setAbpCode("abp");
-    caze.setAddressLevel("1 Address street");
-    caze.setAddressType("HH");
-    caze.setCeExpectedCapacity(0);
-    caze.setFieldCoordinatorId("fcor_id");
-    caze.setFieldOfficerId("foff_id");
-    caze.setHtcDigital("0");
-    caze.setHtcWillingness("0");
-    caze.setLad("0000");
-    caze.setLatitude("0.0.0.0.0.0");
-    caze.setLsoa("0000");
-    caze.setRegion("EN");
-    caze.setOa("0000");
-    caze.setMsoa("0000");
-    caze.setPostcode("CFXX XXX");
-    caze.setTreatmentCode("BLJF_FEJG");
-    caze.setUprn("000000");
-    caze.setTownName("Best Town");
-    return caze;
   }
 }

@@ -10,8 +10,7 @@ public class CaseFieldMapper {
   public static void mapPayloadSampleFieldsToCase(NewCase newCasePayload, Case caze) {
     caze.setUprn(newCasePayload.getUprn());
     caze.setEstabUprn(newCasePayload.getEstabUprn());
-    caze.setCaseType(
-        newCasePayload.getAddressType());
+    caze.setCaseType(newCasePayload.getAddressType());
     caze.setAddressType(newCasePayload.getAddressType());
     caze.setEstabType(newCasePayload.getEstabType());
     caze.setAddressLevel(newCasePayload.getAddressLevel());
