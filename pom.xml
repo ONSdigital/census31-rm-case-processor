@@ -9,7 +9,8 @@
   <version>1.0-SNAPSHOT</version>
 
   <properties>
-    <maven.compiler.release>17</maven.compiler.release>
+    <maven.compiler.release>21</maven.compiler.release>
+    <java.version>21</java.version>
     <container.cli>docker</container.cli>
   </properties>
 
@@ -197,8 +198,9 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-pmd-plugin</artifactId>
-        <version>3.21.2</version>
+        <version>3.24.0</version>
         <configuration>
+          <targetJdk>21</targetJdk>
           <excludeFromFailureFile>exclude-pmd.properties</excludeFromFailureFile>
           <failurePriority>3</failurePriority>
           <failOnViolation>true</failOnViolation>
@@ -275,15 +277,24 @@
           </execution>
         </executions>
       </plugin>
+      <!-- Spotless (replacement for fmt-maven-plugin) -->
       <plugin>
-        <groupId>com.coveo</groupId>
-        <artifactId>fmt-maven-plugin</artifactId>
-        <version>2.13</version>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <version>2.43.0</version>
+        <configuration>
+          <java>
+            <googleJavaFormat>
+              <version>1.22.0</version> <!-- Java 21 compatible -->
+            </googleJavaFormat>
+          </java>
+        </configuration>
         <executions>
           <execution>
             <goals>
-              <goal>format</goal>
+              <goal>check</goal>
             </goals>
+            <phase>verify</phase>
           </execution>
         </executions>
       </plugin>
@@ -330,8 +341,8 @@
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <source>17</source>
-          <target>17</target>
+          <source>21</source>
+          <target>21</target>
           <encoding>UTF-8</encoding>
           <compilerArgs>
             <arg>-XDcompilePolicy=simple</arg>
