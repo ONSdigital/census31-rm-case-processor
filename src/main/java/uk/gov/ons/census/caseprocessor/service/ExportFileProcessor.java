@@ -48,6 +48,7 @@ public class ExportFileProcessor {
   public void process(FulfilmentToProcess fulfilmentToProcess) {
     ExportFileTemplate exportFileTemplate = fulfilmentToProcess.getExportFileTemplate();
 
+    // TODO Pass in questionnaireType from exportFileTemplate when it's been added.
     processExportFileRow(
         exportFileTemplate.getTemplate(),
         fulfilmentToProcess.getCaze(),
@@ -166,7 +167,9 @@ public class ExportFileProcessor {
   private UacQidDTO getUacQidForCase(
       Case caze, UUID correlationId, String originatingUser, Object metadata) {
 
-    UacQidDTO uacQidDTO = uacQidCache.getUacQidPair();
+    // TODO: Currently the questionnaireType is hardcoded to 1. This will need to be based on the
+    // questionnaireType from the export file template.
+    UacQidDTO uacQidDTO = uacQidCache.getUacQidPair(1);
     UacQidLink uacQidLink = new UacQidLink();
     uacQidLink.setId(UUID.randomUUID());
     uacQidLink.setQid(uacQidDTO.getQid());
