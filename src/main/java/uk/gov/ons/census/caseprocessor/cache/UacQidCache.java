@@ -30,8 +30,9 @@ public class UacQidCache {
 
   private static final Executor executor = Executors.newFixedThreadPool(8);
 
-  private Map<Integer, BlockingQueue<UacQidDTO>> uacQidLinkQueueMap = new ConcurrentHashMap<>();
-  private Set<Integer> isToppingUpQueue = ConcurrentHashMap.newKeySet();
+  private final Map<Integer, BlockingQueue<UacQidDTO>> uacQidLinkQueueMap =
+      new ConcurrentHashMap<>();
+  private final Set<Integer> isToppingUpQueue = ConcurrentHashMap.newKeySet();
 
   public UacQidCache(UacQidServiceClient uacQidServiceClient) {
     this.uacQidServiceClient = uacQidServiceClient;
