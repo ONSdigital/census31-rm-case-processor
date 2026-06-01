@@ -8,6 +8,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -17,6 +19,9 @@ import uk.gov.ons.census.caseprocessor.model.dto.UacQidDTO;
 
 @Component
 public class UacQidCache {
+
+  private static final Logger log = LoggerFactory.getLogger(UacQidCache.class);
+
   private final UacQidServiceClient uacQidServiceClient;
 
   @Value("${uacservice.uacqid-cache-min}")
@@ -82,6 +87,10 @@ public class UacQidCache {
         return;
       }
     }
+    log.atInfo()
+        .setMessage("Topping up UAC-QID cache")
+        .addKeyValue("questionnaireType", questionnaireType)
+        .log();
 
     executor.execute(
         () -> {
