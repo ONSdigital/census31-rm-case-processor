@@ -23,22 +23,25 @@ public class UacQidServiceClient {
   @Value("${uacservice.connection.port}")
   private String port;
 
-  public List<UacQidDTO> getUacQids(int numberToCreate) {
+  public List<UacQidDTO> getUacQids(int questionnaireType, int numberToCreate) {
     RestTemplate restTemplate = new RestTemplate();
 
-    UriComponents uriComponents = createUriComponents(numberToCreate, "multiple_qids");
+    UriComponents uriComponents =
+        createUriComponents(questionnaireType, numberToCreate, "multiple_qids");
     ResponseEntity<UacQidDTO[]> responseEntity =
         restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, null, UacQidDTO[].class);
 
     return Arrays.asList(responseEntity.getBody());
   }
 
-  private UriComponents createUriComponents(int numberToCreate, String path) {
+  private UriComponents createUriComponents(
+      int questionnaireType, int numberToCreate, String path) {
     return UriComponentsBuilder.newInstance()
         .scheme(scheme)
         .host(host)
         .port(port)
         .path(path)
+        .queryParam("questionnaireType", questionnaireType)
         .queryParam("numberToCreate", numberToCreate)
         .build()
         .encode();

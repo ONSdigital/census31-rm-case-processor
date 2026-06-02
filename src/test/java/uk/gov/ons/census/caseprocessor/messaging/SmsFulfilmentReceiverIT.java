@@ -63,7 +63,7 @@ class SmsFulfilmentReceiverIT {
   void testSmsFulfilment() throws Exception {
     // Given
     // Get a new UAC QID pair
-    List<UacQidDTO> uacQidDTOList = uacQidServiceClient.getUacQids(1);
+    List<UacQidDTO> uacQidDTOList = uacQidServiceClient.getUacQids(1, 1);
     UacQidDTO smsUacQid = uacQidDTOList.get(0);
 
     // Create the case

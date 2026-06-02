@@ -63,7 +63,7 @@ class EmailFulfilmentReceiverIT {
   void testEmailFulfilment() throws Exception {
     // Given
     // Get a new UAC QID pair
-    List<UacQidDTO> uacQidDTOList = uacQidServiceClient.getUacQids(1);
+    List<UacQidDTO> uacQidDTOList = uacQidServiceClient.getUacQids(1, 1);
     UacQidDTO emailUacQid = uacQidDTOList.get(0);
 
     // Create the case
