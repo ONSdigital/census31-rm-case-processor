@@ -80,6 +80,7 @@ class ExportFileProcessorTest {
         exportFileTemplate.getExportFileDestination(),
         actionRule.getId(),
         null,
+        1,
         actionRule.getUacMetadata());
 
     //    // Then
@@ -124,6 +125,7 @@ class ExportFileProcessorTest {
     exportFileTemplate.setPackCode(PACK_CODE);
     exportFileTemplate.setExportFileDestination(EXPORT_FILE_DESTINATION);
     exportFileTemplate.setTemplate(new String[] {"__caseref__", "__uac__", "UPRN"});
+    exportFileTemplate.setQuestionnaireType(1);
 
     Case caze = new Case();
     CaseFieldsHelper.setDummyCaseFields(caze);
@@ -189,6 +191,7 @@ class ExportFileProcessorTest {
     exportFileTemplate.setExportFileDestination(EXPORT_FILE_DESTINATION);
     exportFileTemplate.setTemplate(
         new String[] {"__caseref__", "__uac__", "__request__.foo", "__request__.spam"});
+    exportFileTemplate.setQuestionnaireType(1);
 
     Case caze = new Case();
     CaseFieldsHelper.setDummyCaseFields(caze);
@@ -253,6 +256,7 @@ class ExportFileProcessorTest {
     exportFileTemplate.setPackCode(PACK_CODE);
     exportFileTemplate.setExportFileDestination(EXPORT_FILE_DESTINATION);
     exportFileTemplate.setTemplate(new String[] {"__caseref__", "__uac__", "__request__.foo"});
+    exportFileTemplate.setQuestionnaireType(1);
 
     Case caze = new Case();
     CaseFieldsHelper.setDummyCaseFields(caze);

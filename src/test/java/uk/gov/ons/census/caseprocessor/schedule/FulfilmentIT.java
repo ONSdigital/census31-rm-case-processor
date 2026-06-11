@@ -75,6 +75,7 @@ class FulfilmentIT {
       exportFileTemplate.setExportFileDestination(EXPORT_FILE_DESTINATION);
       exportFileTemplate.setTemplate(new String[] {"__caseref__", "ADDRESS_LINE1", "__uac__"});
       exportFileTemplate.setDescription("Test description");
+      exportFileTemplate.setQuestionnaireType(1);
       exportFileTemplateRepository.saveAndFlush(exportFileTemplate);
 
       Case caze = junkDataHelper.setupJunkCase();

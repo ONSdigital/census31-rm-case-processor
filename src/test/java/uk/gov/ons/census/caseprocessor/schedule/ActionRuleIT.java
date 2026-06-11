@@ -166,6 +166,7 @@ class ActionRuleIT {
     exportFileTemplate.setPackCode(PACK_CODE);
     exportFileTemplate.setExportFileDestination(EXPORT_FILE_DESTINATION);
     exportFileTemplate.setDescription("Test description");
+    exportFileTemplate.setQuestionnaireType(1);
     return exportFileTemplateRepository.saveAndFlush(exportFileTemplate);
   }
 
