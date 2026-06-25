@@ -66,7 +66,7 @@ public class ActionRuleTriggerer {
                           "__uac__".equals(templateValue) || "__qid__".equals(templateValue));
 
           if (requiresUacQid && questionnaireType == null) {
-            throw new IllegalStateException(
+            throw new IllegalArgumentException(
                 "Export file template contains __uac__ or __qid__ but questionnaire type is null");
           }
         }
@@ -101,7 +101,7 @@ public class ActionRuleTriggerer {
         triggeredActionRule.setHasTriggered(true);
         actionRuleRepository.save(triggeredActionRule);
 
-      } catch (IllegalStateException e) {
+      } catch (IllegalArgumentException e) {
         // This exception will occur if we have an EXPORT_FILE action rule that wants an uac or qid
         // but the questionnaire type on the template is null. In this case, the rule will never
         // work and should be aborted. The Action Rule will be marked as errored
@@ -109,7 +109,7 @@ public class ActionRuleTriggerer {
         String errorMessage =
             "ActionRule "
                 + triggeredActionRule.getId()
-                + " failed with an IllegalStateException,"
+                + " failed with an IllegalArgumentException,"
                 + " it has been marked Triggered to stop it running until it is fixed."
                 + " Exception Message: "
                 + e.getMessage();

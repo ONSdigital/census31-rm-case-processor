@@ -160,7 +160,7 @@ class ActionRuleIT {
     String expectedErrorMessage =
         "ActionRule "
             + actionRule.getId()
-            + " failed with an IllegalStateException,"
+            + " failed with an IllegalArgumentException,"
             + " it has been marked Triggered to stop it running until it is fixed.";
 
     assertThat(output).contains(expectedErrorMessage);
