@@ -48,7 +48,6 @@ public class ExportFileProcessor {
   public void process(FulfilmentToProcess fulfilmentToProcess) {
     ExportFileTemplate exportFileTemplate = fulfilmentToProcess.getExportFileTemplate();
 
-    // TODO Pass in questionnaireType from exportFileTemplate when it's been added.
     processExportFileRow(
         exportFileTemplate.getTemplate(),
         fulfilmentToProcess.getCaze(),
@@ -59,6 +58,7 @@ public class ExportFileProcessor {
         fulfilmentToProcess.getCorrelationId(),
         fulfilmentToProcess.getOriginatingUser(),
         fulfilmentToProcess.getUacMetadata(),
+        exportFileTemplate.getQuestionnaireType(),
         fulfilmentToProcess.getPersonalisation());
   }
 
@@ -71,6 +71,7 @@ public class ExportFileProcessor {
       String exportFileDestination,
       UUID correlationId,
       String originatingUser,
+      Integer questionnaireType,
       Object uacMetadata) {
     // Supply empty personalisation if the caller does not
     processExportFileRow(
@@ -83,6 +84,7 @@ public class ExportFileProcessor {
         correlationId,
         originatingUser,
         uacMetadata,
+        questionnaireType,
         Map.of());
   }
 
@@ -96,6 +98,7 @@ public class ExportFileProcessor {
       UUID correlationId,
       String originatingUser,
       Object uacMetadata,
+      Integer questionnaireType,
       Map<String, String> personalisation) {
 
     UacQidDTO uacQidDTO = null;
@@ -110,14 +113,18 @@ public class ExportFileProcessor {
           break;
         case "__uac__":
           if (uacQidDTO == null) {
-            uacQidDTO = getUacQidForCase(caze, correlationId, originatingUser, uacMetadata);
+            uacQidDTO =
+                getUacQidForCase(
+                    caze, correlationId, originatingUser, uacMetadata, questionnaireType);
           }
 
           rowStrings[i] = uacQidDTO.getUac();
           break;
         case "__qid__":
           if (uacQidDTO == null) {
-            uacQidDTO = getUacQidForCase(caze, correlationId, originatingUser, uacMetadata);
+            uacQidDTO =
+                getUacQidForCase(
+                    caze, correlationId, originatingUser, uacMetadata, questionnaireType);
           }
 
           rowStrings[i] = uacQidDTO.getQid();
@@ -165,11 +172,13 @@ public class ExportFileProcessor {
   }
 
   private UacQidDTO getUacQidForCase(
-      Case caze, UUID correlationId, String originatingUser, Object metadata) {
+      Case caze,
+      UUID correlationId,
+      String originatingUser,
+      Object metadata,
+      Integer questionnaireType) {
 
-    // TODO: Currently the questionnaireType is hardcoded to 1. This will need to be based on the
-    // questionnaireType from the export file template.
-    UacQidDTO uacQidDTO = uacQidCache.getUacQidPair(1);
+    UacQidDTO uacQidDTO = uacQidCache.getUacQidPair(questionnaireType);
     UacQidLink uacQidLink = new UacQidLink();
     uacQidLink.setId(UUID.randomUUID());
     uacQidLink.setQid(uacQidDTO.getQid());

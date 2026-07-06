@@ -91,6 +91,7 @@ public class JunkDataHelper {
     junkExportFileTemplate.setPackCode("JUNK");
     junkExportFileTemplate.setTemplate(template);
     junkExportFileTemplate.setDescription("junk");
+    junkExportFileTemplate.setQuestionnaireType(1);
     exportFileTemplateRepository.saveAndFlush(junkExportFileTemplate);
     return junkExportFileTemplate;
   }

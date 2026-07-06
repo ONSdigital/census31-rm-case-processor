@@ -33,6 +33,7 @@ class CaseToProcessProcessorTest {
     exportFileTemplate.setTemplate(new String[] {"__caseref__", "__uac__", "foo"});
     exportFileTemplate.setPackCode("test pack code");
     exportFileTemplate.setExportFileDestination("test export file destination");
+    exportFileTemplate.setQuestionnaireType(1);
 
     ActionRule actionRule = new ActionRule();
     actionRule.setId(UUID.randomUUID());
@@ -57,6 +58,7 @@ class CaseToProcessProcessorTest {
             exportFileTemplate.getExportFileDestination(),
             actionRule.getId(),
             null,
+            1,
             actionRule.getUacMetadata());
   }
 

@@ -82,7 +82,7 @@ class ActionRuleIT {
         pubsubHelper.pubsubProjectListen(OUTBOUND_UAC_SUBSCRIPTION, EventDTO.class)) {
       // Given
       Case caze = junkDataHelper.setupJunkCase();
-      ExportFileTemplate exportFileTemplate = setUpExportFileTemplate();
+      ExportFileTemplate exportFileTemplate = setUpExportFileTemplate(1);
 
       // When
       setUpActionRule(
@@ -108,6 +108,62 @@ class ActionRuleIT {
       assertThat(rme.getHeader().getTopic()).isEqualTo(uacUpdateTopic);
       assertThat(rme.getPayload().getUacUpdate().getCaseId()).isEqualTo(caze.getId());
     }
+  }
+
+  @Test
+  void testExportFileRuleNoUacQid() throws Exception {
+    try (QueueSpy<EventDTO> outboundUacQueue =
+        pubsubHelper.pubsubProjectListen(OUTBOUND_UAC_SUBSCRIPTION, EventDTO.class)) {
+      // Given
+      Case caze = junkDataHelper.setupJunkCase();
+      ExportFileTemplate exportFileTemplate = setUpExportFileTemplateNoUac();
+
+      // When
+      setUpActionRule(
+          ActionRuleType.EXPORT_FILE,
+          caze.getCollectionExercise(),
+          exportFileTemplate,
+          null,
+          null,
+          null);
+      EventDTO rme = outboundUacQueue.getQueue().poll(20, TimeUnit.SECONDS);
+      List<ExportFileRow> exportFileRows = exportFileRowRepository.findAll();
+      ExportFileRow exportFileRow = exportFileRows.get(0);
+
+      // Then
+      assertThat(exportFileRow).isNotNull();
+      assertThat(exportFileRow.getBatchQuantity()).isEqualTo(1);
+      assertThat(exportFileRow.getPackCode()).isEqualTo(PACK_CODE);
+      assertThat(exportFileRow.getExportFileDestination()).isEqualTo(EXPORT_FILE_DESTINATION);
+      assertThat(exportFileRow.getRow())
+          .startsWith("\"" + caze.getCaseRef() + "\",\"" + caze.getAddressLine1() + "\"");
+    }
+  }
+
+  @Test
+  void testUacTemplateWithNoQidType(CapturedOutput output) throws Exception {
+    Case caze = junkDataHelper.setupJunkCase();
+    ExportFileTemplate exportFileTemplate = setUpExportFileTemplate(null);
+
+    // When
+    ActionRule actionRule =
+        setUpActionRule(
+            ActionRuleType.EXPORT_FILE,
+            caze.getCollectionExercise(),
+            exportFileTemplate,
+            null,
+            null,
+            "NoneExistantColumn = 'Throw A SQL Exception");
+
+    actionRulePoller.getTriggeredActionRule(actionRule.getId());
+
+    String expectedErrorMessage =
+        "ActionRule "
+            + actionRule.getId()
+            + " failed with an IllegalArgumentException,"
+            + " it has been marked Triggered to stop it running until it is fixed.";
+
+    assertThat(output).contains(expectedErrorMessage);
   }
 
   @Test
@@ -137,7 +193,7 @@ class ActionRuleIT {
   @Test
   void testBadSQLIsHandled(CapturedOutput output) throws Exception {
     Case caze = junkDataHelper.setupJunkCase();
-    ExportFileTemplate exportFileTemplate = setUpExportFileTemplate();
+    ExportFileTemplate exportFileTemplate = setUpExportFileTemplate(1);
 
     // When
     ActionRule actionRule =
@@ -160,12 +216,23 @@ class ActionRuleIT {
     assertThat(output).contains(expectedErrorMessage);
   }
 
-  private ExportFileTemplate setUpExportFileTemplate() {
+  private ExportFileTemplate setUpExportFileTemplate(Integer questionnaireType) {
     ExportFileTemplate exportFileTemplate = new ExportFileTemplate();
     exportFileTemplate.setTemplate(new String[] {"__caseref__", "ADDRESS_LINE1", "__uac__"});
     exportFileTemplate.setPackCode(PACK_CODE);
     exportFileTemplate.setExportFileDestination(EXPORT_FILE_DESTINATION);
     exportFileTemplate.setDescription("Test description");
+    exportFileTemplate.setQuestionnaireType(questionnaireType);
+    return exportFileTemplateRepository.saveAndFlush(exportFileTemplate);
+  }
+
+  private ExportFileTemplate setUpExportFileTemplateNoUac() {
+    ExportFileTemplate exportFileTemplate = new ExportFileTemplate();
+    exportFileTemplate.setTemplate(new String[] {"__caseref__", "ADDRESS_LINE1"});
+    exportFileTemplate.setPackCode(PACK_CODE);
+    exportFileTemplate.setExportFileDestination(EXPORT_FILE_DESTINATION);
+    exportFileTemplate.setDescription("Test description");
+    exportFileTemplate.setQuestionnaireType(null);
     return exportFileTemplateRepository.saveAndFlush(exportFileTemplate);
   }
 
