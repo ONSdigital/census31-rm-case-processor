@@ -69,6 +69,7 @@ public class InvalidCaseReceiverIT {
       EventHeaderDTO eventHeader = new EventHeaderDTO();
       eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
       eventHeader.setTopic(INBOUND_INVALID_CASE_TOPIC);
+      eventHeader.setMessageType(EventType.INVALID_CASE);
       junkDataHelper.junkify(eventHeader);
       event.setHeader(eventHeader);
 

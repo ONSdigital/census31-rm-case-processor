@@ -64,6 +64,7 @@ public class DeactivateUacReceiverIT {
       EventHeaderDTO eventHeader = new EventHeaderDTO();
       eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
       eventHeader.setTopic(deactivateUacTopic);
+      eventHeader.setMessageType(EventType.DEACTIVATE_UAC);
       junkDataHelper.junkify(eventHeader);
       event.setHeader(eventHeader);
 

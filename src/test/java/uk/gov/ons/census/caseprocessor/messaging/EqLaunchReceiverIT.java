@@ -28,6 +28,7 @@ import uk.gov.ons.census.caseprocessor.testutils.PubsubHelper;
 import uk.gov.ons.census.caseprocessor.testutils.QueueSpy;
 import uk.gov.ons.census.common.model.entity.Case;
 import uk.gov.ons.census.common.model.entity.Event;
+import uk.gov.ons.census.common.model.entity.EventType;
 import uk.gov.ons.census.common.model.entity.UacQidLink;
 
 @ContextConfiguration
@@ -76,6 +77,7 @@ public class EqLaunchReceiverIT {
       EventHeaderDTO eventHeader = new EventHeaderDTO();
       eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
       eventHeader.setTopic(INBOUND_TOPIC);
+      eventHeader.setMessageType(EventType.EQ_LAUNCH);
       junkDataHelper.junkify(eventHeader);
       eqLaunchedEvent.setHeader(eventHeader);
 

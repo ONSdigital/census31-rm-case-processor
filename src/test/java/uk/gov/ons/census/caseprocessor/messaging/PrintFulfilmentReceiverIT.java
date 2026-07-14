@@ -29,6 +29,7 @@ import uk.gov.ons.census.caseprocessor.testutils.DeleteDataHelper;
 import uk.gov.ons.census.caseprocessor.testutils.JunkDataHelper;
 import uk.gov.ons.census.caseprocessor.testutils.PubsubHelper;
 import uk.gov.ons.census.common.model.entity.Case;
+import uk.gov.ons.census.common.model.entity.EventType;
 import uk.gov.ons.census.common.model.entity.ExportFileTemplate;
 import uk.gov.ons.census.common.model.entity.FulfilmentToProcess;
 
@@ -68,6 +69,7 @@ class PrintFulfilmentReceiverIT {
     junkDataHelper.junkify(printFulfilmentEvent.getHeader());
     printFulfilmentEvent.getHeader().setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
     printFulfilmentEvent.getHeader().setTopic(PRINT_FULFILMENT_TOPIC);
+    printFulfilmentEvent.getHeader().setMessageType(EventType.PRINT_FULFILMENT);
     printFulfilmentEvent.setPayload(new PayloadDTO());
     printFulfilmentEvent.getPayload().setPrintFulfilment(new PrintFulfilmentDTO());
     printFulfilmentEvent.getPayload().getPrintFulfilment().setCaseId(caze.getId());
@@ -118,6 +120,7 @@ class PrintFulfilmentReceiverIT {
     junkDataHelper.junkify(printFulfilmentEvent.getHeader());
     printFulfilmentEvent.getHeader().setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
     printFulfilmentEvent.getHeader().setTopic(PRINT_FULFILMENT_TOPIC);
+    printFulfilmentEvent.getHeader().setMessageType(EventType.PRINT_FULFILMENT);
     printFulfilmentEvent.setPayload(new PayloadDTO());
     printFulfilmentEvent.getPayload().setPrintFulfilment(new PrintFulfilmentDTO());
     printFulfilmentEvent.getPayload().getPrintFulfilment().setCaseId(caze.getId());

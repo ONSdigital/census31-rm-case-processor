@@ -63,6 +63,7 @@ public class NewCaseReceiverIT {
       EventHeaderDTO eventHeader = new EventHeaderDTO();
       eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
       eventHeader.setTopic(NEW_CASE_TOPIC);
+      eventHeader.setMessageType(EventType.NEW_CASE);
       junkDataHelper.junkify(eventHeader);
       event.setHeader(eventHeader);
 

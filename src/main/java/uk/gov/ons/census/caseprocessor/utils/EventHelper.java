@@ -7,6 +7,7 @@ import java.util.UUID;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.EventHeaderDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.PayloadDTO;
+import uk.gov.ons.census.common.model.entity.EventType;
 
 public class EventHelper {
 
@@ -18,7 +19,8 @@ public class EventHelper {
       String eventChannel,
       String eventSource,
       UUID correlationId,
-      String originatingUser) {
+      String originatingUser,
+      EventType eventType) {
     EventHeaderDTO eventHeader = new EventHeaderDTO();
 
     eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
@@ -29,13 +31,20 @@ public class EventHelper {
     eventHeader.setCorrelationId(correlationId);
     eventHeader.setOriginatingUser(originatingUser);
     eventHeader.setTopic(topic);
+    eventHeader.setMessageType(eventType);
 
     return eventHeader;
   }
 
   public static EventHeaderDTO createEventDTO(
       String topic, UUID correlationId, String originatingUser) {
-    return createEventDTO(topic, EVENT_CHANNEL, EVENT_SOURCE, correlationId, originatingUser);
+    return createEventDTO(topic, EVENT_CHANNEL, EVENT_SOURCE, correlationId, originatingUser, null);
+  }
+
+  public static EventHeaderDTO createEventDTO(
+      String topic, UUID correlationId, String originatingUser, EventType eventType) {
+    return createEventDTO(
+        topic, EVENT_CHANNEL, EVENT_SOURCE, correlationId, originatingUser, eventType);
   }
 
   public static EventDTO getDummyEvent(UUID correlationId, String originatingUser) {

@@ -69,6 +69,7 @@ class RefusalReceiverIT {
       EventHeaderDTO eventHeader = new EventHeaderDTO();
       eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
       eventHeader.setTopic(INBOUND_REFUSAL_TOPIC);
+      eventHeader.setMessageType(EventType.RECEIPT);
       junkDataHelper.junkify(eventHeader);
       event.setHeader(eventHeader);
 

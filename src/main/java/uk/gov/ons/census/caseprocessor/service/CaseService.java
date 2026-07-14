@@ -16,6 +16,7 @@ import uk.gov.ons.census.caseprocessor.model.repository.CaseRepository;
 import uk.gov.ons.census.caseprocessor.utils.CaseFieldMapper;
 import uk.gov.ons.census.caseprocessor.utils.EventHelper;
 import uk.gov.ons.census.common.model.entity.Case;
+import uk.gov.ons.census.common.model.entity.EventType;
 
 @Service
 public class CaseService {
@@ -44,7 +45,8 @@ public class CaseService {
 
   public void emitCaseUpdate(Case caze, UUID correlationId, String originatingUser) {
     EventHeaderDTO eventHeader =
-        EventHelper.createEventDTO(caseUpdateTopic, correlationId, originatingUser);
+        EventHelper.createEventDTO(
+            caseUpdateTopic, correlationId, originatingUser, EventType.CASE_UPDATE);
 
     EventDTO event = prepareCaseEvent(caze, eventHeader);
 

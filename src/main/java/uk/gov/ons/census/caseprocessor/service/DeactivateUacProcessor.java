@@ -13,6 +13,7 @@ import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.EventHeaderDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.PayloadDTO;
 import uk.gov.ons.census.common.model.entity.Case;
+import uk.gov.ons.census.common.model.entity.EventType;
 import uk.gov.ons.census.common.model.entity.UacQidLink;
 
 @Component
@@ -42,7 +43,8 @@ public class DeactivateUacProcessor {
   }
 
   private EventDTO prepareDeactivateUacEvent(UacQidLink uacQidLink, UUID correlationId) {
-    EventHeaderDTO eventHeader = createEventDTO(deactivateUacTopic, correlationId, null);
+    EventHeaderDTO eventHeader =
+        createEventDTO(deactivateUacTopic, correlationId, null, EventType.DEACTIVATE_UAC);
 
     EventDTO event = new EventDTO();
     event.setHeader(eventHeader);
