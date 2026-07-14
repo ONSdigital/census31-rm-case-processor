@@ -129,6 +129,9 @@ public class ExportFileProcessor {
 
           rowStrings[i] = uacQidDTO.getQid();
           break;
+        case "__pack_code__":
+          rowStrings[i] = packCode;
+          break;
         default:
           if (templateItem.startsWith(REQUEST_PERSONALISATION_PREFIX)) {
             rowStrings[i] =
