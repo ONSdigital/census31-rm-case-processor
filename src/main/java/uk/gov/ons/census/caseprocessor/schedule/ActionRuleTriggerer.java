@@ -59,15 +59,27 @@ public class ActionRuleTriggerer {
         if (triggeredActionRule.getType() == ActionRuleType.EXPORT_FILE) {
           ExportFileTemplate exportFileTemplate = triggeredActionRule.getExportFileTemplate();
           Integer questionnaireType = exportFileTemplate.getQuestionnaireType();
+          Integer welshQuestionnaireType = exportFileTemplate.getWelshQuestionnaireType();
           boolean requiresUacQid =
               Arrays.stream(exportFileTemplate.getTemplate())
                   .anyMatch(
                       templateValue ->
                           "__uac__".equals(templateValue) || "__qid__".equals(templateValue));
+          boolean requiresWelshUacQid =
+              Arrays.stream(exportFileTemplate.getTemplate())
+                  .anyMatch(
+                      templateValue ->
+                          "__welsh_uac__".equals(templateValue)
+                              || "__welsh_qid__".equals(templateValue));
 
           if (requiresUacQid && questionnaireType == null) {
             throw new IllegalArgumentException(
                 "Export file template contains __uac__ or __qid__ but questionnaire type is null");
+          }
+
+          if (requiresWelshUacQid && welshQuestionnaireType == null) {
+            throw new IllegalArgumentException(
+                "Export file template contains __welsh_uac__ or __welsh_qid__ but welsh questionnaire type is null");
           }
         }
 

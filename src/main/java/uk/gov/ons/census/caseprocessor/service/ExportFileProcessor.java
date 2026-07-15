@@ -59,6 +59,7 @@ public class ExportFileProcessor {
         fulfilmentToProcess.getOriginatingUser(),
         fulfilmentToProcess.getUacMetadata(),
         exportFileTemplate.getQuestionnaireType(),
+        exportFileTemplate.getWelshQuestionnaireType(),
         fulfilmentToProcess.getPersonalisation());
   }
 
@@ -72,6 +73,7 @@ public class ExportFileProcessor {
       UUID correlationId,
       String originatingUser,
       Integer questionnaireType,
+      Integer welshQuestionnaireType,
       Object uacMetadata) {
     // Supply empty personalisation if the caller does not
     processExportFileRow(
@@ -85,6 +87,7 @@ public class ExportFileProcessor {
         originatingUser,
         uacMetadata,
         questionnaireType,
+        welshQuestionnaireType,
         Map.of());
   }
 
@@ -99,9 +102,12 @@ public class ExportFileProcessor {
       String originatingUser,
       Object uacMetadata,
       Integer questionnaireType,
+      Integer welshQuestionnaireType,
       Map<String, String> personalisation) {
 
     UacQidDTO uacQidDTO = null;
+    UacQidDTO welshDualUacQidDTO = null;
+
     String[] rowStrings = new String[template.length];
 
     for (int i = 0; i < template.length; i++) {
@@ -128,6 +134,23 @@ public class ExportFileProcessor {
           }
 
           rowStrings[i] = uacQidDTO.getQid();
+          break;
+        case "__welsh_uac__":
+          if (welshDualUacQidDTO == null) {
+            welshDualUacQidDTO =
+                getUacQidForCase(
+                    caze, correlationId, originatingUser, uacMetadata, welshQuestionnaireType);
+          }
+          rowStrings[i] = welshDualUacQidDTO.getUac();
+          break;
+        case "__welsh_qid__":
+          if (welshDualUacQidDTO == null) {
+            welshDualUacQidDTO =
+                getUacQidForCase(
+                    caze, correlationId, originatingUser, uacMetadata, welshQuestionnaireType);
+          }
+
+          rowStrings[i] = welshDualUacQidDTO.getQid();
           break;
         case "__pack_code__":
           rowStrings[i] = packCode;
