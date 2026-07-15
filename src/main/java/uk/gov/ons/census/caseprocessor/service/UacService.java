@@ -15,6 +15,7 @@ import uk.gov.ons.census.caseprocessor.model.repository.UacQidLinkRepository;
 import uk.gov.ons.census.caseprocessor.utils.EventHelper;
 import uk.gov.ons.census.caseprocessor.utils.HashHelper;
 import uk.gov.ons.census.common.model.entity.Case;
+import uk.gov.ons.census.common.model.entity.EventType;
 import uk.gov.ons.census.common.model.entity.UacQidLink;
 
 @Service
@@ -38,7 +39,8 @@ public class UacService {
     UacQidLink savedUacQidLink = uacQidLinkRepository.save(uacQidLink);
 
     EventHeaderDTO eventHeader =
-        EventHelper.createEventDTO(uacUpdateTopic, correlationId, originatingUser);
+        EventHelper.createEventDTO(
+            uacUpdateTopic, correlationId, originatingUser, EventType.UAC_UPDATE);
 
     UacUpdateDTO uac = new UacUpdateDTO();
     uac.setQid(savedUacQidLink.getQid());

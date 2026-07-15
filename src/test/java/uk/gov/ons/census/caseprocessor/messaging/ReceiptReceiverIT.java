@@ -85,6 +85,7 @@ public class ReceiptReceiverIT {
       EventHeaderDTO eventHeader = new EventHeaderDTO();
       eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
       eventHeader.setTopic(INBOUND_RECEIPT_TOPIC);
+      eventHeader.setMessageType(EventType.RECEIPT);
       junkDataHelper.junkify(eventHeader);
       event.setHeader(eventHeader);
 

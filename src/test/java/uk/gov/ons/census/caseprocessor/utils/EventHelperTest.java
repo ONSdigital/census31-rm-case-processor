@@ -31,7 +31,7 @@ public class EventHelperTest {
   public void testCreateEventDTOWithEventTypeChannelAndSource() {
     EventHeaderDTO eventHeader =
         EventHelper.createEventDTO(
-            "TOPIC", "CHANNEL", "SOURCE", TEST_CORRELATION_ID, TEST_ORIGINATING_USER);
+            "TOPIC", "CHANNEL", "SOURCE", TEST_CORRELATION_ID, TEST_ORIGINATING_USER, null);
 
     assertThat(eventHeader.getVersion()).isEqualTo(OUTBOUND_EVENT_SCHEMA_VERSION);
     assertThat(eventHeader.getCorrelationId()).isEqualTo(TEST_CORRELATION_ID);
