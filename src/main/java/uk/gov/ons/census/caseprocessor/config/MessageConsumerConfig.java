@@ -39,7 +39,7 @@ public class MessageConsumerConfig {
   private String invalidCaseSubscription;
 
   @Value("${queueconfig.eq-launch-subscription}")
-  private String eqLaunchSubscription;
+  private String surveyLaunchedSubscription;
 
   @Value("${queueconfig.deactivate-uac-subscription}")
   private String deactivateUacSubscription;
@@ -83,7 +83,7 @@ public class MessageConsumerConfig {
   }
 
   @Bean
-  public MessageChannel eqLaunchInputChannel() {
+  public MessageChannel surveyLaunchedInputChannel() {
     return new DirectChannel();
   }
 
@@ -147,9 +147,10 @@ public class MessageConsumerConfig {
   }
 
   @Bean
-  PubSubInboundChannelAdapter eqLaunchedInbound(
-      @Qualifier("eqLaunchInputChannel") MessageChannel channel) {
-    String subscription = toProjectSubscriptionName(eqLaunchSubscription, pubsubProject).toString();
+  PubSubInboundChannelAdapter surveyLaunchedInbound(
+      @Qualifier("surveyLaunchedInputChannel") MessageChannel channel) {
+    String subscription =
+        toProjectSubscriptionName(surveyLaunchedSubscription, pubsubProject).toString();
     return makeAdapter(channel, subscription);
   }
 

@@ -15,10 +15,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import uk.gov.ons.census.caseprocessor.model.dto.EqLaunchDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.EventHeaderDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.PayloadDTO;
+import uk.gov.ons.census.caseprocessor.model.dto.SurveyLaunchedDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.UacUpdateDTO;
 import uk.gov.ons.census.caseprocessor.model.repository.EventRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.UacQidLinkRepository;
@@ -35,7 +35,7 @@ import uk.gov.ons.census.common.model.entity.UacQidLink;
 @ActiveProfiles("test")
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
-public class EqLaunchReceiverIT {
+public class SurveyLaunchedReceiverIT {
   private static final String TEST_QID = "1234334";
   private static final String INBOUND_TOPIC = "event_eq-launch";
 
@@ -81,8 +81,8 @@ public class EqLaunchReceiverIT {
       junkDataHelper.junkify(eventHeader);
       eqLaunchedEvent.setHeader(eventHeader);
 
-      EqLaunchDTO EqLaunch = new EqLaunchDTO();
-      EqLaunch.setQid(uacQidLink.getQid());
+      SurveyLaunchedDTO EqLaunch = new SurveyLaunchedDTO();
+      EqLaunch.setQuestionnaireId(uacQidLink.getQid());
       PayloadDTO payloadDTO = new PayloadDTO();
       payloadDTO.setEqLaunch(EqLaunch);
       eqLaunchedEvent.setPayload(payloadDTO);

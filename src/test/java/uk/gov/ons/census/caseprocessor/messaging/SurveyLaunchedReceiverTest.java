@@ -18,22 +18,22 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.Message;
 import uk.gov.ons.census.caseprocessor.logging.EventLogger;
-import uk.gov.ons.census.caseprocessor.model.dto.EqLaunchDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.EventHeaderDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.PayloadDTO;
-import uk.gov.ons.census.caseprocessor.service.UacService;
+import uk.gov.ons.census.caseprocessor.model.dto.SurveyLaunchedDTO;
+import uk.gov.ons.census.caseprocessor.service.SurveyLaunchedService;
 import uk.gov.ons.census.common.model.entity.EventType;
 import uk.gov.ons.census.common.model.entity.UacQidLink;
 
 @ExtendWith(MockitoExtension.class)
-public class EqLaunchReceiverTest {
+public class SurveyLaunchedReceiverTest {
   private final String TEST_QID_ID = "1234567890123456";
 
-  @Mock private UacService uacService;
   @Mock private EventLogger eventLogger;
+  @Mock private SurveyLaunchedService surveyLaunchedService;
 
-  @InjectMocks EqLaunchReceiver underTest;
+  @InjectMocks SurveyLaunchedReceiver underTest;
 
   @Test
   public void testEqLaunchedEventFromRH() {
@@ -45,43 +45,43 @@ public class EqLaunchReceiverTest {
     managementEvent.getHeader().setDateTime(OffsetDateTime.now(ZoneId.of("UTC")));
     managementEvent.getHeader().setTopic("Test topic");
     managementEvent.getHeader().setChannel("RH");
+    managementEvent.getHeader().setMessageType(EventType.EQ_LAUNCH);
     managementEvent.setPayload(new PayloadDTO());
 
-    EqLaunchDTO eqLaunch = new EqLaunchDTO();
-    eqLaunch.setQid(TEST_QID_ID);
+    SurveyLaunchedDTO eqLaunch = new SurveyLaunchedDTO();
+    eqLaunch.setQuestionnaireId(TEST_QID_ID);
     managementEvent.getPayload().setEqLaunch(eqLaunch);
 
     UacQidLink expectedUacQidLink = new UacQidLink();
     expectedUacQidLink.setQid(TEST_QID_ID);
+    expectedUacQidLink.setEqLaunched(true);
     Message<byte[]> message = constructMessage(managementEvent);
 
     // Given
-    when(uacService.findByQid(TEST_QID_ID)).thenReturn(expectedUacQidLink);
+    when(surveyLaunchedService.handleSurveyLaunchedEvent(managementEvent))
+        .thenReturn(expectedUacQidLink);
 
     // when
     underTest.receiveMessage(message);
 
     // then
-    verify(uacService).findByQid(TEST_QID_ID);
+    verify(surveyLaunchedService).handleSurveyLaunchedEvent(managementEvent);
 
     ArgumentCaptor<UacQidLink> uacQidLinkCaptor = ArgumentCaptor.forClass(UacQidLink.class);
-    verify(uacService)
-        .saveAndEmitUacUpdateEvent(
-            uacQidLinkCaptor.capture(), eq(TEST_CORRELATION_ID), eq(TEST_ORIGINATING_USER));
-
-    UacQidLink actualUacQidLink = uacQidLinkCaptor.getValue();
-    assertThat(actualUacQidLink.getQid()).isEqualTo(TEST_QID_ID);
-    assertThat(actualUacQidLink.isEqLaunched()).isTrue();
 
     verify(eventLogger)
         .logUacQidEvent(
-            eq(expectedUacQidLink),
+            uacQidLinkCaptor.capture(),
             eq("EQ launched"),
             eq(EventType.EQ_LAUNCH),
             eq(managementEvent),
             eq(message));
 
-    verifyNoMoreInteractions(uacService);
+    UacQidLink actualUacQidLink = uacQidLinkCaptor.getValue();
+    assertThat(actualUacQidLink.getQid()).isEqualTo(TEST_QID_ID);
+    assertThat(actualUacQidLink.isEqLaunched()).isTrue();
+
     verifyNoMoreInteractions(eventLogger);
+    verifyNoMoreInteractions(surveyLaunchedService);
   }
 }
