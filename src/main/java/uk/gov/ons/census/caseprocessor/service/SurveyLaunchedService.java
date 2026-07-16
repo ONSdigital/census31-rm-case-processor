@@ -19,7 +19,8 @@ public class SurveyLaunchedService {
   public UacQidLink handleSurveyLaunchedEvent(EventDTO eventDTO) {
 
     UacQidLink uacQidLink =
-        uacService.findByQid(eventDTO.getPayload().getEqLaunch().getQuestionnaireId());
+        uacService.findByQid(eventDTO.getPayload().getSurveyLaunched().getQuestionnaireId());
+
     Case caze = uacQidLink.getCaze();
     uacQidLink.setEqLaunched(true);
     uacService.saveAndEmitUacUpdateEvent(

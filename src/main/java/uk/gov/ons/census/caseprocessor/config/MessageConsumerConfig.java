@@ -38,7 +38,7 @@ public class MessageConsumerConfig {
   @Value("${queueconfig.invalid-case-subscription}")
   private String invalidCaseSubscription;
 
-  @Value("${queueconfig.eq-launch-subscription}")
+  @Value("${queueconfig.survey-launched-subscription}")
   private String surveyLaunchedSubscription;
 
   @Value("${queueconfig.deactivate-uac-subscription}")

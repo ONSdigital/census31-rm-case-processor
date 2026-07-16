@@ -37,7 +37,7 @@ import uk.gov.ons.census.common.model.entity.UacQidLink;
 @ExtendWith(SpringExtension.class)
 public class SurveyLaunchedReceiverIT {
   private static final String TEST_QID = "1234334";
-  private static final String INBOUND_TOPIC = "event_eq-launch";
+  private static final String INBOUND_TOPIC = "event_survey-launched";
 
   @Value("${queueconfig.uac-update-topic}")
   private String uacUpdateTopic;
@@ -77,14 +77,14 @@ public class SurveyLaunchedReceiverIT {
       EventHeaderDTO eventHeader = new EventHeaderDTO();
       eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
       eventHeader.setTopic(INBOUND_TOPIC);
-      eventHeader.setMessageType(EventType.EQ_LAUNCH);
+      eventHeader.setMessageType(EventType.SURVEY_LAUNCHED);
       junkDataHelper.junkify(eventHeader);
       eqLaunchedEvent.setHeader(eventHeader);
 
       SurveyLaunchedDTO EqLaunch = new SurveyLaunchedDTO();
       EqLaunch.setQuestionnaireId(uacQidLink.getQid());
       PayloadDTO payloadDTO = new PayloadDTO();
-      payloadDTO.setEqLaunch(EqLaunch);
+      payloadDTO.setSurveyLaunched(EqLaunch);
       eqLaunchedEvent.setPayload(payloadDTO);
 
       // WHEN
@@ -98,7 +98,7 @@ public class SurveyLaunchedReceiverIT {
       List<Event> events = eventRepository.findAll();
       assertThat(events.size()).isEqualTo(1);
       Event event = events.get(0);
-      assertThat(event.getDescription()).isEqualTo("EQ launched");
+      assertThat(event.getDescription()).isEqualTo("Survey launched");
       UacQidLink actualUacQidLink = event.getUacQidLink();
       assertThat(actualUacQidLink.getQid()).isEqualTo(TEST_QID);
       assertThat(actualUacQidLink.getCaze().getId()).isEqualTo(caze.getId());

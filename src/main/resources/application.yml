@@ -43,7 +43,7 @@ queueconfig:
   receipt-subscription: event_receipt_rm-case-processor
   refusal-subscription: event_refusal_rm-case-processor
   invalid-case-subscription: event_invalid-case_rm-case-processor
-  eq-launch-subscription: event_eq-launch_rm-case-processor
+  survey-launched-subscription: event_survey-launched_rm-case-processor
   print-fulfilment-subscription: event_print-fulfilment_rm-case-processor
   deactivate-uac-subscription: event_deactivate-uac_rm-case-processor
   update-sample-subscription: event_update-sample_rm-case-processor

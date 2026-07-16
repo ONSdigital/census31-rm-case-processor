@@ -1,6 +1,7 @@
 package uk.gov.ons.census.caseprocessor.messaging;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static uk.gov.ons.census.caseprocessor.testutils.MessageConstructor.constructMessage;
@@ -10,6 +11,7 @@ import static uk.gov.ons.census.caseprocessor.utils.Constants.OUTBOUND_EVENT_SCH
 
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -36,7 +38,7 @@ public class SurveyLaunchedReceiverTest {
   @InjectMocks SurveyLaunchedReceiver underTest;
 
   @Test
-  public void testEqLaunchedEventFromRH() {
+  public void testSurveyLaunchedEventFromRH() {
     EventDTO managementEvent = new EventDTO();
     managementEvent.setHeader(new EventHeaderDTO());
     managementEvent.getHeader().setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
@@ -45,12 +47,12 @@ public class SurveyLaunchedReceiverTest {
     managementEvent.getHeader().setDateTime(OffsetDateTime.now(ZoneId.of("UTC")));
     managementEvent.getHeader().setTopic("Test topic");
     managementEvent.getHeader().setChannel("RH");
-    managementEvent.getHeader().setMessageType(EventType.EQ_LAUNCH);
+    managementEvent.getHeader().setMessageType(EventType.SURVEY_LAUNCHED);
     managementEvent.setPayload(new PayloadDTO());
 
     SurveyLaunchedDTO eqLaunch = new SurveyLaunchedDTO();
     eqLaunch.setQuestionnaireId(TEST_QID_ID);
-    managementEvent.getPayload().setEqLaunch(eqLaunch);
+    managementEvent.getPayload().setSurveyLaunched(eqLaunch);
 
     UacQidLink expectedUacQidLink = new UacQidLink();
     expectedUacQidLink.setQid(TEST_QID_ID);
@@ -72,8 +74,8 @@ public class SurveyLaunchedReceiverTest {
     verify(eventLogger)
         .logUacQidEvent(
             uacQidLinkCaptor.capture(),
-            eq("EQ launched"),
-            eq(EventType.EQ_LAUNCH),
+            eq("Survey launched"),
+            eq(EventType.SURVEY_LAUNCHED),
             eq(managementEvent),
             eq(message));
 
@@ -83,5 +85,34 @@ public class SurveyLaunchedReceiverTest {
 
     verifyNoMoreInteractions(eventLogger);
     verifyNoMoreInteractions(surveyLaunchedService);
+  }
+
+  @Test
+  void testSurveyLaunchedEventFromRHWrongEventType() {
+    EventDTO managementEvent = new EventDTO();
+    managementEvent.setHeader(new EventHeaderDTO());
+    managementEvent.getHeader().setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
+    managementEvent.getHeader().setCorrelationId(TEST_CORRELATION_ID);
+    managementEvent.getHeader().setOriginatingUser(TEST_ORIGINATING_USER);
+    managementEvent.getHeader().setDateTime(OffsetDateTime.now(ZoneId.of("UTC")));
+    managementEvent.getHeader().setTopic("Test topic");
+    managementEvent.getHeader().setChannel("RH");
+    managementEvent.getHeader().setMessageType(EventType.RECEIPT);
+    managementEvent.setPayload(new PayloadDTO());
+
+    SurveyLaunchedDTO eqLaunch = new SurveyLaunchedDTO();
+    eqLaunch.setQuestionnaireId(TEST_QID_ID);
+    managementEvent.getPayload().setSurveyLaunched(eqLaunch);
+
+    UacQidLink expectedUacQidLink = new UacQidLink();
+    expectedUacQidLink.setQid(TEST_QID_ID);
+    expectedUacQidLink.setEqLaunched(true);
+    Message<byte[]> message = constructMessage(managementEvent);
+
+    RuntimeException thrown =
+        assertThrows(RuntimeException.class, () -> underTest.receiveMessage(message));
+
+    Assertions.assertThat(thrown.getMessage())
+        .isEqualTo("Event Type 'RECEIPT' is invalid on this topic");
   }
 }

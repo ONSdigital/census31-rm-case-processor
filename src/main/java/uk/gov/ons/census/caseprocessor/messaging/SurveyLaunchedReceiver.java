@@ -35,7 +35,8 @@ public class SurveyLaunchedReceiver {
 
     UacQidLink uacQidLink = surveyLaunchedService.handleSurveyLaunchedEvent(event);
 
-    eventLogger.logUacQidEvent(uacQidLink, "EQ launched", EventType.EQ_LAUNCH, event, message);
+    eventLogger.logUacQidEvent(
+        uacQidLink, "Survey launched", EventType.SURVEY_LAUNCHED, event, message);
   }
 
   private boolean processEvent(EventDTO surveyEvent) {
@@ -43,7 +44,7 @@ public class SurveyLaunchedReceiver {
     EventHeaderDTO event = surveyEvent.getHeader();
 
     switch (event.getMessageType()) {
-      case EQ_LAUNCH:
+      case SURVEY_LAUNCHED:
         return true;
 
       default:
