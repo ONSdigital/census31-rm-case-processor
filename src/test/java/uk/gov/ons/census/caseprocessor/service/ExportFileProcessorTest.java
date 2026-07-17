@@ -49,7 +49,8 @@ class ExportFileProcessorTest {
     CaseFieldsHelper.setDummyCaseFields(caze);
 
     ExportFileTemplate exportFileTemplate = new ExportFileTemplate();
-    exportFileTemplate.setTemplate(new String[] {"__caseref__", "__uac__", "UPRN"});
+    exportFileTemplate.setTemplate(
+        new String[] {"__caseref__", "__uac__", "UPRN", "__pack_code__"});
     exportFileTemplate.setPackCode(PACK_CODE);
     exportFileTemplate.setExportFileDestination(EXPORT_FILE_DESTINATION);
 
@@ -91,7 +92,7 @@ class ExportFileProcessorTest {
     assertThat(actualExportFileRow.getPackCode()).isEqualTo(PACK_CODE);
     assertThat(actualExportFileRow.getExportFileDestination()).isEqualTo(EXPORT_FILE_DESTINATION);
     assertThat(actualExportFileRow.getRow())
-        .isEqualTo("\"123\",\"" + UAC + "\",\"" + caze.getUprn() + "\"");
+        .isEqualTo("\"123\",\"" + UAC + "\",\"" + caze.getUprn() + "\",\"" + PACK_CODE + "\"");
 
     ArgumentCaptor<UacQidLink> uacQidLinkCaptor = ArgumentCaptor.forClass(UacQidLink.class);
     verify(uacService)
@@ -184,7 +185,8 @@ class ExportFileProcessorTest {
     ExportFileTemplate exportFileTemplate = new ExportFileTemplate();
     exportFileTemplate.setPackCode(PACK_CODE);
     exportFileTemplate.setExportFileDestination(EXPORT_FILE_DESTINATION);
-    exportFileTemplate.setTemplate(new String[] {"__caseref__", "__uac__", "UPRN"});
+    exportFileTemplate.setTemplate(
+        new String[] {"__caseref__", "__uac__", "UPRN", "__pack_code__"});
     exportFileTemplate.setQuestionnaireType(1);
 
     Case caze = new Case();
@@ -216,7 +218,7 @@ class ExportFileProcessorTest {
     assertThat(actualExportFileRow.getPackCode()).isEqualTo(PACK_CODE);
     assertThat(actualExportFileRow.getExportFileDestination()).isEqualTo(EXPORT_FILE_DESTINATION);
     assertThat(actualExportFileRow.getRow())
-        .isEqualTo("\"123\",\"" + UAC + "\",\"" + caze.getUprn() + "\"");
+        .isEqualTo("\"123\",\"" + UAC + "\",\"" + caze.getUprn() + "\",\"" + PACK_CODE + "\"");
 
     ArgumentCaptor<UacQidLink> uacQidLinkCaptor = ArgumentCaptor.forClass(UacQidLink.class);
     verify(uacService)
@@ -250,7 +252,9 @@ class ExportFileProcessorTest {
     exportFileTemplate.setPackCode(PACK_CODE);
     exportFileTemplate.setExportFileDestination(EXPORT_FILE_DESTINATION);
     exportFileTemplate.setTemplate(
-        new String[] {"__caseref__", "__uac__", "__request__.foo", "__request__.spam"});
+        new String[] {
+          "__caseref__", "__uac__", "__pack_code__", "__request__.foo", "__request__.spam"
+        });
     exportFileTemplate.setQuestionnaireType(1);
 
     Case caze = new Case();
@@ -282,7 +286,8 @@ class ExportFileProcessorTest {
     ExportFileRow actualExportFileRow = exportFileRowArgumentCaptor.getValue();
     assertThat(actualExportFileRow.getPackCode()).isEqualTo(PACK_CODE);
     assertThat(actualExportFileRow.getExportFileDestination()).isEqualTo(EXPORT_FILE_DESTINATION);
-    assertThat(actualExportFileRow.getRow()).isEqualTo("\"123\",\"" + UAC + "\",\"bar\",\"eggs\"");
+    assertThat(actualExportFileRow.getRow())
+        .isEqualTo("\"123\",\"" + UAC + "\",\"" + PACK_CODE + "\",\"bar\",\"eggs\"");
 
     ArgumentCaptor<UacQidLink> uacQidLinkCaptor = ArgumentCaptor.forClass(UacQidLink.class);
     verify(uacService)
@@ -315,7 +320,8 @@ class ExportFileProcessorTest {
     ExportFileTemplate exportFileTemplate = new ExportFileTemplate();
     exportFileTemplate.setPackCode(PACK_CODE);
     exportFileTemplate.setExportFileDestination(EXPORT_FILE_DESTINATION);
-    exportFileTemplate.setTemplate(new String[] {"__caseref__", "__uac__", "__request__.foo"});
+    exportFileTemplate.setTemplate(
+        new String[] {"__caseref__", "__uac__", "__pack_code__", "__request__.foo"});
     exportFileTemplate.setQuestionnaireType(1);
 
     Case caze = new Case();
@@ -347,7 +353,8 @@ class ExportFileProcessorTest {
     ExportFileRow actualExportFileRow = exportFileRowArgumentCaptor.getValue();
     assertThat(actualExportFileRow.getPackCode()).isEqualTo(PACK_CODE);
     assertThat(actualExportFileRow.getExportFileDestination()).isEqualTo(EXPORT_FILE_DESTINATION);
-    assertThat(actualExportFileRow.getRow()).isEqualTo("\"123\",\"" + UAC + "\",");
+    assertThat(actualExportFileRow.getRow())
+        .isEqualTo("\"123\",\"" + UAC + "\",\"" + PACK_CODE + "\",");
 
     ArgumentCaptor<UacQidLink> uacQidLinkCaptor = ArgumentCaptor.forClass(UacQidLink.class);
     verify(uacService)
