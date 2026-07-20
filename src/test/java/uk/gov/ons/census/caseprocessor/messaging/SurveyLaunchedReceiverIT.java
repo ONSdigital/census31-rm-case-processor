@@ -69,7 +69,7 @@ public class SurveyLaunchedReceiverIT {
       uacQidLink.setUacHash("junkHash");
       uacQidLink.setQid(TEST_QID);
       uacQidLink.setCaze(caze);
-      uacQidLink.setEqLaunched(false);
+      uacQidLink.setSurveyLaunched(false);
       uacQidLinkRepository.saveAndFlush(uacQidLink);
 
       EventDTO surveyLaunchedEvent = new EventDTO();
@@ -93,7 +93,7 @@ public class SurveyLaunchedReceiverIT {
       // THEN
       EventDTO uacUpdatedEvent = outboundUacQueueSpy.checkExpectedMessageReceived();
       UacUpdateDTO emittedUac = uacUpdatedEvent.getPayload().getUacUpdate();
-      assertThat(emittedUac.isEqLaunched()).isTrue();
+      assertThat(emittedUac.isSurveyLaunched()).isTrue();
 
       EventDTO caseUpdatedEvent = outboundCaseQueueSpy.checkExpectedMessageReceived();
       CaseUpdateDTO emittedCase = caseUpdatedEvent.getPayload().getCaseUpdate();

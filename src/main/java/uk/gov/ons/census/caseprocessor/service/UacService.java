@@ -47,7 +47,7 @@ public class UacService {
     uac.setUacHash(savedUacQidLink.getUacHash());
     uac.setActive(savedUacQidLink.isActive());
     uac.setReceiptReceived(savedUacQidLink.isReceiptReceived());
-    uac.setEqLaunched(savedUacQidLink.isEqLaunched());
+    uac.setSurveyLaunched(savedUacQidLink.isSurveyLaunched());
 
     uac.setCaseId(savedUacQidLink.getCaze().getId());
     uac.setCollectionExerciseId(savedUacQidLink.getCaze().getCollectionExercise().getId());

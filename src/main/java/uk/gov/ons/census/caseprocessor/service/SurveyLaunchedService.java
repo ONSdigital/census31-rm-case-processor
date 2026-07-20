@@ -22,7 +22,7 @@ public class SurveyLaunchedService {
         uacService.findByQid(eventDTO.getPayload().getSurveyLaunched().getQuestionnaireId());
 
     Case caze = uacQidLink.getCaze();
-    uacQidLink.setEqLaunched(true);
+    uacQidLink.setSurveyLaunched(true);
     uacService.saveAndEmitUacUpdateEvent(
         uacQidLink,
         eventDTO.getHeader().getCorrelationId(),

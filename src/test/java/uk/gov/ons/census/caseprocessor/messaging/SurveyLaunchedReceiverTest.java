@@ -56,7 +56,7 @@ public class SurveyLaunchedReceiverTest {
 
     UacQidLink expectedUacQidLink = new UacQidLink();
     expectedUacQidLink.setQid(TEST_QID_ID);
-    expectedUacQidLink.setEqLaunched(true);
+    expectedUacQidLink.setSurveyLaunched(true);
     Message<byte[]> message = constructMessage(managementEvent);
 
     // Given
@@ -81,7 +81,7 @@ public class SurveyLaunchedReceiverTest {
 
     UacQidLink actualUacQidLink = uacQidLinkCaptor.getValue();
     assertThat(actualUacQidLink.getQid()).isEqualTo(TEST_QID_ID);
-    assertThat(actualUacQidLink.isEqLaunched()).isTrue();
+    assertThat(actualUacQidLink.isSurveyLaunched()).isTrue();
 
     verifyNoMoreInteractions(eventLogger);
     verifyNoMoreInteractions(surveyLaunchedService);
@@ -106,7 +106,7 @@ public class SurveyLaunchedReceiverTest {
 
     UacQidLink expectedUacQidLink = new UacQidLink();
     expectedUacQidLink.setQid(TEST_QID_ID);
-    expectedUacQidLink.setEqLaunched(true);
+    expectedUacQidLink.setSurveyLaunched(true);
     Message<byte[]> message = constructMessage(managementEvent);
 
     RuntimeException thrown =

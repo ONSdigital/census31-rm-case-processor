@@ -54,7 +54,7 @@ public class SurveyLaunchedServiceTest {
 
     UacQidLink expectedUacQidLink = new UacQidLink();
     expectedUacQidLink.setQid(TEST_QID_ID);
-    expectedUacQidLink.setEqLaunched(false);
+    expectedUacQidLink.setSurveyLaunched(false);
     expectedUacQidLink.setCaze(caze);
 
     when(uacService.findByQid(TEST_QID_ID)).thenReturn(expectedUacQidLink);
@@ -73,7 +73,7 @@ public class SurveyLaunchedServiceTest {
         .saveAndEmitUacUpdateEvent(
             uacQidLinkArgumentCaptor.capture(), eq(TEST_CORRELATION_ID), eq(TEST_ORIGINATING_USER));
     UacQidLink capturedUacQidLink = uacQidLinkArgumentCaptor.getValue();
-    assertThat(capturedUacQidLink.isEqLaunched()).isTrue();
+    assertThat(capturedUacQidLink.isSurveyLaunched()).isTrue();
     assertThat(capturedUacQidLink.getCaze().isSurveyLaunched()).isTrue();
   }
 
@@ -97,7 +97,7 @@ public class SurveyLaunchedServiceTest {
 
     UacQidLink expectedUacQidLink = new UacQidLink();
     expectedUacQidLink.setQid(TEST_QID_ID);
-    expectedUacQidLink.setEqLaunched(false);
+    expectedUacQidLink.setSurveyLaunched(false);
 
     when(uacService.findByQid(TEST_QID_ID)).thenReturn(expectedUacQidLink);
     when(uacService.saveAndEmitUacUpdateEvent(
@@ -115,7 +115,7 @@ public class SurveyLaunchedServiceTest {
         .saveAndEmitUacUpdateEvent(
             uacQidLinkArgumentCaptor.capture(), eq(TEST_CORRELATION_ID), eq(TEST_ORIGINATING_USER));
     UacQidLink capturedUacQidLink = uacQidLinkArgumentCaptor.getValue();
-    assertThat(capturedUacQidLink.isEqLaunched()).isTrue();
+    assertThat(capturedUacQidLink.isSurveyLaunched()).isTrue();
 
     verifyNoInteractions(caseService);
   }
