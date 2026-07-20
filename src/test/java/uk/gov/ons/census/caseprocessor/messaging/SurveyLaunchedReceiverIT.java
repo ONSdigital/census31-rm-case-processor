@@ -1,6 +1,7 @@
 package uk.gov.ons.census.caseprocessor.messaging;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static uk.gov.ons.census.caseprocessor.testutils.TestConstants.OUTBOUND_CASE_SUBSCRIPTION;
 import static uk.gov.ons.census.caseprocessor.testutils.TestConstants.OUTBOUND_UAC_SUBSCRIPTION;
 import static uk.gov.ons.census.caseprocessor.utils.Constants.OUTBOUND_EVENT_SCHEMA_VERSION;
 
@@ -15,11 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
-import uk.gov.ons.census.caseprocessor.model.dto.EventHeaderDTO;
-import uk.gov.ons.census.caseprocessor.model.dto.PayloadDTO;
-import uk.gov.ons.census.caseprocessor.model.dto.SurveyLaunchedDTO;
-import uk.gov.ons.census.caseprocessor.model.dto.UacUpdateDTO;
+import uk.gov.ons.census.caseprocessor.model.dto.*;
 import uk.gov.ons.census.caseprocessor.model.repository.EventRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.UacQidLinkRepository;
 import uk.gov.ons.census.caseprocessor.testutils.DeleteDataHelper;
@@ -56,11 +53,13 @@ public class SurveyLaunchedReceiverIT {
   }
 
   @Test
-  public void testEqLaunchLogsEventSetsFlagAndEmitsCorrectUACUpdatedEvent() throws Exception {
+  public void testSurveyLaunchedLogsEventSetsFlagAndEmitsCorrectUACUpdatedEvent() throws Exception {
     // GIVEN
 
     try (QueueSpy<EventDTO> outboundUacQueueSpy =
-        pubsubHelper.pubsubProjectListen(OUTBOUND_UAC_SUBSCRIPTION, EventDTO.class)) {
+            pubsubHelper.pubsubProjectListen(OUTBOUND_UAC_SUBSCRIPTION, EventDTO.class);
+        QueueSpy<EventDTO> outboundCaseQueueSpy =
+            pubsubHelper.pubsubProjectListen(OUTBOUND_CASE_SUBSCRIPTION, EventDTO.class)) {
       Case caze = junkDataHelper.setupJunkCase();
 
       UacQidLink uacQidLink = new UacQidLink();
@@ -73,27 +72,32 @@ public class SurveyLaunchedReceiverIT {
       uacQidLink.setEqLaunched(false);
       uacQidLinkRepository.saveAndFlush(uacQidLink);
 
-      EventDTO eqLaunchedEvent = new EventDTO();
+      EventDTO surveyLaunchedEvent = new EventDTO();
       EventHeaderDTO eventHeader = new EventHeaderDTO();
       eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
       eventHeader.setTopic(INBOUND_TOPIC);
+      eventHeader.setChannel("RH");
       eventHeader.setMessageType(EventType.SURVEY_LAUNCHED);
       junkDataHelper.junkify(eventHeader);
-      eqLaunchedEvent.setHeader(eventHeader);
+      surveyLaunchedEvent.setHeader(eventHeader);
 
-      SurveyLaunchedDTO EqLaunch = new SurveyLaunchedDTO();
-      EqLaunch.setQuestionnaireId(uacQidLink.getQid());
+      SurveyLaunchedDTO surveyLaunch = new SurveyLaunchedDTO();
+      surveyLaunch.setQuestionnaireId(uacQidLink.getQid());
       PayloadDTO payloadDTO = new PayloadDTO();
-      payloadDTO.setSurveyLaunched(EqLaunch);
-      eqLaunchedEvent.setPayload(payloadDTO);
+      payloadDTO.setSurveyLaunched(surveyLaunch);
+      surveyLaunchedEvent.setPayload(payloadDTO);
 
       // WHEN
-      pubsubHelper.sendMessageToPubsubProject(INBOUND_TOPIC, eqLaunchedEvent);
+      pubsubHelper.sendMessageToPubsubProject(INBOUND_TOPIC, surveyLaunchedEvent);
 
       // THEN
       EventDTO uacUpdatedEvent = outboundUacQueueSpy.checkExpectedMessageReceived();
       UacUpdateDTO emittedUac = uacUpdatedEvent.getPayload().getUacUpdate();
       assertThat(emittedUac.isEqLaunched()).isTrue();
+
+      EventDTO caseUpdatedEvent = outboundCaseQueueSpy.checkExpectedMessageReceived();
+      CaseUpdateDTO emittedCase = caseUpdatedEvent.getPayload().getCaseUpdate();
+      assertThat(emittedCase.isSurveyLaunched()).isTrue();
 
       List<Event> events = eventRepository.findAll();
       assertThat(events.size()).isEqualTo(1);

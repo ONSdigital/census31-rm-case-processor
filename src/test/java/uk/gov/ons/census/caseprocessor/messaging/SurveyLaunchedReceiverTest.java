@@ -50,9 +50,9 @@ public class SurveyLaunchedReceiverTest {
     managementEvent.getHeader().setMessageType(EventType.SURVEY_LAUNCHED);
     managementEvent.setPayload(new PayloadDTO());
 
-    SurveyLaunchedDTO eqLaunch = new SurveyLaunchedDTO();
-    eqLaunch.setQuestionnaireId(TEST_QID_ID);
-    managementEvent.getPayload().setSurveyLaunched(eqLaunch);
+    SurveyLaunchedDTO surveyLaunch = new SurveyLaunchedDTO();
+    surveyLaunch.setQuestionnaireId(TEST_QID_ID);
+    managementEvent.getPayload().setSurveyLaunched(surveyLaunch);
 
     UacQidLink expectedUacQidLink = new UacQidLink();
     expectedUacQidLink.setQid(TEST_QID_ID);
@@ -100,9 +100,9 @@ public class SurveyLaunchedReceiverTest {
     managementEvent.getHeader().setMessageType(EventType.RECEIPT);
     managementEvent.setPayload(new PayloadDTO());
 
-    SurveyLaunchedDTO eqLaunch = new SurveyLaunchedDTO();
-    eqLaunch.setQuestionnaireId(TEST_QID_ID);
-    managementEvent.getPayload().setSurveyLaunched(eqLaunch);
+    SurveyLaunchedDTO surveyLaunch = new SurveyLaunchedDTO();
+    surveyLaunch.setQuestionnaireId(TEST_QID_ID);
+    managementEvent.getPayload().setSurveyLaunched(surveyLaunch);
 
     UacQidLink expectedUacQidLink = new UacQidLink();
     expectedUacQidLink.setQid(TEST_QID_ID);
