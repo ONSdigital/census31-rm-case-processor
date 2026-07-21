@@ -92,7 +92,8 @@ class ActionRuleTriggererTest {
   private void testMissingQuestionnaireTypeValidation(String[] template, boolean isWelsh)
       throws UnknownHostException {
     // Given
-    ExportFileTemplate exportFileTemplate = createExportFileTemplate(template, isWelsh);
+    ExportFileTemplate exportFileTemplate =
+        createExportFileTemplateWithNullQuestionnaireType(template, isWelsh);
     ActionRule actionRule = createActionRule(exportFileTemplate);
 
     when(actionRuleRepository.findByTriggerDateTimeBeforeAndHasTriggeredIsFalse(
@@ -108,7 +109,8 @@ class ActionRuleTriggererTest {
     verifyActionRuleErrored(actionRule);
   }
 
-  private ExportFileTemplate createExportFileTemplate(String[] template, boolean isWelsh) {
+  private ExportFileTemplate createExportFileTemplateWithNullQuestionnaireType(
+      String[] template, boolean isWelsh) {
     ExportFileTemplate exportFileTemplate = new ExportFileTemplate();
     exportFileTemplate.setTemplate(template);
     exportFileTemplate.setPackCode("Packcode");
