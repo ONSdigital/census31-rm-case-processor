@@ -165,4 +165,47 @@ class UacServiceTest {
     assertThat(uacUpdateDto.getQid()).isEqualTo(qid);
     assertThat(uacUpdateDto.getCaseId()).isEqualTo(testCase.getId());
   }
+
+  @Test
+  void createNewUacQidWithoutCase() {
+    // Given
+    ReflectionTestUtils.setField(underTest, "uacUpdateTopic", "Test topic");
+    ReflectionTestUtils.setField(underTest, "pubsubProject", "Test project");
+
+    String qid = "TEST_QID";
+    String uac = "TEST_UAC";
+
+    UacQidLink expectedSavedUacQidLink = new UacQidLink();
+    expectedSavedUacQidLink.setUac(uac);
+    expectedSavedUacQidLink.setQid(qid);
+    expectedSavedUacQidLink.setCaze(null);
+
+    ArgumentCaptor<UacQidLink> uacQidLinkCaptor = ArgumentCaptor.forClass(UacQidLink.class);
+    when(uacQidLinkRepository.save(uacQidLinkCaptor.capture())).then(returnsFirstArg());
+
+    // When
+    underTest.createLinkAndEmitNewUacQid(
+        null, uac, qid, TEST_UAC_METADATA, TEST_CORRELATION_ID, TEST_ORIGINATING_USER);
+
+    // Then
+    UacQidLink actualSavedUacQidLink = uacQidLinkCaptor.getValue();
+    assertThat(actualSavedUacQidLink.isActive()).isTrue();
+    assertThat(actualSavedUacQidLink.getQid()).isEqualTo(qid);
+    assertThat(actualSavedUacQidLink.getUac()).isEqualTo(uac);
+    assertThat(actualSavedUacQidLink.getUacHash()).isEqualTo(HashHelper.hash(uac));
+    assertThat(actualSavedUacQidLink.getMetadata()).isEqualTo(TEST_UAC_METADATA);
+    assertThat(actualSavedUacQidLink.getCaze()).isEqualTo(null);
+
+    ArgumentCaptor<EventDTO> eventArgumentCaptor = ArgumentCaptor.forClass(EventDTO.class);
+    verify(messageSender).sendMessage(any(), eventArgumentCaptor.capture());
+    EventDTO actualEvent = eventArgumentCaptor.getValue();
+
+    assertThat(actualEvent.getHeader().getCorrelationId()).isEqualTo(TEST_CORRELATION_ID);
+    assertThat(actualEvent.getHeader().getOriginatingUser()).isEqualTo(TEST_ORIGINATING_USER);
+
+    UacUpdateDTO uacUpdateDto = actualEvent.getPayload().getUacUpdate();
+    assertThat(uacUpdateDto.getUacHash()).isEqualTo(HashHelper.hash(uac));
+    assertThat(uacUpdateDto.getQid()).isEqualTo(qid);
+    assertThat(uacUpdateDto.getCaseId()).isEqualTo(null);
+  }
 }

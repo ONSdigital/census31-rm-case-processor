@@ -101,4 +101,51 @@ public class DeactivateUacReceiverIT {
       assertThat(databaseEvent.getType()).isEqualTo(EventType.DEACTIVATE_UAC);
     }
   }
+
+  @Test
+  public void testDeactivateUacReceiverWithNoCase() throws Exception {
+    try (QueueSpy<EventDTO> uacRhQueue =
+        pubsubHelper.pubsubProjectListen(OUTBOUND_UAC_SUBSCRIPTION, EventDTO.class)) {
+      // GIVEN
+      EventDTO event = new EventDTO();
+      EventHeaderDTO eventHeader = new EventHeaderDTO();
+      eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
+      eventHeader.setTopic(deactivateUacTopic);
+      eventHeader.setMessageType(EventType.DEACTIVATE_UAC);
+      junkDataHelper.junkify(eventHeader);
+      event.setHeader(eventHeader);
+
+      PayloadDTO payloadDTO = new PayloadDTO();
+      DeactivateUacDTO deactivateUacDTO = new DeactivateUacDTO();
+      deactivateUacDTO.setQid(TEST_QID);
+      payloadDTO.setDeactivateUac(deactivateUacDTO);
+      event.setPayload(payloadDTO);
+
+      UacQidLink uacQidLink = new UacQidLink();
+      uacQidLink.setId(UUID.randomUUID());
+      uacQidLink.setQid(TEST_QID);
+      uacQidLink.setUac("test_uac");
+      uacQidLink.setUacHash("fakeHash");
+      uacQidLink.setActive(true);
+      uacQidLink.setCaze(null);
+      uacQidLinkRepository.save(uacQidLink);
+
+      // WHEN
+      pubsubHelper.sendMessageToPubsubProject(deactivateUacTopic, event);
+
+      // THEN
+      EventDTO actualEvent = uacRhQueue.checkExpectedMessageReceived();
+
+      UacUpdateDTO uac = actualEvent.getPayload().getUacUpdate();
+      assertThat(uac.getQid()).isEqualTo(TEST_QID);
+      assertThat(uac.isActive()).isFalse();
+
+      UacQidLink sentUacQidLinkUpdated = uacQidLinkRepository.findByQid(TEST_QID).get();
+
+      assertThat(sentUacQidLinkUpdated.isActive()).isFalse();
+
+      Event databaseEvent = eventRepository.findAll().get(0);
+      assertThat(databaseEvent.getType()).isEqualTo(EventType.DEACTIVATE_UAC);
+    }
+  }
 }
