@@ -146,6 +146,7 @@ public class DeactivateUacReceiverIT {
 
       Event databaseEvent = eventRepository.findAll().get(0);
       assertThat(databaseEvent.getType()).isEqualTo(EventType.DEACTIVATE_UAC);
+      assertThat(uac.getCaseId() == null).isTrue();
     }
   }
 }
