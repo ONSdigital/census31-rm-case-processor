@@ -28,7 +28,7 @@ public class EqFlushProcessor {
     List<UacQidLink> uacQidLinks = caze.getUacQidLinks();
 
     for (UacQidLink uacQidLink : uacQidLinks) {
-      if (uacQidLink.isEqLaunched() && !uacQidLink.isReceiptReceived()) {
+      if (uacQidLink.isSurveyLaunched() && !uacQidLink.isReceiptReceived()) {
         CloudTaskMessage cloudTaskMessage =
             prepareEqFlushCloudTaskMessage(uacQidLink, actionRule.getId());
         messageSender.sendMessage(cloudTaskQueueTopic, cloudTaskMessage);
