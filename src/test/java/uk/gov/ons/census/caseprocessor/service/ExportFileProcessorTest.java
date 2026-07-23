@@ -82,6 +82,7 @@ class ExportFileProcessorTest {
         actionRule.getId(),
         null,
         1,
+        1,
         actionRule.getUacMetadata());
 
     //    // Then
@@ -151,6 +152,7 @@ class ExportFileProcessorTest {
         exportFileTemplate.getPackCode(),
         exportFileTemplate.getExportFileDestination(),
         actionRule.getId(),
+        null,
         null,
         null,
         actionRule.getUacMetadata());

@@ -38,6 +38,7 @@ public class CaseToProcessProcessor {
             caseToProcess.getActionRule().getId(),
             null,
             exportFileTemplate.getQuestionnaireType(),
+            exportFileTemplate.getWelshQuestionnaireType(),
             caseToProcess.getActionRule().getUacMetadata());
         break;
       case DEACTIVATE_UAC:
