@@ -47,11 +47,17 @@ public class UacService {
     uac.setUacHash(savedUacQidLink.getUacHash());
     uac.setActive(savedUacQidLink.isActive());
     uac.setReceiptReceived(savedUacQidLink.isReceiptReceived());
-    uac.setEqLaunched(savedUacQidLink.isEqLaunched());
+    uac.setSurveyLaunched(savedUacQidLink.isSurveyLaunched());
 
-    uac.setCaseId(savedUacQidLink.getCaze().getId());
-    uac.setCollectionExerciseId(savedUacQidLink.getCaze().getCollectionExercise().getId());
-    uac.setSurveyId(savedUacQidLink.getCaze().getCollectionExercise().getSurvey().getId());
+    if (savedUacQidLink.getCaze() != null) {
+      uac.setCaseId(savedUacQidLink.getCaze().getId());
+      uac.setCollectionExerciseId(savedUacQidLink.getCaze().getCollectionExercise().getId());
+      uac.setSurveyId(savedUacQidLink.getCaze().getCollectionExercise().getSurvey().getId());
+    } else {
+      uac.setCaseId(null);
+      uac.setCollectionExerciseId(null);
+      uac.setSurveyId(null);
+    }
 
     PayloadDTO payloadDTO = new PayloadDTO();
     payloadDTO.setUacUpdate(uac);

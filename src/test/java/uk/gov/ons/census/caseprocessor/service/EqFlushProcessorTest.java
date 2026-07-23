@@ -40,7 +40,7 @@ class EqFlushProcessorTest {
     UacQidLink uacQidLink = new UacQidLink();
     uacQidLink.setQid("0123456789");
     uacQidLink.setReceiptReceived(false);
-    uacQidLink.setEqLaunched(true);
+    uacQidLink.setSurveyLaunched(true);
     caze.setUacQidLinks(List.of(uacQidLink));
 
     ActionRule actionRule = new ActionRule();
@@ -75,7 +75,7 @@ class EqFlushProcessorTest {
     UacQidLink uacQidLink = new UacQidLink();
     uacQidLink.setQid("0123456789");
     uacQidLink.setReceiptReceived(true);
-    uacQidLink.setEqLaunched(true);
+    uacQidLink.setSurveyLaunched(true);
     caze.setUacQidLinks(List.of(uacQidLink));
 
     ActionRule actionRule = new ActionRule();
@@ -99,7 +99,7 @@ class EqFlushProcessorTest {
     UacQidLink uacQidLink = new UacQidLink();
     uacQidLink.setQid("0123456789");
     uacQidLink.setReceiptReceived(false);
-    uacQidLink.setEqLaunched(false);
+    uacQidLink.setSurveyLaunched(false);
     caze.setUacQidLinks(List.of(uacQidLink));
 
     ActionRule actionRule = new ActionRule();

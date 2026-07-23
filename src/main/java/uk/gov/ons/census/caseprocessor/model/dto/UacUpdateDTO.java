@@ -11,10 +11,13 @@ public class UacUpdateDTO {
   private String uacHash;
   private boolean active;
   private String qid;
+
+  @JsonInclude(Include.ALWAYS)
   private UUID caseId;
+
   private UUID collectionExerciseId;
   private UUID surveyId;
   private boolean receiptReceived;
-  private boolean eqLaunched;
+  private boolean surveyLaunched;
   private String collectionInstrumentUrl;
 }
