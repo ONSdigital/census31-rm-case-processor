@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-jre-alpine
+FROM mirror.gcr.io/library/eclipse-temurin:21-jre-alpine
 
 ARG JAR_FILE=census-rm-caseprocessor*.jar
 CMD ["/opt/java/openjdk/bin/java", "-jar", "/opt/census-rm-caseprocessor.jar"]

@@ -17,7 +17,7 @@ jobs:
     permissions:
       pull-requests: read
     steps:
-      - uses: docker://onsdigital/github-pr-label-checker:v1.6.13
+      - uses: docker://mirror.gcr.io/onsdigital/github-pr-label-checker:v1.6.13
         with:
           one_of: breaking change,feature,patch
           none_of: do not merge,work in progress
