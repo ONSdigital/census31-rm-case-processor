@@ -24,8 +24,7 @@ public class CaseFieldsHelper {
     caseToUpdate.setLsoa("A12345678");
     caseToUpdate.setMsoa("A12345678");
     caseToUpdate.setLad("ABC123");
-    caseToUpdate.setHtcDigital("1");
-    caseToUpdate.setHtcWillingness("1");
+    caseToUpdate.setHtc("1");
     caseToUpdate.setLatitude("51.5074");
     caseToUpdate.setLongitude("0.1278");
     caseToUpdate.setPrintBatch("1");

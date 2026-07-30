@@ -73,7 +73,7 @@ public class NewCaseReceiverIT {
       NewCase newCase = new NewCase();
       newCase.setCaseId(TEST_CASE_ID);
       newCase.setCollectionExerciseId(collectionExercise.getId());
-      newCase.setTreatmentCode("HH_QP3E");
+      newCase.setTreatmentCode("HH_OAXN");
       newCase.setAddressType("H");
       newCase.setUprn("1234567890");
       newCase.setEstabUprn("1234567890");
@@ -91,8 +91,7 @@ public class NewCaseReceiverIT {
       newCase.setLsoa("A12345678");
       newCase.setMsoa("A12345678");
       newCase.setLad("ABC123");
-      newCase.setHtcDigital("1");
-      newCase.setHtcWillingness("1");
+      newCase.setHtc("1");
       newCase.setLatitude("51.5074");
       newCase.setLongitude("0.1278");
       newCase.setPrintBatch("1");
