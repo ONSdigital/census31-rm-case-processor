@@ -52,7 +52,6 @@ public class QidReceiptService {
           log.warn(
               "Receipt received for unaddressed UAC/QID pair not yet linked to a case. QID: {}, Correlation ID: {}, Channel: {}",
               event.getPayload().getReceipt().getQid(),
-              // event.getHeader().getTransactionId(),
               event.getHeader().getCorrelationId(),
               event.getHeader().getChannel());
         }
