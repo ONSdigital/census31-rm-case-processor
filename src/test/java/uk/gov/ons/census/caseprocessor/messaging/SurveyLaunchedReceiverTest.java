@@ -23,8 +23,10 @@ import uk.gov.ons.census.caseprocessor.logging.EventLogger;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.EventHeaderDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.PayloadDTO;
+import uk.gov.ons.census.caseprocessor.model.dto.RespondentAuthenticatedDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.SurveyLaunchedDTO;
 import uk.gov.ons.census.caseprocessor.service.SurveyLaunchedService;
+import uk.gov.ons.census.caseprocessor.service.UacService;
 import uk.gov.ons.census.common.model.entity.EventType;
 import uk.gov.ons.census.common.model.entity.UacQidLink;
 
@@ -34,6 +36,7 @@ public class SurveyLaunchedReceiverTest {
 
   @Mock private EventLogger eventLogger;
   @Mock private SurveyLaunchedService surveyLaunchedService;
+  @Mock private UacService uacService;
 
   @InjectMocks SurveyLaunchedReceiver underTest;
 
@@ -114,5 +117,49 @@ public class SurveyLaunchedReceiverTest {
 
     Assertions.assertThat(thrown.getMessage())
         .isEqualTo("Event Type 'RECEIPT' is invalid on this topic");
+  }
+
+  @Test
+  void testRespondentAuthenticatedEventFromRH() {
+    EventDTO managementEvent = new EventDTO();
+    managementEvent.setHeader(new EventHeaderDTO());
+    managementEvent.getHeader().setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
+    managementEvent.getHeader().setCorrelationId(TEST_CORRELATION_ID);
+    managementEvent.getHeader().setOriginatingUser(TEST_ORIGINATING_USER);
+    managementEvent.getHeader().setDateTime(OffsetDateTime.now(ZoneId.of("UTC")));
+    managementEvent.getHeader().setTopic("Test topic");
+    managementEvent.getHeader().setChannel("RH");
+    managementEvent.getHeader().setMessageType(EventType.RESPONDENT_AUTHENTICATED);
+    managementEvent.setPayload(new PayloadDTO());
+
+    RespondentAuthenticatedDTO respondentAuthenticated = new RespondentAuthenticatedDTO();
+    respondentAuthenticated.setQuestionnaireId(TEST_QID_ID);
+    managementEvent.getPayload().setRespondentAuthenticated(respondentAuthenticated);
+
+    UacQidLink expectedUacQidLink = new UacQidLink();
+    expectedUacQidLink.setQid(TEST_QID_ID);
+    Message<byte[]> message = constructMessage(managementEvent);
+
+    // Given
+    when(uacService.findByQid(TEST_QID_ID)).thenReturn(expectedUacQidLink);
+
+    // when
+    underTest.receiveMessage(message);
+
+    // then
+    verify(uacService).findByQid(TEST_QID_ID);
+    verify(surveyLaunchedService, never()).handleSurveyLaunchedEvent(any());
+
+    verify(eventLogger)
+        .logUacQidEvent(
+            eq(expectedUacQidLink),
+            eq("Respondent authenticated"),
+            eq(EventType.RESPONDENT_AUTHENTICATED),
+            eq(managementEvent),
+            eq(message));
+
+    verifyNoMoreInteractions(eventLogger);
+    verifyNoMoreInteractions(surveyLaunchedService);
+    verifyNoMoreInteractions(uacService);
   }
 }

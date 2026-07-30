@@ -10,47 +10,69 @@ import uk.gov.ons.census.caseprocessor.logging.EventLogger;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.EventHeaderDTO;
 import uk.gov.ons.census.caseprocessor.service.SurveyLaunchedService;
+import uk.gov.ons.census.caseprocessor.service.UacService;
 import uk.gov.ons.census.common.model.entity.EventType;
 import uk.gov.ons.census.common.model.entity.UacQidLink;
 
 @MessageEndpoint
 public class SurveyLaunchedReceiver {
-  private final EventLogger eventLogger;
-  private final SurveyLaunchedService surveyLaunchedService;
 
-  public SurveyLaunchedReceiver(
-      EventLogger eventLogger, SurveyLaunchedService surveyLaunchedService) {
-    this.eventLogger = eventLogger;
-    this.surveyLaunchedService = surveyLaunchedService;
-  }
+    private final EventLogger eventLogger;
+    private final SurveyLaunchedService surveyLaunchedService;
+    private final UacService uacService;
 
-  @Transactional
-  @ServiceActivator(inputChannel = "surveyLaunchedInputChannel", adviceChain = "retryAdvice")
-  public void receiveMessage(Message<byte[]> message) {
-    EventDTO event = convertJsonBytesToEvent(message.getPayload());
-
-    if (!processEvent(event)) {
-      return;
+    public SurveyLaunchedReceiver(
+            EventLogger eventLogger, SurveyLaunchedService surveyLaunchedService, UacService uacService) {
+        this.eventLogger = eventLogger;
+        this.surveyLaunchedService = surveyLaunchedService;
+        this.uacService = uacService;
     }
 
-    UacQidLink uacQidLink = surveyLaunchedService.handleSurveyLaunchedEvent(event);
+    @Transactional
+    @ServiceActivator(inputChannel = "surveyLaunchedInputChannel", adviceChain = "retryAdvice")
+    public void receiveMessage(Message<byte[]> message) {
+        EventDTO event = convertJsonBytesToEvent(message.getPayload());
 
-    eventLogger.logUacQidEvent(
-        uacQidLink, "Survey launched", EventType.SURVEY_LAUNCHED, event, message);
-  }
+        if (!isSurveyLaunchedEvent(event)) {
+            logRespondentAuthenticatedEvent(event, message);
+            return;
+        }
 
-  private boolean processEvent(EventDTO surveyEvent) {
+        UacQidLink uacQidLink = surveyLaunchedService.handleSurveyLaunchedEvent(event);
 
-    EventHeaderDTO event = surveyEvent.getHeader();
-
-    switch (event.getMessageType()) {
-      case SURVEY_LAUNCHED:
-        return true;
-
-      default:
-        // Should never get here
-        throw new RuntimeException(
-            String.format("Event Type '%s' is invalid on this topic", event.getMessageType()));
+        eventLogger.logUacQidEvent(
+                uacQidLink, "Survey launched", EventType.SURVEY_LAUNCHED, event, message);
     }
-  }
+
+    /**
+     * Returns {@code true} if the event is a genuine SURVEY_LAUNCHED event, {@code false} if it's a
+     * RESPONDENT_AUTHENTICATED event that should be discarded (after logging — see {@link
+     * #logRespondentAuthenticatedEvent}).
+     *
+     * @throws IllegalStateException if the event is neither of the expected message types.
+     */
+    private boolean isSurveyLaunchedEvent(EventDTO surveyEvent) {
+        EventHeaderDTO header = surveyEvent.getHeader();
+
+        return switch (header.getMessageType()) {
+            case SURVEY_LAUNCHED -> true;
+            case RESPONDENT_AUTHENTICATED -> false;
+            default ->
+                    throw new IllegalStateException(
+                            "Event Type '%s' is invalid on this topic".formatted(header.getMessageType()));
+        };
+    }
+
+    private void logRespondentAuthenticatedEvent(EventDTO surveyEvent, Message<byte[]> message) {
+        UacQidLink uacQidLink =
+                uacService.findByQid(
+                        surveyEvent.getPayload().getRespondentAuthenticated().getQuestionnaireId());
+
+        eventLogger.logUacQidEvent(
+                uacQidLink,
+                "Respondent authenticated",
+                EventType.RESPONDENT_AUTHENTICATED,
+                surveyEvent,
+                message);
+    }
 }

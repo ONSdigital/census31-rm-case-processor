@@ -23,4 +23,5 @@ public class PayloadDTO {
   private SmsRequest smsRequest;
   private EmailRequest emailRequest;
   private ExportFileDTO exportFile;
+  private RespondentAuthenticatedDTO respondentAuthenticated;
 }

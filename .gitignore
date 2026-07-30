@@ -7,3 +7,5 @@ target/*
 megalinter-reports/
 # Podman secrets
 podman-build-secret*
+*.ipr
+*.iws
