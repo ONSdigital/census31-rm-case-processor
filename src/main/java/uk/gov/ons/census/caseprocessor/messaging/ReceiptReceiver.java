@@ -36,7 +36,8 @@ public class ReceiptReceiver {
 
     UacQidLink uacQidLink = qidReceiptService.processReceiptEvent(receiptEvent);
 
-    eventLogger.logUacQidEvent(uacQidLink, "Receipt received", EventType.RECEIPT, receiptEvent, message);
+    eventLogger.logUacQidEvent(
+        uacQidLink, "Receipt received", EventType.RECEIPT, receiptEvent, message);
   }
 
   private boolean processEvent(EventDTO receiptEvent) {
@@ -50,7 +51,8 @@ public class ReceiptReceiver {
       default:
         // Should never get here
         throw new RuntimeException(
-            String.format("Event Type '%s' is invalid on this topic", eventHeader.getMessageType()));
+            String.format(
+                "Event Type '%s' is invalid on this topic", eventHeader.getMessageType()));
     }
   }
 }

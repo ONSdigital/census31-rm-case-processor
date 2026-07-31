@@ -77,7 +77,6 @@ public class QidReceiptServiceTest {
     UacQidLink capturedUacQidLink = uacQidLinkArgumentCaptor.getValue();
     assertThat(capturedUacQidLink.isActive()).isFalse();
     assertThat(capturedUacQidLink.isReceiptReceived()).isTrue();
-    // assertThat(capturedUacQidLink.getCaze().isReceiptReceived()).isTrue();
   }
 
   @Test
