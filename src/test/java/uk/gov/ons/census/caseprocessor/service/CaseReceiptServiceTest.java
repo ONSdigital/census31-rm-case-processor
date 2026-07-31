@@ -66,9 +66,9 @@ class CaseReceiptServiceTest {
 
   @Test
   void receiptCaseDoesNothingForNoActionRule() {
-    UacQidLink uacQidLink = buildLink("3112345678901234", "HH");
+    UacQidLink uacQidLink = buildLink("2112345678901234", "HH");
 
-    UacQidLink result = underTest.receiptCase(uacQidLink, buildReceiptEvent("3112345678901234"));
+    UacQidLink result = underTest.receiptCase(uacQidLink, buildReceiptEvent("2112345678901234"));
 
     assertThat(result).isSameAs(uacQidLink);
     assertThat(uacQidLink.getCaze().isReceiptReceived()).isFalse();

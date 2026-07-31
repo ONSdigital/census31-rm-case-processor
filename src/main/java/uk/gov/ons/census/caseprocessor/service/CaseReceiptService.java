@@ -8,6 +8,8 @@ import java.util.function.BiFunction;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
 import uk.gov.ons.census.common.model.entity.Case;
@@ -16,11 +18,11 @@ import uk.gov.ons.census.common.model.entity.UacQidLink;
 @Component
 public class CaseReceiptService {
 
+  private static final Logger log = LoggerFactory.getLogger(CaseReceiptService.class);
+
   private CaseService caseService;
   private static final String HH = "H";
   private static final String IND = "I";
-  private static final String CE1 = "C";
-  private static final String CONT = "Cont";
 
   private Map<Key, BiFunction<Case, EventDTO, Case>> rules = new HashMap<>();
 
@@ -30,15 +32,13 @@ public class CaseReceiptService {
   }
 
   private void setUpRules() {
-    // This table is not accessible to me. Replace with the correct URL if needed.
     /*
-     This table is based on: https://collaborate2.ons.gov.uk/confluence/pages/viewpage.action?spaceKey=SDC&title=Receipting
+     This table is based on: https://officefornationalstatistics.atlassian.net/wiki/x/igE4Ew
     */
-
     rules.put(new Key("HH", "U", HH), receiptAndCancel);
-    rules.put(new Key("HH", "U", CE1), noActionRequired);
-    rules.put(new Key("HH", "U", CONT), noActionRequired);
     rules.put(new Key("HI", "U", HH), receiptCase);
+    rules.put(new Key("HI", "U", IND), receiptCase);
+    rules.put(new Key("HH", "U", IND), noActionRequired);
   }
 
   public UacQidLink receiptCase(UacQidLink uacQidLink, EventDTO causeEvent) {
@@ -77,19 +77,6 @@ public class CaseReceiptService {
         return caze;
       };
 
-  BiFunction<Case, EventDTO, Case> receiptAndUpdate =
-      (caze, event) -> {
-        if (caze.isReceiptReceived()) {
-          return caze;
-        }
-        Case updatedCase = receiptCase(caze);
-        caseService.saveCaseAndEmitCaseUpdate(
-            updatedCase,
-            event.getHeader().getCorrelationId(),
-            event.getHeader().getOriginatingUser());
-        return caze;
-      };
-
   BiFunction<Case, EventDTO, Case> receiptCase =
       (caze, event) -> {
         if (caze.isReceiptReceived()) {
@@ -103,13 +90,22 @@ public class CaseReceiptService {
         return caze;
       };
 
-  BiFunction<Case, EventDTO, Case> noActionRequired = (caze, event) -> caze;
+  BiFunction<Case, EventDTO, Case> noActionRequired =
+      (caze, event) -> {
+        if (log.isWarnEnabled()) {
+          log.warn(
+              "Receipt received with questionnaire type and form type mismatch. No action rule applied. QID: {}, Correlation ID: {}, Channel: {}",
+              event.getPayload().getReceipt().getQid(),
+              event.getHeader().getCorrelationId(),
+              event.getHeader().getChannel());
+        }
+        return caze;
+      };
 
   @AllArgsConstructor
   @EqualsAndHashCode
   @ToString
   private class Key {
-
     private String caseType;
     private String addressLevel;
     private String formType;
