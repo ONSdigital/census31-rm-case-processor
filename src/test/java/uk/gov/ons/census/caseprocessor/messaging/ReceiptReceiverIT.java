@@ -72,7 +72,7 @@ public class ReceiptReceiverIT {
       uacQidLink.setCaze(caze);
       uacQidLink.setActive(true);
       uacQidLink.setReceiptReceived(false);
-      uacQidLink.setSurveyLaunched(false);
+      uacQidLink.setSurveyLaunched(true);
       uacQidLinkRepository.saveAndFlush(uacQidLink);
 
       ReceiptDTO receiptDTO = new ReceiptDTO();

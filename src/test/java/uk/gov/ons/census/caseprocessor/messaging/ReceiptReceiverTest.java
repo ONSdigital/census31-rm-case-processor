@@ -1,7 +1,8 @@
 package uk.gov.ons.census.caseprocessor.messaging;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static uk.gov.ons.census.caseprocessor.testutils.MessageConstructor.constructMessage;
 import static uk.gov.ons.census.caseprocessor.testutils.TestConstants.TEST_CORRELATION_ID;
@@ -10,7 +11,7 @@ import static uk.gov.ons.census.caseprocessor.utils.Constants.OUTBOUND_EVENT_SCH
 
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.util.UUID;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -19,144 +20,95 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.Message;
 import uk.gov.ons.census.caseprocessor.logging.EventLogger;
-import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
-import uk.gov.ons.census.caseprocessor.model.dto.EventHeaderDTO;
-import uk.gov.ons.census.caseprocessor.model.dto.PayloadDTO;
-import uk.gov.ons.census.caseprocessor.model.dto.ReceiptDTO;
-import uk.gov.ons.census.caseprocessor.service.UacService;
+import uk.gov.ons.census.caseprocessor.model.dto.*;
+import uk.gov.ons.census.caseprocessor.service.QidReceiptService;
 import uk.gov.ons.census.common.model.entity.EventType;
 import uk.gov.ons.census.common.model.entity.UacQidLink;
 
 @ExtendWith(MockitoExtension.class)
 public class ReceiptReceiverTest {
-  private static final String QID = "12345";
+  private final String QID = "1234567890123456";
 
-  @Mock private UacService uacService;
   @Mock private EventLogger eventLogger;
+  @Mock private QidReceiptService qidReceiptService;
 
   @InjectMocks ReceiptReceiver underTest;
 
   @Test
-  public void testUnlinkedUacQidReceiptWhereActive() {
+  public void testReceiptReceivedEventFromRH() {
+    EventDTO receiptEvent = new EventDTO();
+    receiptEvent.setHeader(new EventHeaderDTO());
+    receiptEvent.getHeader().setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
+    receiptEvent.getHeader().setCorrelationId(TEST_CORRELATION_ID);
+    receiptEvent.getHeader().setOriginatingUser(TEST_ORIGINATING_USER);
+    receiptEvent.getHeader().setDateTime(OffsetDateTime.now(ZoneId.of("UTC")));
+    receiptEvent.getHeader().setTopic("Test topic");
+    receiptEvent.getHeader().setChannel("RH");
+    receiptEvent.getHeader().setMessageType(EventType.RECEIPT);
+    receiptEvent.setPayload(new PayloadDTO());
+
     ReceiptDTO receiptDTO = new ReceiptDTO();
     receiptDTO.setQid(QID);
+    receiptEvent.getPayload().setReceipt(receiptDTO);
 
-    PayloadDTO payloadDTO = new PayloadDTO();
-    payloadDTO.setReceipt(receiptDTO);
-    EventDTO event = new EventDTO();
-    event.setPayload(payloadDTO);
+    UacQidLink expectedUacQidLink = new UacQidLink();
+    expectedUacQidLink.setQid(QID);
+    expectedUacQidLink.setReceiptReceived(true);
+    expectedUacQidLink.setActive(false);
 
-    EventHeaderDTO eventHeader = new EventHeaderDTO();
-    eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
-    eventHeader.setCorrelationId(TEST_CORRELATION_ID);
-    eventHeader.setOriginatingUser(TEST_ORIGINATING_USER);
-    eventHeader.setTopic("Test topic");
-    eventHeader.setDateTime(OffsetDateTime.now(ZoneId.of("UTC")));
-    event.setHeader(eventHeader);
-    Message<byte[]> message = constructMessage(event);
+    Message<byte[]> message = constructMessage(receiptEvent);
 
-    UacQidLink uacQidLink = new UacQidLink();
-    uacQidLink.setActive(true);
+    // Given
+    when(qidReceiptService.processReceiptEvent(receiptEvent)).thenReturn(expectedUacQidLink);
 
-    when(uacService.findByQid(any())).thenReturn(uacQidLink);
-    when(uacService.saveAndEmitUacUpdateEvent(any(UacQidLink.class), any(UUID.class), anyString()))
-        .thenReturn(uacQidLink);
-
+    // when
     underTest.receiveMessage(message);
 
+    // then
+    verify(qidReceiptService).processReceiptEvent(receiptEvent);
+
     ArgumentCaptor<UacQidLink> uacQidLinkCaptor = ArgumentCaptor.forClass(UacQidLink.class);
-    verify(uacService)
-        .saveAndEmitUacUpdateEvent(
-            uacQidLinkCaptor.capture(), eq(TEST_CORRELATION_ID), eq(TEST_ORIGINATING_USER));
-    UacQidLink actualUacQidLink = uacQidLinkCaptor.getValue();
-    assertThat(actualUacQidLink.isActive()).isFalse();
 
     verify(eventLogger)
         .logUacQidEvent(
-            eq(actualUacQidLink),
+            uacQidLinkCaptor.capture(),
             eq("Receipt received"),
             eq(EventType.RECEIPT),
-            eq(event),
+            eq(receiptEvent),
             eq(message));
-  }
 
-  @Test
-  public void testUnlinkedUacQidReceiptWherePreviouslyReceipted() {
-    ReceiptDTO receiptDTO = new ReceiptDTO();
-    receiptDTO.setQid(QID);
-
-    PayloadDTO payloadDTO = new PayloadDTO();
-    payloadDTO.setReceipt(receiptDTO);
-    EventDTO event = new EventDTO();
-    event.setPayload(payloadDTO);
-
-    EventHeaderDTO eventHeader = new EventHeaderDTO();
-    eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
-    eventHeader.setTopic("Test topic");
-    eventHeader.setDateTime(OffsetDateTime.now(ZoneId.of("UTC")));
-    event.setHeader(eventHeader);
-    Message<byte[]> message = constructMessage(event);
-
-    UacQidLink uacQidLink = new UacQidLink();
-    uacQidLink.setActive(true);
-    uacQidLink.setReceiptReceived(true);
-
-    when(uacService.findByQid(any())).thenReturn(uacQidLink);
-
-    underTest.receiveMessage(message);
-
-    ArgumentCaptor<String> uacQidLinkCaptor = ArgumentCaptor.forClass(String.class);
-    verify(uacService).findByQid(uacQidLinkCaptor.capture());
-
-    verify(eventLogger)
-        .logUacQidEvent(
-            eq(uacQidLink), eq("Receipt received"), eq(EventType.RECEIPT), eq(event), eq(message));
-
-    verifyNoMoreInteractions(uacService);
-  }
-
-  @Test
-  public void testUnlinkedUacQidReceiptsUacQid() {
-    ReceiptDTO receiptDTO = new ReceiptDTO();
-    receiptDTO.setQid(QID);
-
-    PayloadDTO payloadDTO = new PayloadDTO();
-    payloadDTO.setReceipt(receiptDTO);
-    EventDTO event = new EventDTO();
-    event.setPayload(payloadDTO);
-
-    EventHeaderDTO eventHeader = new EventHeaderDTO();
-    eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
-    eventHeader.setCorrelationId(TEST_CORRELATION_ID);
-    eventHeader.setOriginatingUser(TEST_ORIGINATING_USER);
-    eventHeader.setTopic("Test topic");
-    eventHeader.setDateTime(OffsetDateTime.now(ZoneId.of("UTC")));
-    event.setHeader(eventHeader);
-    Message<byte[]> message = constructMessage(event);
-
-    UacQidLink uacQidLink = new UacQidLink();
-    uacQidLink.setActive(true);
-
-    when(uacService.findByQid(any())).thenReturn(uacQidLink);
-    when(uacService.saveAndEmitUacUpdateEvent(any(UacQidLink.class), any(UUID.class), anyString()))
-        .thenReturn(uacQidLink);
-
-    underTest.receiveMessage(message);
-
-    ArgumentCaptor<UacQidLink> uacQidLinkCaptor = ArgumentCaptor.forClass(UacQidLink.class);
-    verify(uacService)
-        .saveAndEmitUacUpdateEvent(
-            uacQidLinkCaptor.capture(), eq(TEST_CORRELATION_ID), eq(TEST_ORIGINATING_USER));
     UacQidLink actualUacQidLink = uacQidLinkCaptor.getValue();
-    assertThat(actualUacQidLink.isActive()).isFalse();
+    assertThat(actualUacQidLink.getQid()).isEqualTo(QID);
     assertThat(actualUacQidLink.isReceiptReceived()).isTrue();
+    assertThat(actualUacQidLink.isActive()).isFalse();
 
-    verify(eventLogger)
-        .logUacQidEvent(
-            eq(actualUacQidLink),
-            eq("Receipt received"),
-            eq(EventType.RECEIPT),
-            eq(event),
-            eq(message));
+    verifyNoMoreInteractions(eventLogger);
+    verifyNoMoreInteractions(qidReceiptService);
+  }
+
+  @Test
+  void testReceiptEventFromRHWrongEventType() {
+    EventDTO receiptEvent = new EventDTO();
+    receiptEvent.setHeader(new EventHeaderDTO());
+    receiptEvent.getHeader().setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
+    receiptEvent.getHeader().setCorrelationId(TEST_CORRELATION_ID);
+    receiptEvent.getHeader().setOriginatingUser(TEST_ORIGINATING_USER);
+    receiptEvent.getHeader().setDateTime(OffsetDateTime.now(ZoneId.of("UTC")));
+    receiptEvent.getHeader().setTopic("Test topic");
+    receiptEvent.getHeader().setChannel("RH");
+    receiptEvent.getHeader().setMessageType(EventType.CASE_UPDATE);
+    receiptEvent.setPayload(new PayloadDTO());
+
+    ReceiptDTO receiptDTO = new ReceiptDTO();
+    receiptDTO.setQid(QID);
+    receiptEvent.getPayload().setReceipt(receiptDTO);
+
+    Message<byte[]> message = constructMessage(receiptEvent);
+
+    RuntimeException thrown =
+        assertThrows(RuntimeException.class, () -> underTest.receiveMessage(message));
+
+    Assertions.assertThat(thrown.getMessage())
+        .isEqualTo("Event Type 'CASE_UPDATE' is invalid on this topic");
   }
 }

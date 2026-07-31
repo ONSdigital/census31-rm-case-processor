@@ -10,7 +10,6 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.springframework.stereotype.Component;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
-import uk.gov.ons.census.caseprocessor.model.repository.CaseRepository;
 import uk.gov.ons.census.common.model.entity.Case;
 import uk.gov.ons.census.common.model.entity.UacQidLink;
 
@@ -18,7 +17,6 @@ import uk.gov.ons.census.common.model.entity.UacQidLink;
 public class CaseReceiptService {
 
   private CaseService caseService;
-  private final CaseRepository caseRepository;
   private static final String HH = "H";
   private static final String IND = "I";
   private static final String CE1 = "C";
@@ -26,9 +24,8 @@ public class CaseReceiptService {
 
   private Map<Key, BiFunction<Case, EventDTO, Case>> rules = new HashMap<>();
 
-  public CaseReceiptService(CaseService caseService, CaseRepository caseRepository) {
+  public CaseReceiptService(CaseService caseService) {
     this.caseService = caseService;
-    this.caseRepository = caseRepository;
     setUpRules();
   }
 
@@ -44,7 +41,7 @@ public class CaseReceiptService {
     rules.put(new Key("HI", "U", HH), receiptCase);
   }
 
-  public void receiptCase(UacQidLink uacQidLink, EventDTO causeEvent) {
+  public UacQidLink receiptCase(UacQidLink uacQidLink, EventDTO causeEvent) {
     Case caze = uacQidLink.getCaze();
 
     Key ruleKey = makeRulesKey(caze, uacQidLink);
@@ -54,6 +51,7 @@ public class CaseReceiptService {
     }
 
     var unused = rules.get(ruleKey).apply(caze, causeEvent);
+    return uacQidLink;
   }
 
   private Key makeRulesKey(Case caze, UacQidLink uacQidLink) {
