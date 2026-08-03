@@ -8,8 +8,6 @@ import java.util.function.BiFunction;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
 import uk.gov.ons.census.common.model.entity.Case;
@@ -17,8 +15,6 @@ import uk.gov.ons.census.common.model.entity.UacQidLink;
 
 @Component
 public class CaseReceiptService {
-
-  private static final Logger log = LoggerFactory.getLogger(CaseReceiptService.class);
 
   private CaseService caseService;
   private static final String HH = "H";
