@@ -64,6 +64,8 @@ public class CaseReceiptService {
     return caze;
   }
 
+  /*TODO: This function will send a field cancel message in the future.
+  For now, it is identical to receiptCase, but this will change after field integration is implemented.*/
   BiFunction<Case, EventDTO, Case> receiptAndCancel =
       (caze, event) -> {
         if (caze.isReceiptReceived()) {
@@ -90,17 +92,7 @@ public class CaseReceiptService {
         return caze;
       };
 
-  BiFunction<Case, EventDTO, Case> noActionRequired =
-      (caze, event) -> {
-        if (log.isWarnEnabled()) {
-          log.warn(
-              "Receipt received with questionnaire type and form type mismatch. No action rule applied. QID: {}, Correlation ID: {}, Channel: {}",
-              event.getPayload().getReceipt().getQid(),
-              event.getHeader().getCorrelationId(),
-              event.getHeader().getChannel());
-        }
-        return caze;
-      };
+  BiFunction<Case, EventDTO, Case> noActionRequired = (caze, event) -> caze;
 
   @AllArgsConstructor
   @EqualsAndHashCode
