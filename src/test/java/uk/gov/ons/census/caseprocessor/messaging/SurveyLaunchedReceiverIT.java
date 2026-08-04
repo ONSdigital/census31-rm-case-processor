@@ -16,7 +16,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import uk.gov.ons.census.caseprocessor.model.dto.*;
+import uk.gov.ons.census.caseprocessor.model.dto.CaseUpdateDTO;
+import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
+import uk.gov.ons.census.caseprocessor.model.dto.EventHeaderDTO;
+import uk.gov.ons.census.caseprocessor.model.dto.PayloadDTO;
+import uk.gov.ons.census.caseprocessor.model.dto.RespondentAuthenticatedDTO;
+import uk.gov.ons.census.caseprocessor.model.dto.SurveyLaunchedDTO;
+import uk.gov.ons.census.caseprocessor.model.dto.UacUpdateDTO;
 import uk.gov.ons.census.caseprocessor.model.repository.EventRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.UacQidLinkRepository;
 import uk.gov.ons.census.caseprocessor.testutils.DeleteDataHelper;
@@ -103,6 +109,57 @@ public class SurveyLaunchedReceiverIT {
       assertThat(events.size()).isEqualTo(1);
       Event event = events.get(0);
       assertThat(event.getDescription()).isEqualTo("Survey launched");
+      UacQidLink actualUacQidLink = event.getUacQidLink();
+      assertThat(actualUacQidLink.getQid()).isEqualTo(TEST_QID);
+      assertThat(actualUacQidLink.getCaze().getId()).isEqualTo(caze.getId());
+    }
+  }
+
+  @Test
+  public void testRespondentAuthenticatedLogsEventButDoesNotEmitMessages() throws Exception {
+    // GIVEN
+    try (QueueSpy<EventDTO> outboundUacQueueSpy =
+            pubsubHelper.pubsubProjectListen(OUTBOUND_UAC_SUBSCRIPTION, EventDTO.class);
+        QueueSpy<EventDTO> outboundCaseQueueSpy =
+            pubsubHelper.pubsubProjectListen(OUTBOUND_CASE_SUBSCRIPTION, EventDTO.class)) {
+      Case caze = junkDataHelper.setupJunkCase();
+
+      UacQidLink uacQidLink = new UacQidLink();
+      uacQidLink.setId(UUID.randomUUID());
+      uacQidLink.setCaze(caze);
+      uacQidLink.setUac("Junk");
+      uacQidLink.setUacHash("junkHash");
+      uacQidLink.setQid(TEST_QID);
+      uacQidLink.setSurveyLaunched(false);
+      uacQidLinkRepository.saveAndFlush(uacQidLink);
+
+      EventDTO respondentAuthenticatedEvent = new EventDTO();
+      EventHeaderDTO eventHeader = new EventHeaderDTO();
+      eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
+      eventHeader.setTopic(INBOUND_TOPIC);
+      eventHeader.setChannel("RH");
+      eventHeader.setMessageType(EventType.RESPONDENT_AUTHENTICATED);
+      junkDataHelper.junkify(eventHeader);
+      respondentAuthenticatedEvent.setHeader(eventHeader);
+
+      RespondentAuthenticatedDTO respondentAuthenticated = new RespondentAuthenticatedDTO();
+      respondentAuthenticated.setQuestionnaireId(uacQidLink.getQid());
+      PayloadDTO payloadDTO = new PayloadDTO();
+      payloadDTO.setRespondentAuthenticated(respondentAuthenticated);
+      respondentAuthenticatedEvent.setPayload(payloadDTO);
+
+      // WHEN
+      pubsubHelper.sendMessageToPubsubProject(INBOUND_TOPIC, respondentAuthenticatedEvent);
+
+      // THEN
+      outboundUacQueueSpy.checkMessageIsNotReceived(5);
+      outboundCaseQueueSpy.checkMessageIsNotReceived(1);
+
+      List<Event> events = eventRepository.findAll();
+      assertThat(events.size()).isEqualTo(1);
+      Event event = events.get(0);
+      assertThat(event.getDescription()).isEqualTo("Respondent authenticated");
+      assertThat(event.getType()).isEqualTo(EventType.RESPONDENT_AUTHENTICATED);
       UacQidLink actualUacQidLink = event.getUacQidLink();
       assertThat(actualUacQidLink.getQid()).isEqualTo(TEST_QID);
       assertThat(actualUacQidLink.getCaze().getId()).isEqualTo(caze.getId());
