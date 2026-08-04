@@ -17,62 +17,62 @@ import uk.gov.ons.census.common.model.entity.UacQidLink;
 @MessageEndpoint
 public class SurveyLaunchedReceiver {
 
-    private final EventLogger eventLogger;
-    private final SurveyLaunchedService surveyLaunchedService;
-    private final UacService uacService;
+  private final EventLogger eventLogger;
+  private final SurveyLaunchedService surveyLaunchedService;
+  private final UacService uacService;
 
-    public SurveyLaunchedReceiver(
-            EventLogger eventLogger, SurveyLaunchedService surveyLaunchedService, UacService uacService) {
-        this.eventLogger = eventLogger;
-        this.surveyLaunchedService = surveyLaunchedService;
-        this.uacService = uacService;
+  public SurveyLaunchedReceiver(
+      EventLogger eventLogger, SurveyLaunchedService surveyLaunchedService, UacService uacService) {
+    this.eventLogger = eventLogger;
+    this.surveyLaunchedService = surveyLaunchedService;
+    this.uacService = uacService;
+  }
+
+  @Transactional
+  @ServiceActivator(inputChannel = "surveyLaunchedInputChannel", adviceChain = "retryAdvice")
+  public void receiveMessage(Message<byte[]> message) {
+    EventDTO event = convertJsonBytesToEvent(message.getPayload());
+
+    if (!isSurveyLaunchedEvent(event)) {
+      logRespondentAuthenticatedEvent(event, message);
+      return;
     }
 
-    @Transactional
-    @ServiceActivator(inputChannel = "surveyLaunchedInputChannel", adviceChain = "retryAdvice")
-    public void receiveMessage(Message<byte[]> message) {
-        EventDTO event = convertJsonBytesToEvent(message.getPayload());
+    UacQidLink uacQidLink = surveyLaunchedService.handleSurveyLaunchedEvent(event);
 
-        if (!isSurveyLaunchedEvent(event)) {
-            logRespondentAuthenticatedEvent(event, message);
-            return;
-        }
+    eventLogger.logUacQidEvent(
+        uacQidLink, "Survey launched", EventType.SURVEY_LAUNCHED, event, message);
+  }
 
-        UacQidLink uacQidLink = surveyLaunchedService.handleSurveyLaunchedEvent(event);
+  /**
+   * Returns {@code true} if the event is a genuine SURVEY_LAUNCHED event, {@code false} if it's a
+   * RESPONDENT_AUTHENTICATED event that should be discarded (after logging — see {@link
+   * #logRespondentAuthenticatedEvent}).
+   *
+   * @throws IllegalStateException if the event is neither of the expected message types.
+   */
+  private boolean isSurveyLaunchedEvent(EventDTO surveyEvent) {
+    EventHeaderDTO header = surveyEvent.getHeader();
 
-        eventLogger.logUacQidEvent(
-                uacQidLink, "Survey launched", EventType.SURVEY_LAUNCHED, event, message);
-    }
+    return switch (header.getMessageType()) {
+      case SURVEY_LAUNCHED -> true;
+      case RESPONDENT_AUTHENTICATED -> false;
+      default ->
+          throw new IllegalStateException(
+              "Event Type '%s' is invalid on this topic".formatted(header.getMessageType()));
+    };
+  }
 
-    /**
-     * Returns {@code true} if the event is a genuine SURVEY_LAUNCHED event, {@code false} if it's a
-     * RESPONDENT_AUTHENTICATED event that should be discarded (after logging — see {@link
-     * #logRespondentAuthenticatedEvent}).
-     *
-     * @throws IllegalStateException if the event is neither of the expected message types.
-     */
-    private boolean isSurveyLaunchedEvent(EventDTO surveyEvent) {
-        EventHeaderDTO header = surveyEvent.getHeader();
+  private void logRespondentAuthenticatedEvent(EventDTO surveyEvent, Message<byte[]> message) {
+    UacQidLink uacQidLink =
+        uacService.findByQid(
+            surveyEvent.getPayload().getRespondentAuthenticated().getQuestionnaireId());
 
-        return switch (header.getMessageType()) {
-            case SURVEY_LAUNCHED -> true;
-            case RESPONDENT_AUTHENTICATED -> false;
-            default ->
-                    throw new IllegalStateException(
-                            "Event Type '%s' is invalid on this topic".formatted(header.getMessageType()));
-        };
-    }
-
-    private void logRespondentAuthenticatedEvent(EventDTO surveyEvent, Message<byte[]> message) {
-        UacQidLink uacQidLink =
-                uacService.findByQid(
-                        surveyEvent.getPayload().getRespondentAuthenticated().getQuestionnaireId());
-
-        eventLogger.logUacQidEvent(
-                uacQidLink,
-                "Respondent authenticated",
-                EventType.RESPONDENT_AUTHENTICATED,
-                surveyEvent,
-                message);
-    }
+    eventLogger.logUacQidEvent(
+        uacQidLink,
+        "Respondent authenticated",
+        EventType.RESPONDENT_AUTHENTICATED,
+        surveyEvent,
+        message);
+  }
 }
