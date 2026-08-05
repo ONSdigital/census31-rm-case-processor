@@ -28,7 +28,8 @@ public class CaseFieldMapper {
     caze.setMsoa(newCasePayload.getMsoa());
     caze.setLad(newCasePayload.getLad());
     caze.setRegion(newCasePayload.getRegion());
-    caze.setHtc(newCasePayload.getHtc());
+    caze.setHtcWillingness(newCasePayload.getHtcWillingness());
+    caze.setHtcDigital(newCasePayload.getHtcDigital());
     caze.setFieldCoordinatorId(newCasePayload.getFieldCoordinatorId());
     caze.setFieldOfficerId(newCasePayload.getFieldOfficerId());
     caze.setTreatmentCode(newCasePayload.getTreatmentCode());
@@ -64,7 +65,8 @@ public class CaseFieldMapper {
     caseUpdate.setLad(caze.getLad());
     caseUpdate.setCeExpectedCapacity(caze.getCeExpectedCapacity());
     caseUpdate.setTreatmentCode(caze.getTreatmentCode());
-    caseUpdate.setHtc(caze.getHtc());
+    caseUpdate.setHtcWillingness(caze.getHtcWillingness());
+    caseUpdate.setHtcDigital(caze.getHtcDigital());
     caseUpdate.setFieldCoordinatorId(caze.getFieldCoordinatorId());
     caseUpdate.setFieldOfficerId(caze.getFieldOfficerId());
     caseUpdate.setCaseType(caze.getCaseType());

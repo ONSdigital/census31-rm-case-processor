@@ -47,7 +47,8 @@ public class JunkDataHelper {
     junkCase.setPrintBatch("1");
     junkCase.setFieldCoordinatorId("fcor_id");
     junkCase.setFieldOfficerId("foff_id");
-    junkCase.setHtc("1");
+    junkCase.setHtcDigital("1");
+    junkCase.setHtcWillingness("1");
     junkCase.setLad("0000");
     junkCase.setLatitude("0.0.0.0.0.0");
     junkCase.setLongitude("0.1278");

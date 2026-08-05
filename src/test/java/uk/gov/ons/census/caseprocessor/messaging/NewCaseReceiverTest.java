@@ -184,7 +184,8 @@ class NewCaseReceiverTest {
     newCase.setLsoa("A12345678");
     newCase.setMsoa("A12345678");
     newCase.setLad("ABC123");
-    newCase.setHtc("1");
+    newCase.setHtcDigital("1");
+    newCase.setHtcWillingness("1");
     newCase.setLatitude("51.5074");
     newCase.setLongitude("0.1278");
     newCase.setPrintBatch("1");
@@ -250,7 +251,8 @@ class NewCaseReceiverTest {
     newCase.setLsoa("A12345678");
     newCase.setMsoa("A12345678");
     newCase.setLad("ABC123");
-    newCase.setHtc("1");
+    newCase.setHtcDigital("1");
+    newCase.setHtcWillingness("1");
     newCase.setLatitude("51.5074");
     newCase.setLongitude("0.1278");
     newCase.setPrintBatch("1");

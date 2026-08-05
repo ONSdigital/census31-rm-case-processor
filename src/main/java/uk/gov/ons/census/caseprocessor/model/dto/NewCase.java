@@ -30,7 +30,8 @@ public class NewCase {
   private String msoa;
   private String lad;
   private String region;
-  private String htc;
+  private String htcWillingness;
+  private String htcDigital;
   private String fieldCoordinatorId;
   private String fieldOfficerId;
   private String treatmentCode;
@@ -59,7 +60,8 @@ public class NewCase {
       case MSOA -> this.getMsoa();
       case LAD -> this.getLad();
       case REGION -> this.getRegion();
-      case HTC -> this.getHtc();
+      case HTC_WILLINGNESS -> this.getHtcWillingness();
+      case HTC_DIGITAL -> this.getHtcDigital();
       case TREATMENT_CODE -> this.getTreatmentCode();
       case FIELDCOORDINATOR_ID -> this.getFieldCoordinatorId();
       case FIELDOFFICER_ID -> this.getFieldOfficerId();
