@@ -73,7 +73,7 @@ public class NewCaseReceiverIT {
       NewCase newCase = new NewCase();
       newCase.setCaseId(TEST_CASE_ID);
       newCase.setCollectionExerciseId(collectionExercise.getId());
-      newCase.setTreatmentCode("HH_QP3E");
+      newCase.setTreatmentCode("HH_OAXN");
       newCase.setAddressType("H");
       newCase.setUprn("1234567890");
       newCase.setEstabUprn("1234567890");
