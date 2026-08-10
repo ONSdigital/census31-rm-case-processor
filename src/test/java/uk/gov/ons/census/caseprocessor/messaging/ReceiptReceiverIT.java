@@ -36,7 +36,7 @@ import uk.gov.ons.census.common.model.entity.UacQidLink;
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 public class ReceiptReceiverIT {
-  private static final String TEST_QID = "123456";
+  private static final String TEST_QID = "010000";
   private static final UUID TEST_UACLINK_ID = UUID.randomUUID();
   private static final String INBOUND_RECEIPT_TOPIC = "event_receipt";
 
