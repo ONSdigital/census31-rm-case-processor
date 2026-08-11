@@ -33,7 +33,7 @@ public class QidReceiptServiceTest {
   @InjectMocks QidReceiptService underTest;
 
   @ParameterizedTest(name = "processes receipt when case exists and channel is {0}")
-  @MethodSource("allowedChannels")
+  @MethodSource("exampleChannels")
   public void testHandleReceiptEventWithCaseForAllowedChannels(String channel) {
     // Given
     EventDTO receiptEvent = buildReceiptEvent(channel);
@@ -132,7 +132,12 @@ public class QidReceiptServiceTest {
     assertThat(capturedUacQidLink.isActive()).isFalse();
   }
 
-  private static Stream<Arguments> allowedChannels() {
-    return Stream.of(Arguments.of("RH"), Arguments.of("EQ"), Arguments.of((String) null));
+  private static Stream<Arguments> exampleChannels() {
+    return Stream.of(
+        Arguments.of("RH"),
+        Arguments.of("EQ"),
+        Arguments.of("PPO"),
+        Arguments.of("QM"),
+        Arguments.of((String) null));
   }
 }
