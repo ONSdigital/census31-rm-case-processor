@@ -12,6 +12,7 @@ import org.springframework.messaging.Message;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.ons.census.caseprocessor.logging.EventLogger;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
+import uk.gov.ons.census.caseprocessor.model.dto.FieldActionInstruction;
 import uk.gov.ons.census.caseprocessor.model.dto.NewCase;
 import uk.gov.ons.census.caseprocessor.model.repository.CaseRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.CollectionExerciseRepository;
@@ -78,6 +79,8 @@ public class NewCaseReceiver {
     newCase = saveNewCaseAndStampCaseRef(newCase);
     caseService.emitCaseUpdate(
         newCase, event.getHeader().getCorrelationId(), event.getHeader().getOriginatingUser());
+
+    event.getHeader().setFieldActionInstruction(FieldActionInstruction.CREATE);
 
     eventLogger.logCaseEvent(newCase, "New case created", EventType.NEW_CASE, event, message);
   }
