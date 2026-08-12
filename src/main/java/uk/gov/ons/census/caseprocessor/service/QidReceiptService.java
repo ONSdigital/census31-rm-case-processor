@@ -32,7 +32,7 @@ public class QidReceiptService {
 
       Case caze = uacQidLink.getCaze();
 
-      if (caze != null && "RH".equals(eventDTO.getHeader().getChannel())) {
+      if (caze != null) {
         uacQidLink = caseReceiptService.receiptCase(uacQidLink, eventDTO);
       }
     }
