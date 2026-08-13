@@ -78,11 +78,13 @@ public class NewCaseReceiver {
 
     newCase = saveNewCaseAndStampCaseRef(newCase);
 
-    event.getHeader().setFieldActionInstruction(FieldActionInstruction.CREATE);
-
     caseService.emitCaseUpdate(
-        newCase, event.getHeader().getCorrelationId(), event.getHeader().getOriginatingUser());
+        newCase,
+        event.getHeader().getCorrelationId(),
+        event.getHeader().getOriginatingUser(),
+        FieldActionInstruction.CREATE);
 
+    event.getHeader().setFieldActionInstruction(FieldActionInstruction.CREATE);
     eventLogger.logCaseEvent(newCase, "New case created", EventType.NEW_CASE, event, message);
   }
 

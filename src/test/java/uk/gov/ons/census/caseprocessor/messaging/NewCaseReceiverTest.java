@@ -91,7 +91,10 @@ class NewCaseReceiverTest {
     ArgumentCaptor<Case> caseArgumentCaptor = ArgumentCaptor.forClass(Case.class);
     verify(caseService)
         .emitCaseUpdate(
-            caseArgumentCaptor.capture(), eq(TEST_CORRELATION_ID), eq(TEST_ORIGINATING_USER));
+            caseArgumentCaptor.capture(),
+            eq(TEST_CORRELATION_ID),
+            eq(TEST_ORIGINATING_USER),
+            eq(FieldActionInstruction.CREATE));
     Case actualCase = caseArgumentCaptor.getValue();
     assertThat(actualCase.getId()).isEqualTo(TEST_CASE_ID);
 
@@ -133,7 +136,7 @@ class NewCaseReceiverTest {
     underTest.receiveNewCase(message);
 
     // Then
-    verify(caseService, never()).emitCaseUpdate(any(), any(UUID.class), anyString());
+    verify(caseService, never()).emitCaseUpdate(any(), any(UUID.class), anyString(), any());
     verifyNoInteractions(eventLogger);
   }
 

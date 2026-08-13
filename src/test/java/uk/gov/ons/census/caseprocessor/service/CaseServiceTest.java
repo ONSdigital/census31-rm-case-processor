@@ -21,6 +21,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import uk.gov.ons.census.caseprocessor.messaging.MessageSender;
 import uk.gov.ons.census.caseprocessor.model.dto.CaseUpdateDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
+import uk.gov.ons.census.caseprocessor.model.dto.FieldActionInstruction;
 import uk.gov.ons.census.caseprocessor.model.dto.RefusalTypeDTO;
 import uk.gov.ons.census.caseprocessor.model.repository.CaseRepository;
 import uk.gov.ons.census.caseprocessor.testutils.CaseFieldsHelper;
@@ -136,6 +137,63 @@ class CaseServiceTest {
     assertThat(actualCaseUpdate.getAddress().getTownName()).isEqualTo(caze.getTownName());
     assertThat(actualCaseUpdate.getAddress().getPostcode()).isEqualTo(caze.getPostcode());
     assertThat(actualCaseUpdate.getAddress().getRegion()).isEqualTo(caze.getRegion());
+  }
+
+  @Test
+  void emitCaseUpdateWithFieldActionInstruction() {
+    ReflectionTestUtils.setField(underTest, "caseUpdateTopic", "Test topic");
+    ReflectionTestUtils.setField(underTest, "pubsubProject", "Test project");
+
+    Survey survey = new Survey();
+    survey.setId(UUID.randomUUID());
+    CollectionExercise collex = new CollectionExercise();
+    collex.setId(UUID.randomUUID());
+    collex.setSurvey(survey);
+
+    Case caze = new Case();
+    caze.setId(UUID.randomUUID());
+    caze.setCaseRef(1234567890L);
+    caze.setCollectionExercise(collex);
+    CaseFieldsHelper.setDummyCaseFields(caze);
+
+    underTest.emitCaseUpdate(
+        caze, TEST_CORRELATION_ID, TEST_ORIGINATING_USER, FieldActionInstruction.CREATE);
+
+    ArgumentCaptor<EventDTO> eventArgumentCaptor = ArgumentCaptor.forClass(EventDTO.class);
+    verify(messageSender).sendMessage(any(), eventArgumentCaptor.capture());
+    EventDTO actualEvent = eventArgumentCaptor.getValue();
+
+    assertThat(actualEvent.getHeader().getFieldActionInstruction())
+        .isEqualTo(FieldActionInstruction.CREATE);
+    assertThat(actualEvent.getHeader().getCorrelationId()).isEqualTo(TEST_CORRELATION_ID);
+    assertThat(actualEvent.getHeader().getOriginatingUser()).isEqualTo(TEST_ORIGINATING_USER);
+    assertThat(actualEvent.getPayload().getCaseUpdate().getCaseId()).isEqualTo(caze.getId());
+  }
+
+  @Test
+  void emitCaseUpdateWithNullFieldActionInstructionSetsNoInstruction() {
+    ReflectionTestUtils.setField(underTest, "caseUpdateTopic", "Test topic");
+    ReflectionTestUtils.setField(underTest, "pubsubProject", "Test project");
+
+    Survey survey = new Survey();
+    survey.setId(UUID.randomUUID());
+    CollectionExercise collex = new CollectionExercise();
+    collex.setId(UUID.randomUUID());
+    collex.setSurvey(survey);
+
+    Case caze = new Case();
+    caze.setId(UUID.randomUUID());
+    caze.setCaseRef(1234567890L);
+    caze.setCollectionExercise(collex);
+    CaseFieldsHelper.setDummyCaseFields(caze);
+
+    underTest.emitCaseUpdate(caze, TEST_CORRELATION_ID, TEST_ORIGINATING_USER, null);
+
+    ArgumentCaptor<EventDTO> eventArgumentCaptor = ArgumentCaptor.forClass(EventDTO.class);
+    verify(messageSender).sendMessage(any(), eventArgumentCaptor.capture());
+    EventDTO actualEvent = eventArgumentCaptor.getValue();
+
+    assertThat(actualEvent.getHeader().getFieldActionInstruction()).isNull();
   }
 
   @Test
