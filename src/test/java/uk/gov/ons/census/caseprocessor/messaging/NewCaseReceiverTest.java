@@ -28,6 +28,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import uk.gov.ons.census.caseprocessor.logging.EventLogger;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.EventHeaderDTO;
+import uk.gov.ons.census.caseprocessor.model.dto.FieldActionInstruction;
 import uk.gov.ons.census.caseprocessor.model.dto.NewCase;
 import uk.gov.ons.census.caseprocessor.model.dto.PayloadDTO;
 import uk.gov.ons.census.caseprocessor.model.repository.CaseRepository;
@@ -94,8 +95,17 @@ class NewCaseReceiverTest {
     Case actualCase = caseArgumentCaptor.getValue();
     assertThat(actualCase.getId()).isEqualTo(TEST_CASE_ID);
 
+    ArgumentCaptor<EventDTO> loggedEventCaptor = ArgumentCaptor.forClass(EventDTO.class);
     verify(eventLogger)
-        .logCaseEvent(actualCase, "New case created", EventType.NEW_CASE, event, eventMessage);
+        .logCaseEvent(
+            eq(actualCase),
+            eq("New case created"),
+            eq(EventType.NEW_CASE),
+            loggedEventCaptor.capture(),
+            eq(eventMessage));
+
+    assertThat(loggedEventCaptor.getValue().getHeader().getFieldActionInstruction())
+        .isEqualTo(FieldActionInstruction.CREATE);
   }
 
   @Test

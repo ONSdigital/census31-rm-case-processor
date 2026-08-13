@@ -77,10 +77,11 @@ public class NewCaseReceiver {
     CaseFieldMapper.mapPayloadSampleFieldsToCase(newCasePayload, newCase);
 
     newCase = saveNewCaseAndStampCaseRef(newCase);
-    caseService.emitCaseUpdate(
-        newCase, event.getHeader().getCorrelationId(), event.getHeader().getOriginatingUser());
 
     event.getHeader().setFieldActionInstruction(FieldActionInstruction.CREATE);
+
+    caseService.emitCaseUpdate(
+        newCase, event.getHeader().getCorrelationId(), event.getHeader().getOriginatingUser());
 
     eventLogger.logCaseEvent(newCase, "New case created", EventType.NEW_CASE, event, message);
   }

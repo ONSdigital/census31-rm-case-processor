@@ -107,6 +107,7 @@ public class NewCaseReceiverIT {
       EventDTO actualEvent = outboundCaseQueueSpy.checkExpectedMessageReceived();
 
       CaseUpdateDTO emittedCase = actualEvent.getPayload().getCaseUpdate();
+      Assertions.assertThat(actualEvent.getHeader().getFieldActionInstruction()).isNull();
       Assertions.assertThat(emittedCase.getCaseId()).isEqualTo(TEST_CASE_ID);
       Assertions.assertThat(emittedCase.getCollectionExerciseId())
           .isEqualTo(collectionExercise.getId());

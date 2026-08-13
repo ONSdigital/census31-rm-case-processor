@@ -93,8 +93,7 @@ class ActionRuleIT {
           null,
           null);
       EventDTO rme = outboundUacQueue.getQueue().poll(20, TimeUnit.SECONDS);
-      List<ExportFileRow> exportFileRows = exportFileRowRepository.findAll();
-      ExportFileRow exportFileRow = exportFileRows.get(0);
+      ExportFileRow exportFileRow = waitForFirstExportFileRow();
 
       // Then
       assertThat(exportFileRow).isNotNull();
@@ -127,8 +126,7 @@ class ActionRuleIT {
           null,
           null);
       EventDTO rme = outboundUacQueue.getQueue().poll(20, TimeUnit.SECONDS);
-      List<ExportFileRow> exportFileRows = exportFileRowRepository.findAll();
-      ExportFileRow exportFileRow = exportFileRows.get(0);
+      ExportFileRow exportFileRow = waitForFirstExportFileRow();
 
       // Then
       assertThat(exportFileRow).isNotNull();
@@ -268,5 +266,16 @@ class ActionRuleIT {
     uacQidLink.setActive(true);
     uacQidLink.setCaze(caze);
     return uacQidLinkRepository.saveAndFlush(uacQidLink);
+  }
+
+  private ExportFileRow waitForFirstExportFileRow() throws InterruptedException {
+    for (int i = 0; i < 20; i++) {
+      List<ExportFileRow> exportFileRows = exportFileRowRepository.findAll();
+      if (!exportFileRows.isEmpty()) {
+        return exportFileRows.get(0);
+      }
+      Thread.sleep(500);
+    }
+    throw new IllegalStateException("No export file rows were created within timeout");
   }
 }
