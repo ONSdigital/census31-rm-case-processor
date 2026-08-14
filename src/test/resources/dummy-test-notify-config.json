@@ -1,0 +1,12 @@
+{
+  "Office_for_National_Statistics_surveys_NHS": {
+    "base-url": "http://localhost:8089",
+    "api-key": "dummykey-ffffffff-ffff-ffff-ffff-ffffffffffff-ffffffff-ffff-ffff-ffff-ffffffffffff",
+    "sender-id":" 6bf5f8c2-bc4e-4bbc-a855-aa708d5fdfe7"
+  },
+  "test-service": {
+    "base-url": "http://localhost:8089",
+    "api-key": "TESTSERVICEKEY-ffffffff-ffff-ffff-ffff-ffffffffffff-ffffffff-ffff-ffff-ffff-ffffffffffff",
+    "sender-id":" 6bf5f8c2-bc4e-4bbc-a855-aa708d5fdfe8"
+  }
+}

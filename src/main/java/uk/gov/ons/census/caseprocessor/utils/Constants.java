@@ -8,4 +8,7 @@ public class Constants {
       Set.of("v0.3_RELEASE", "0.4.0-DRAFT", "0.4.0", "0.5.0-DRAFT", "0.5.0", "0.6.0-DRAFT");
 
   public static final String REQUEST_PERSONALISATION_PREFIX = "__request__.";
+
+  public static final String TEMPLATE_UAC_KEY = "__uac__";
+  public static final String TEMPLATE_QID_KEY = "__qid__";
 }

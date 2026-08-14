@@ -12,7 +12,6 @@ public class PayloadDTO {
   private CaseUpdateDTO caseUpdate;
   private UacUpdateDTO uacUpdate;
   private InvalidCase invalidCase;
-  private PrintFulfilmentDTO printFulfilment;
   private DeactivateUacDTO deactivateUac;
   private UpdateSampleSensitive updateSampleSensitive;
   private UpdateSample updateSample;
@@ -20,8 +19,11 @@ public class PayloadDTO {
   private SmsConfirmation smsConfirmation;
   private EmailConfirmation emailConfirmation;
   private NewCase newCase;
-  private SmsRequest smsRequest;
+  // private SmsRequest smsRequest;
   private EmailRequest emailRequest;
   private ExportFileDTO exportFile;
   private RespondentAuthenticatedDTO respondentAuthenticated;
+  private FulfilmentDTO fulfilment;
+  private SmsRequestEnriched smsRequestEnriched;
+  private FulfilmentRequest fulfilmentRequest;
 }

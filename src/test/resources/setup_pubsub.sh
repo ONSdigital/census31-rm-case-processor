@@ -3,8 +3,7 @@
 # Wait for pubsub-emulator to come up
 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' '$PUBSUB_SETUP_HOST')" != "200" ]]; do sleep 1; done'
 
-curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/topics/rm-internal-sms-request
-curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/subscriptions/rm-internal-sms-request-enriched_notify-service -H 'Content-Type: application/json' -d '{"topic": "projects/our-project/topics/rm-internal-sms-request"}'
+curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/topics/rm-internal-sms-request-enriched
 
 curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/topics/rm-internal-sms-confirmation
 curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/subscriptions/rm-internal-sms-confirmation_case-processor -H 'Content-Type: application/json' -d '{"topic": "projects/our-project/topics/rm-internal-sms-confirmation"}'
@@ -47,4 +46,8 @@ curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/subscriptions/even
 
 curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/topics/event_uac-update
 curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/subscriptions/event_uac-update_rh -H 'Content-Type: application/json' -d '{"topic": "projects/our-project/topics/event_uac-update"}'
+
+curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/topics/event_fulfilment-request
+curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/subscriptions/event_fulfilment-request_rm-case-processor -H 'Content-Type: application/json' -d '{"topic": "projects/our-project/topics/event_fulfilment-request"}'
+
 

@@ -2,6 +2,8 @@ package uk.gov.ons.census.caseprocessor.client;
 
 import java.util.Arrays;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,8 @@ public class UacQidServiceClient {
 
   @Value("${uacservice.connection.port}")
   private String port;
+
+  private static final Logger log = LoggerFactory.getLogger(UacQidServiceClient.class);
 
   public List<UacQidDTO> getUacQids(int questionnaireType, int numberToCreate) {
     RestTemplate restTemplate = new RestTemplate();
@@ -45,5 +49,28 @@ public class UacQidServiceClient {
         .queryParam("numberToCreate", numberToCreate)
         .build()
         .encode();
+  }
+
+  private UriComponents createUriComponents(Integer questionnaireType) {
+    return UriComponentsBuilder.newInstance()
+        .scheme(scheme)
+        .host(host)
+        .port(port)
+        .queryParam("questionnaireType", questionnaireType)
+        .build()
+        .encode();
+  }
+
+  public UacQidDTO generateUacQid(Integer questionnaireType) {
+    log.atError()
+        .setMessage("HTTP call to generate a UAC and QID")
+        .addKeyValue("method", "generateUacQid")
+        .log();
+
+    RestTemplate restTemplate = new RestTemplate();
+    UriComponents uriComponents = createUriComponents(questionnaireType);
+    ResponseEntity<UacQidDTO> responseEntity =
+        restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, null, UacQidDTO.class);
+    return responseEntity.getBody();
   }
 }
