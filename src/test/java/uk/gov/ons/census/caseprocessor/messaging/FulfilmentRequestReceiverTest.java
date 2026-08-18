@@ -219,7 +219,6 @@ public class FulfilmentRequestReceiverTest {
     smsRequestEnriched.setPersonalisation(fulfilmentRequest.getContact().toMap());
     smsRequestEnriched.setUac(uacQid.getUac());
     smsRequestEnriched.setQid(uacQid.getQid());
-    smsRequestEnriched.setContact(fulfilmentRequest.getContact());
 
     return smsRequestEnriched;
   }

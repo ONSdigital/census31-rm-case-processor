@@ -551,7 +551,6 @@ class FulfilmentRequestServiceTest {
     smsRequestEnriched.setCaseId(caseId);
     smsRequestEnriched.setPhoneNumber("+447788991100");
     smsRequestEnriched.setPackCode("P_CODE");
-    smsRequestEnriched.setContact(contact);
     smsRequestEnriched.setScheduled(false);
     smsRequestEnriched.setPersonalisation(contact.toMap());
     smsRequestEnriched.setUac(uacQid.getUac());

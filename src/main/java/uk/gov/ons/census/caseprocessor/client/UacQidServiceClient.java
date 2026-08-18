@@ -62,7 +62,7 @@ public class UacQidServiceClient {
   }
 
   public UacQidDTO generateUacQid(Integer questionnaireType) {
-    log.atError()
+    log.atDebug()
         .setMessage("HTTP call to generate a UAC and QID")
         .addKeyValue("method", "generateUacQid")
         .log();

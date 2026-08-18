@@ -101,7 +101,7 @@ public class FulfilmentRequestReceiverIT {
     contact.setTitle("Mr.");
     contact.setForename("Joe");
     contact.setSurname("Bloggs");
-    contact.setTitle("+4477889900111");
+    contact.setTelNo("+4477889900111");
     fulfilmentRequest.setContact(contact);
     fulfilmentRequestEvent.getPayload().setFulfilmentRequest(fulfilmentRequest);
 

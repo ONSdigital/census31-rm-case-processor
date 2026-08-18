@@ -12,6 +12,5 @@ public class SmsRequestEnriched {
   private String uac;
   private String qid;
   private boolean scheduled;
-  private Contact contact;
   private Map<String, String> personalisation;
 }

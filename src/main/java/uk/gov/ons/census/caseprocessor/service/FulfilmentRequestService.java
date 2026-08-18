@@ -30,7 +30,6 @@ public class FulfilmentRequestService {
   private final FulfilmentToProcessRepository fulfilmentToProcessRepository;
   private static final Logger log = LoggerFactory.getLogger(FulfilmentRequestService.class);
 
-  // private final EventLogger eventLogger;
   private final PubSubHelper pubSubHelper;
 
   public FulfilmentRequestService(
@@ -219,7 +218,6 @@ public class FulfilmentRequestService {
     smsRequestEnriched.setCaseId(smsRequest.getCaseId());
     smsRequestEnriched.setPhoneNumber(smsRequest.getContact().getTelNo());
     smsRequestEnriched.setPackCode(smsRequest.getFulfilmentCode());
-    smsRequestEnriched.setContact(smsRequest.getContact());
     smsRequestEnriched.setScheduled(false);
     smsRequestEnriched.setPersonalisation(smsRequest.getContact().toMap());
 

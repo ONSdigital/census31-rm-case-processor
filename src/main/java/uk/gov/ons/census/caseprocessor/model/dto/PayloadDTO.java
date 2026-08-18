@@ -19,11 +19,9 @@ public class PayloadDTO {
   private SmsConfirmation smsConfirmation;
   private EmailConfirmation emailConfirmation;
   private NewCase newCase;
-  // private SmsRequest smsRequest;
   private EmailRequest emailRequest;
   private ExportFileDTO exportFile;
   private RespondentAuthenticatedDTO respondentAuthenticated;
-  private FulfilmentDTO fulfilment;
   private SmsRequestEnriched smsRequestEnriched;
   private FulfilmentRequest fulfilmentRequest;
 }

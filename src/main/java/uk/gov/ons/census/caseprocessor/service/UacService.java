@@ -102,4 +102,14 @@ public class UacService {
     uacQidLink.setCaze(caze);
     saveAndEmitUacUpdateEvent(uacQidLink, correlationId, originatingUser);
   }
+
+  public UacQidLink findByUacAndQidAndCaze(String uac, String qid, UUID caseId) {
+    Optional<UacQidLink> uacQidLinkOpt = uacQidLinkRepository.findByQid(qid);
+
+    if (uacQidLinkOpt.isEmpty()) {
+      throw new RuntimeException(String.format("qid '%s' not found!", qid));
+    }
+
+    return uacQidLinkOpt.get();
+  }
 }
