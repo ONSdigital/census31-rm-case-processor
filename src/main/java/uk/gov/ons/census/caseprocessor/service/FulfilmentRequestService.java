@@ -122,47 +122,31 @@ public class FulfilmentRequestService {
     EventDTO smsRequestEnrichedEvent =
         buildSmsRequestEnrichedEvent(
             fulfilmentRequest, fulfilmentRequestHeader, newUacQidPair, smsRequestEnrichedTopic);
+
+    return smsRequestEnrichedEvent;
+  }
+
+  public Case processSMSFulfilmentReceiptService(
+      EventDTO smsRequestEnrichedEvent, String smsRequestEnrichedTopic) {
+    SmsRequestEnriched smsRequestEnriched =
+        smsRequestEnrichedEvent.getPayload().getSmsRequestEnriched();
+
+    Case caze = caseService.getCase(smsRequestEnriched.getCaseId());
+
+    uacService.createLinkAndEmitNewUacQid(
+        caze,
+        smsRequestEnriched.getUac(),
+        smsRequestEnriched.getQid(),
+        null,
+        smsRequestEnrichedEvent.getHeader().getCorrelationId(),
+        smsRequestEnrichedEvent.getHeader().getOriginatingUser());
+
     // Send the enriched SMS Request, now including the UAC/QID pair if required.
     // This enriched message can then safely be retried multiple times without potentially
     // generating and linking more, unnecessary UAC/QID pairs
 
     pubSubHelper.publishAndConfirm(smsRequestEnrichedTopic, smsRequestEnrichedEvent);
 
-    return smsRequestEnrichedEvent;
-  }
-
-  public Case processSMSFulfilmentReceiptService(EventDTO smsRequestEnrichedEvent) {
-    SmsRequestEnriched smsRequestEnriched =
-        smsRequestEnrichedEvent.getPayload().getSmsRequestEnriched();
-
-    Case caze = caseService.getCase(smsRequestEnriched.getCaseId());
-
-    if (smsRequestEnriched.getQid() != null) {
-      // Check the QID does not already exist
-      if (uacService.existsByQid(smsRequestEnriched.getQid())) {
-
-        // If it does exist, check if it is linked to the given case
-        UacQidLink existingUacQidLink = uacService.findByQid(smsRequestEnriched.getQid());
-        if (existingUacQidLink.getCaze().getId().equals(smsRequestEnriched.getCaseId())) {
-
-          // If the QID is already linked to the given case this must be duplicate event, ignore
-          return null;
-        }
-
-        // If not then something has gone wrong, error out
-        throw new RuntimeException(
-            "SMS fulfilment QID "
-                + smsRequestEnriched.getQid()
-                + " is already linked to a different case");
-      }
-      uacService.createLinkAndEmitNewUacQid(
-          caze,
-          smsRequestEnriched.getUac(),
-          smsRequestEnriched.getQid(),
-          null,
-          smsRequestEnrichedEvent.getHeader().getCorrelationId(),
-          smsRequestEnrichedEvent.getHeader().getOriginatingUser());
-    }
     return caze;
   }
 

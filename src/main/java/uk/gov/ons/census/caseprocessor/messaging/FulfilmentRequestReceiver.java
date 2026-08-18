@@ -71,7 +71,9 @@ public class FulfilmentRequestReceiver {
       EventDTO smsRequestEnrichedEvent =
           fulfilmentRequestService.processSMSRequestReceiver(event, smsRequestEnrichedTopic);
 
-      caze = fulfilmentRequestService.processSMSFulfilmentReceiptService(smsRequestEnrichedEvent);
+      caze =
+          fulfilmentRequestService.processSMSFulfilmentReceiptService(
+              smsRequestEnrichedEvent, smsRequestEnrichedTopic);
 
       eventLogger.logCaseEvent(
           caze,

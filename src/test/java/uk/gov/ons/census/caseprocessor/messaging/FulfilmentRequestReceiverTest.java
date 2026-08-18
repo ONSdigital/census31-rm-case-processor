@@ -39,7 +39,7 @@ public class FulfilmentRequestReceiverTest {
 
   @InjectMocks FulfilmentRequestReceiver underTest;
 
-  private final String smsRequestEnrichedTopic = "sms-topic";
+  private final String smsRequestEnrichedTopic = "rm-internal-sms-request-enriched";
 
   @Test
   void testReceiveMessage_printFulfilment_export_success() throws Exception {
@@ -95,7 +95,6 @@ public class FulfilmentRequestReceiverTest {
     caze.setId(caseId);
 
     // Given
-
     when(fulfilmentRequestService.getExportFileTemplate("PACK1")).thenReturn(Optional.empty());
 
     when(fulfilmentRequestService.getSmsTemplate("PACK1")).thenReturn(Optional.of(smsTemplate));
@@ -105,7 +104,7 @@ public class FulfilmentRequestReceiverTest {
 
     when(fulfilmentRequestService.validatePhoneNumber(any())).thenReturn(true);
 
-    when(fulfilmentRequestService.processSMSFulfilmentReceiptService(smsRequestEnrichedEvent))
+    when(fulfilmentRequestService.processSMSFulfilmentReceiptService(any(), any()))
         .thenReturn(caze);
 
     underTest.receiveMessage(msg);

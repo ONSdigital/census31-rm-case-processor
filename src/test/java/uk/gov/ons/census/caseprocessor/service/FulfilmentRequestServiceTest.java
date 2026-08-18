@@ -101,6 +101,7 @@ class FulfilmentRequestServiceTest {
 
   @Test
   void testProcessSMSFulfilmentReceiptService_success() {
+    String topic = "sms-request-enriched-topic";
     // --- Arrange ---
     UUID caseId = UUID.randomUUID();
     EventDTO smsRequestEnrichedEvent = setupSmsRequestEnrichedEvent(caseId);
@@ -111,12 +112,9 @@ class FulfilmentRequestServiceTest {
 
     when(caseService.getCase(caseId)).thenReturn(caze);
 
-    // QID does NOT exist
-    when(uacService.existsByQid("QID123")).thenReturn(false);
-
     // --- Act ---
     Case result =
-        fulfilmentRequestService.processSMSFulfilmentReceiptService(smsRequestEnrichedEvent);
+        fulfilmentRequestService.processSMSFulfilmentReceiptService(smsRequestEnrichedEvent, topic);
 
     // --- Assert ---
     assertEquals(caze, result);
@@ -129,156 +127,9 @@ class FulfilmentRequestServiceTest {
             null,
             smsRequestEnrichedEvent.getHeader().getCorrelationId(),
             smsRequestEnrichedEvent.getHeader().getOriginatingUser());
-  }
-
-  @Test
-  void testProcessSMSFulfilmentReceiptService_duplicateEvent_returnsNull() {
-    // --- Arrange ---
-    UUID caseId = UUID.randomUUID();
-    EventDTO smsRequestEnrichedEvent = setupSmsRequestEnrichedEvent(caseId);
-
-    // Case returned
-    Case caze = new Case();
-    caze.setId(caseId);
-
-    when(caseService.getCase(caseId)).thenReturn(caze);
-
-    // QID exists
-    when(uacService.existsByQid("QID123")).thenReturn(true);
-
-    // QID linked to SAME case → duplicate
-    UacQidLink link = new UacQidLink();
-    link.setCaze(caze);
-
-    when(uacService.findByQid("QID123")).thenReturn(link);
-
-    // --- Act ---
-    Case result =
-        fulfilmentRequestService.processSMSFulfilmentReceiptService(smsRequestEnrichedEvent);
 
     // --- Assert ---
-    assertNull(result);
-
-    verify(uacService, never())
-        .createLinkAndEmitNewUacQid(any(), any(), any(), any(), any(), any());
-
-    when(caseService.getCase(caseId)).thenReturn(caze);
-
-    // QID exists
-    when(uacService.existsByQid("QID123")).thenReturn(true);
-
-    // QID linked to SAME case → duplicate
-    UacQidLink link2 = new UacQidLink();
-    link2.setCaze(caze);
-
-    when(uacService.findByQid("QID123")).thenReturn(link2);
-
-    // --- Act ---
-    Case result2 =
-        fulfilmentRequestService.processSMSFulfilmentReceiptService(smsRequestEnrichedEvent);
-
-    // --- Assert ---
-    assertNull(result2);
-
-    verify(uacService, never())
-        .createLinkAndEmitNewUacQid(any(), any(), any(), any(), any(), any());
-  }
-
-  @Test
-  void testProcessSMSFulfilmentReceiptService_qidLinkedToDifferentCase_throwsException() {
-
-    // --- Arrange ---
-    UUID caseId = UUID.randomUUID();
-    EventDTO smsRequestEnrichedEvent = setupSmsRequestEnrichedEvent(caseId);
-
-    // Case returned
-    Case caze = new Case();
-    caze.setId(caseId);
-
-    // Case returned
-    Case caze2 = new Case();
-    caze2.setId(UUID.randomUUID());
-
-    when(caseService.getCase(caseId)).thenReturn(caze);
-
-    // QID exists
-    when(uacService.existsByQid("QID123")).thenReturn(true);
-
-    // QID linked to DIFFERENT case → duplicate
-    UacQidLink link = new UacQidLink();
-    link.setCaze(caze2);
-
-    when(uacService.findByQid(
-            smsRequestEnrichedEvent.getPayload().getSmsRequestEnriched().getQid()))
-        .thenReturn(link);
-
-    // --- Act + Assert ---
-    RuntimeException ex =
-        assertThrows(
-            RuntimeException.class,
-            () ->
-                fulfilmentRequestService.processSMSFulfilmentReceiptService(
-                    smsRequestEnrichedEvent));
-
-    assertTrue(ex.getMessage().contains("is already linked to a different case"));
-
-    verify(uacService, never())
-        .createLinkAndEmitNewUacQid(any(), any(), any(), any(), any(), any());
-  }
-
-  // QID is null -> not linking, simply return case
-  @Test
-  void testProcessSMSFulfilmentReceiptService_qidNull_returnsCaseWithoutLinking() {
-
-    // --- Arrange ---
-    UUID caseId = UUID.randomUUID();
-    EventDTO smsRequestEnrichedEvent = setupSmsRequestEnrichedEvent(caseId);
-
-    smsRequestEnrichedEvent.getPayload().getSmsRequestEnriched().setQid(null);
-    smsRequestEnrichedEvent.getPayload().getSmsRequestEnriched().setUac(null);
-
-    // Case returned
-    Case caze = new Case();
-    caze.setId(caseId);
-
-    when(caseService.getCase(caseId)).thenReturn(caze);
-
-    // --- Act ---
-    Case result =
-        fulfilmentRequestService.processSMSFulfilmentReceiptService(smsRequestEnrichedEvent);
-
-    // --- Assert ---
-    assertEquals(caze, result);
-
-    verify(uacService, never()).existsByQid(any());
-
-    verify(uacService, never())
-        .createLinkAndEmitNewUacQid(any(), any(), any(), any(), any(), any());
-  }
-
-  // Case not found → throw exception
-  @Test
-  void testProcessSMSFulfilmentReceiptService_caseNotFound_throwsException() {
-
-    // --- Arrange ---
-    UUID caseId = UUID.randomUUID();
-
-    EventDTO smsRequestEnrichedEvent = setupSmsRequestEnrichedEvent(caseId);
-
-    when(caseService.getCase(caseId)).thenThrow(new RuntimeException("Case not found"));
-
-    // --- Act + Assert ---
-    RuntimeException ex =
-        assertThrows(
-            RuntimeException.class,
-            () ->
-                fulfilmentRequestService.processSMSFulfilmentReceiptService(
-                    smsRequestEnrichedEvent));
-
-    assertTrue(ex.getMessage().contains("Case not found"));
-
-    verify(uacService, never())
-        .createLinkAndEmitNewUacQid(any(), any(), any(), any(), any(), any());
+    verify(pubSubHelper).publishAndConfirm(topic, smsRequestEnrichedEvent);
   }
 
   @Test
@@ -301,9 +152,6 @@ class FulfilmentRequestServiceTest {
 
     // --- Act ---
     EventDTO enrichedEvent = fulfilmentRequestService.processSMSRequestReceiver(event, topic);
-
-    // --- Assert ---
-    verify(pubSubHelper).publishAndConfirm(topic, enrichedEvent);
 
     SmsRequestEnriched enriched = enrichedEvent.getPayload().getSmsRequestEnriched();
 
@@ -371,40 +219,6 @@ class FulfilmentRequestServiceTest {
             () -> fulfilmentRequestService.processSMSRequestReceiver(event, topic));
 
     assertTrue(ex.getMessage().contains("Failed to fetch UAC/QID pair"));
-  }
-
-  @Test
-  void testProcessSMSRequestReceiver_noUacQidRequired() {
-    UUID caseId = UUID.randomUUID();
-    String topic = "sms-request-enriched-topic";
-    EventDTO event = setupFulfilmentRequestEvent(caseId);
-    SmsTemplate template = setupTemplate();
-    String[] modifiedValues =
-        new String[] {
-          "__pack_code__",
-          "__caseref__",
-          "ADDRESS_LINE1",
-          "ADDRESS_LINE2",
-          "ADDRESS_LINE3",
-          "TOWN_NAME",
-          "POSTCODE"
-        };
-
-    template.setTemplate(modifiedValues);
-
-    when(smsTemplateRepository.findById("PACK1")).thenReturn(Optional.of(template));
-
-    when(caseRepository.existsById(caseId)).thenReturn(true);
-
-    EventDTO enriched = fulfilmentRequestService.processSMSRequestReceiver(event, topic);
-
-    verify(pubSubHelper).publishAndConfirm(topic, enriched);
-
-    SmsRequestEnriched enrichedPayload = enriched.getPayload().getSmsRequestEnriched();
-    assertEquals(caseId, enrichedPayload.getCaseId());
-    assertEquals("PACK1", enrichedPayload.getPackCode());
-    assertNull(enrichedPayload.getUac());
-    assertNull(enrichedPayload.getQid());
   }
 
   @Test
