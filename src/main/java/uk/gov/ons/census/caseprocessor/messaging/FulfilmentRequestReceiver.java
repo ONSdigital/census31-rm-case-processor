@@ -3,8 +3,6 @@ package uk.gov.ons.census.caseprocessor.messaging;
 import static uk.gov.ons.census.caseprocessor.utils.JsonHelper.convertJsonBytesToEvent;
 
 import java.util.Optional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
@@ -25,10 +23,7 @@ public class FulfilmentRequestReceiver {
   private final FulfilmentRequestService fulfilmentRequestService;
   private final EventLogger eventLogger;
 
-  private static final Logger log = LoggerFactory.getLogger(FulfilmentRequestReceiver.class);
-
   private static final String SMS_FULFILMENT_DESCRIPTION = "SMS fulfilment request received";
-  private static final String SCHEDULED_SMS_DESCRIPTION = "Scheduled SMS request received";
 
   public FulfilmentRequestReceiver(
       FulfilmentRequestService fulfilmentRequestService, EventLogger eventLogger) {

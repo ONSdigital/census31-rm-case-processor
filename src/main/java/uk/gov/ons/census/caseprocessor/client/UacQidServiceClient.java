@@ -2,8 +2,6 @@ package uk.gov.ons.census.caseprocessor.client;
 
 import java.util.Arrays;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -24,8 +22,6 @@ public class UacQidServiceClient {
 
   @Value("${uacservice.connection.port}")
   private String port;
-
-  private static final Logger log = LoggerFactory.getLogger(UacQidServiceClient.class);
 
   public List<UacQidDTO> getUacQids(int questionnaireType, int numberToCreate) {
     RestTemplate restTemplate = new RestTemplate();
