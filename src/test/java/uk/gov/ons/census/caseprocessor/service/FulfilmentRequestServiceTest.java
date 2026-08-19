@@ -19,11 +19,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Value;
-import uk.gov.ons.census.caseprocessor.client.UacQidServiceClient;
+import uk.gov.ons.census.caseprocessor.cache.UacQidCache;
 import uk.gov.ons.census.caseprocessor.model.dto.*;
 import uk.gov.ons.census.caseprocessor.model.repository.CaseRepository;
-import uk.gov.ons.census.caseprocessor.model.repository.ExportFileTemplateRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.FulfilmentToProcessRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.SmsTemplateRepository;
 import uk.gov.ons.census.caseprocessor.utils.Constants;
@@ -33,24 +31,13 @@ import uk.gov.ons.census.common.model.entity.*;
 @ExtendWith(MockitoExtension.class)
 class FulfilmentRequestServiceTest {
 
-  private final String TEST_PACK_CODE = "TEST_PACK_CODE";
-  private final String TEST_UAC = "TEST_UAC";
-  private final String TEST_QID = "TEST_QID";
-  private final String TEST_SOURCE = "TEST_SOURCE";
-  private final String TEST_CHANNEL = "TEST_CHANNEL";
-  private final String TEST_USER = "test@example.test";
-
-  @Mock private UacQidServiceClient uacQidServiceClient;
+  @Mock private UacQidCache uacQidCache;
   @Mock private CaseRepository caseRepository;
   @Mock private SmsTemplateRepository smsTemplateRepository;
-  @Mock private ExportFileTemplateRepository exportFileTemplateRepository;
   @Mock private UacService uacService;
   @Mock private CaseService caseService;
   @Mock private FulfilmentToProcessRepository fulfilmentToProcessRepository;
   @Mock private PubSubHelper pubSubHelper;
-
-  @Value("${queueconfig.fulfilment-request-topic}")
-  private String fulfilmentRequestTopic;
 
   @InjectMocks private FulfilmentRequestService fulfilmentRequestService;
 
@@ -62,7 +49,7 @@ class FulfilmentRequestServiceTest {
 
     // Then
     assertThat(actualUacQidCreated).isEmpty();
-    verifyNoInteractions(uacQidServiceClient);
+    verifyNoInteractions(uacQidCache);
   }
 
   @Test
@@ -71,7 +58,7 @@ class FulfilmentRequestServiceTest {
     UacQidDTO newUacQidCreated = new UacQidDTO();
     newUacQidCreated.setUac("TEST_UAC");
     newUacQidCreated.setUac("TEST_QID");
-    when(uacQidServiceClient.generateUacQid(1)).thenReturn(newUacQidCreated);
+    when(uacQidCache.getUacQidPair(1)).thenReturn(newUacQidCreated);
 
     // When
     Optional<UacQidDTO> actualUacQidCreated =
@@ -148,7 +135,7 @@ class FulfilmentRequestServiceTest {
     uacQid.setUac("UAC123");
     uacQid.setQid("QID123");
 
-    when(uacQidServiceClient.generateUacQid(10)).thenReturn(uacQid);
+    when(uacQidCache.getUacQidPair(10)).thenReturn(uacQid);
 
     // --- Act ---
     EventDTO enrichedEvent = fulfilmentRequestService.processSMSRequestReceiver(event, topic);
@@ -304,7 +291,7 @@ class FulfilmentRequestServiceTest {
         .thenReturn(false);
 
     // Case has template PACK1, but request is P_CODE
-    Case caze = setupCase(caseId, "PACK1");
+    Case caze = setupCase(caseId);
 
     when(caseService.getCase(caseId)).thenReturn(caze);
 
@@ -339,7 +326,6 @@ class FulfilmentRequestServiceTest {
     // --- Arrange ---
     String topic = "sms-request-enriched-topic";
     UUID correlationId = UUID.randomUUID();
-    String originatingUser = "test-user";
 
     // Header
     EventHeaderDTO header = new EventHeaderDTO();
@@ -350,25 +336,7 @@ class FulfilmentRequestServiceTest {
     header.setOriginatingUser("test-user");
 
     // Contact → toMap() will be used
-    Contact contact = new Contact();
-    contact.setTitle("Mr");
-    contact.setForename("John");
-    contact.setSurname("Doe");
-    contact.setTelNo("+447788991100");
-
-    // Mock UAC/QID pair
-    UacQidDTO uacQid = new UacQidDTO();
-    uacQid.setUac("UAC123");
-    uacQid.setQid("QID123");
-
-    SmsRequestEnriched smsRequestEnriched = new SmsRequestEnriched();
-    smsRequestEnriched.setCaseId(caseId);
-    smsRequestEnriched.setPhoneNumber("+447788991100");
-    smsRequestEnriched.setPackCode("P_CODE");
-    smsRequestEnriched.setScheduled(false);
-    smsRequestEnriched.setPersonalisation(contact.toMap());
-    smsRequestEnriched.setUac(uacQid.getUac());
-    smsRequestEnriched.setQid(uacQid.getQid());
+    SmsRequestEnriched smsRequestEnriched = getSmsRequestEnriched(caseId);
 
     EventHeaderDTO enrichedEventHeader = new EventHeaderDTO();
     enrichedEventHeader.setMessageId(UUID.randomUUID());
@@ -389,6 +357,29 @@ class FulfilmentRequestServiceTest {
     smsRequestEnrichedEvent.setPayload(enrichedPayload);
 
     return smsRequestEnrichedEvent;
+  }
+
+  private static SmsRequestEnriched getSmsRequestEnriched(UUID caseId) {
+    Contact contact = new Contact();
+    contact.setTitle("Mr");
+    contact.setForename("John");
+    contact.setSurname("Doe");
+    contact.setTelNo("+447788991100");
+
+    // Mock UAC/QID pair
+    UacQidDTO uacQid = new UacQidDTO();
+    uacQid.setUac("UAC123");
+    uacQid.setQid("QID123");
+
+    SmsRequestEnriched smsRequestEnriched = new SmsRequestEnriched();
+    smsRequestEnriched.setCaseId(caseId);
+    smsRequestEnriched.setPhoneNumber("+447788991100");
+    smsRequestEnriched.setPackCode("P_CODE");
+    smsRequestEnriched.setScheduled(false);
+    smsRequestEnriched.setPersonalisation(contact.toMap());
+    smsRequestEnriched.setUac(uacQid.getUac());
+    smsRequestEnriched.setQid(uacQid.getQid());
+    return smsRequestEnriched;
   }
 
   private EventDTO setupFulfilmentRequestEvent(UUID caseId) {
@@ -473,10 +464,10 @@ class FulfilmentRequestServiceTest {
     return event;
   }
 
-  private Case setupCase(UUID caseId, String packCode) {
+  private Case setupCase(UUID caseId) {
 
     ExportFileTemplate eft = new ExportFileTemplate();
-    eft.setPackCode(packCode);
+    eft.setPackCode("PACK1");
 
     FulfilmentSurveyExportFileTemplate fset = new FulfilmentSurveyExportFileTemplate();
     fset.setExportFileTemplate(eft);

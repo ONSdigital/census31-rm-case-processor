@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import uk.gov.ons.census.caseprocessor.client.UacQidServiceClient;
+import uk.gov.ons.census.caseprocessor.cache.UacQidCache;
 import uk.gov.ons.census.caseprocessor.model.dto.*;
 import uk.gov.ons.census.caseprocessor.model.repository.CaseRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.ExportFileTemplateRepository;
@@ -21,7 +21,7 @@ import uk.gov.ons.census.common.model.entity.*;
 
 @Service
 public class FulfilmentRequestService {
-  private final UacQidServiceClient uacQidServiceClient;
+  private final UacQidCache uacQidCache;
   private final CaseRepository caseRepository;
   private final SmsTemplateRepository smsTemplateRepository;
   private final ExportFileTemplateRepository exportFileTemplateRepository;
@@ -33,7 +33,7 @@ public class FulfilmentRequestService {
   private final PubSubHelper pubSubHelper;
 
   public FulfilmentRequestService(
-      UacQidServiceClient uacQidServiceClient,
+      UacQidCache uacQidCache,
       CaseRepository caseRepository,
       SmsTemplateRepository smsTemplateRepository,
       UacService uacService,
@@ -41,7 +41,7 @@ public class FulfilmentRequestService {
       FulfilmentToProcessRepository fulfilmentToProcessRepository,
       ExportFileTemplateRepository exportFileTemplateRepository,
       PubSubHelper pubSubHelper) {
-    this.uacQidServiceClient = uacQidServiceClient;
+    this.uacQidCache = uacQidCache;
     this.caseRepository = caseRepository;
     this.smsTemplateRepository = smsTemplateRepository;
     this.uacService = uacService;
@@ -183,7 +183,7 @@ public class FulfilmentRequestService {
       if (questionnaireType == null) {
         throw new IllegalArgumentException("SMS template is missing questionnaire type");
       }
-      return Optional.of(uacQidServiceClient.generateUacQid(questionnaireType));
+      return Optional.of(uacQidCache.getUacQidPair(questionnaireType));
     }
     return Optional.empty();
   }
