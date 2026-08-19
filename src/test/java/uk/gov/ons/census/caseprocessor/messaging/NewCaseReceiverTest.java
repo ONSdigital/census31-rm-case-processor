@@ -106,9 +106,6 @@ class NewCaseReceiverTest {
             eq(EventType.NEW_CASE),
             loggedEventCaptor.capture(),
             eq(eventMessage));
-
-    assertThat(loggedEventCaptor.getValue().getHeader().getFieldActionInstruction())
-        .isEqualTo(FieldActionInstruction.CREATE);
   }
 
   @Test

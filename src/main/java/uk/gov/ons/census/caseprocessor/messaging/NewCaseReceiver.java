@@ -84,7 +84,6 @@ public class NewCaseReceiver {
         event.getHeader().getOriginatingUser(),
         FieldActionInstruction.CREATE);
 
-    event.getHeader().setFieldActionInstruction(FieldActionInstruction.CREATE);
     eventLogger.logCaseEvent(newCase, "New case created", EventType.NEW_CASE, event, message);
   }
 
