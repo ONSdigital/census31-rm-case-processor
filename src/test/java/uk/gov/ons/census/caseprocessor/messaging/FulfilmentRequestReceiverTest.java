@@ -20,8 +20,10 @@ import uk.gov.ons.census.caseprocessor.model.repository.FulfilmentToProcessRepos
 import uk.gov.ons.census.caseprocessor.service.CaseService;
 import uk.gov.ons.census.caseprocessor.service.FulfilmentRequestService;
 import uk.gov.ons.census.caseprocessor.utils.Constants;
-import uk.gov.ons.census.caseprocessor.utils.PubSubHelper;
-import uk.gov.ons.census.common.model.entity.*;
+import uk.gov.ons.census.common.model.entity.Case;
+import uk.gov.ons.census.common.model.entity.EventType;
+import uk.gov.ons.census.common.model.entity.ExportFileTemplate;
+import uk.gov.ons.census.common.model.entity.SmsTemplate;
 
 @ExtendWith(MockitoExtension.class)
 public class FulfilmentRequestReceiverTest {
@@ -35,19 +37,13 @@ public class FulfilmentRequestReceiverTest {
 
   @Mock private FulfilmentRequestService fulfilmentRequestService;
 
-  @Mock private PubSubHelper pubSubHelper;
-
   @InjectMocks FulfilmentRequestReceiver underTest;
 
-  private final String smsRequestEnrichedTopic = "rm-internal-sms-request-enriched";
-
   @Test
-  void testReceiveMessage_printFulfilment_export_success() throws Exception {
+  void testReceiveMessage_print_fulfilment_success() throws Exception {
     UUID caseId = UUID.randomUUID();
     EventDTO event = buildEvent(caseId, "PACK1");
     Message<byte[]> msg = buildMessage(event);
-
-    SmsTemplate smsTemplate = setupTemplate();
 
     ExportFileTemplate eft = new ExportFileTemplate();
     eft.setPackCode("PACK1");
@@ -73,7 +69,7 @@ public class FulfilmentRequestReceiverTest {
   }
 
   @Test
-  void testReceiveMessage_printFulfilment_sms_success() throws Exception {
+  void testReceiveMessage_sms_fulfilment_success() throws Exception {
     UUID caseId = UUID.randomUUID();
     EventDTO event = buildEvent(caseId, "PACK1");
     Message<byte[]> msg = buildMessage(event);

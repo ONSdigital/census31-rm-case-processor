@@ -26,7 +26,14 @@ import uk.gov.ons.census.caseprocessor.model.repository.FulfilmentToProcessRepos
 import uk.gov.ons.census.caseprocessor.model.repository.SmsTemplateRepository;
 import uk.gov.ons.census.caseprocessor.utils.Constants;
 import uk.gov.ons.census.caseprocessor.utils.PubSubHelper;
-import uk.gov.ons.census.common.model.entity.*;
+import uk.gov.ons.census.common.model.entity.Case;
+import uk.gov.ons.census.common.model.entity.CollectionExercise;
+import uk.gov.ons.census.common.model.entity.EventType;
+import uk.gov.ons.census.common.model.entity.ExportFileTemplate;
+import uk.gov.ons.census.common.model.entity.FulfilmentSurveyExportFileTemplate;
+import uk.gov.ons.census.common.model.entity.FulfilmentToProcess;
+import uk.gov.ons.census.common.model.entity.SmsTemplate;
+import uk.gov.ons.census.common.model.entity.Survey;
 
 @ExtendWith(MockitoExtension.class)
 class FulfilmentRequestServiceTest {
