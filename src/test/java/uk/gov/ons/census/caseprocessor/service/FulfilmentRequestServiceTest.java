@@ -123,7 +123,7 @@ class FulfilmentRequestServiceTest {
   void testProcessSMSRequestReceiver_success() {
     String topic = "sms-request-enriched-topic";
     UUID caseId = UUID.randomUUID();
-    SmsTemplate smsTemplate = setupTemplate();
+    SmsTemplate smsTemplate = setupSmsTemplate();
     EventDTO event = setupFulfilmentRequestEvent(caseId);
     when(smsTemplateRepository.findById("PACK1")).thenReturn(Optional.of(smsTemplate));
 
@@ -158,7 +158,6 @@ class FulfilmentRequestServiceTest {
     String topic = "sms-request-enriched-topic";
     UUID caseId = UUID.randomUUID();
     EventDTO event = setupFulfilmentRequestEvent(caseId);
-    // SmsTemplate smsTemplate = setupTemplate();
 
     when(smsTemplateRepository.findById("PACK1")).thenReturn(Optional.empty());
 
@@ -175,7 +174,7 @@ class FulfilmentRequestServiceTest {
     String topic = "sms-request-enriched-topic";
     UUID caseId = UUID.randomUUID();
     EventDTO event = setupFulfilmentRequestEvent(caseId);
-    SmsTemplate template = setupTemplate();
+    SmsTemplate template = setupSmsTemplate();
 
     when(smsTemplateRepository.findById("PACK1")).thenReturn(Optional.of(template));
 
@@ -194,7 +193,7 @@ class FulfilmentRequestServiceTest {
     UUID caseId = UUID.randomUUID();
     String topic = "sms-request-enriched-topic";
     EventDTO event = setupFulfilmentRequestEvent(caseId);
-    SmsTemplate template = setupTemplate();
+    SmsTemplate template = setupSmsTemplate();
 
     when(smsTemplateRepository.findById("PACK1")).thenReturn(Optional.of(template));
 
@@ -408,7 +407,7 @@ class FulfilmentRequestServiceTest {
     return event;
   }
 
-  private SmsTemplate setupTemplate() {
+  private SmsTemplate setupSmsTemplate() {
     String[] template =
         new String[] {
           "__pack_code__",
