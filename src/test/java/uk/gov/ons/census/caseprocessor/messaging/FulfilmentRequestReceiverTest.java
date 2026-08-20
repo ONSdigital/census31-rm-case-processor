@@ -82,7 +82,7 @@ public class FulfilmentRequestReceiverTest {
     smsRequestEnrichedEvent.setHeader(event.getHeader());
     smsRequestEnrichedEvent.setPayload(payload);
 
-    SmsTemplate smsTemplate = setupTemplate();
+    SmsTemplate smsTemplate = setupSmsTemplate();
 
     ExportFileTemplate eft = new ExportFileTemplate();
     eft.setPackCode("PACK1");
@@ -122,8 +122,6 @@ public class FulfilmentRequestReceiverTest {
 
     ExportFileTemplate eft = new ExportFileTemplate();
     eft.setPackCode("PACK1");
-
-    SmsTemplate smsTemplate = setupTemplate();
 
     // Given
     when(fulfilmentRequestService.getSmsTemplate("PACK1")).thenReturn(Optional.empty());
@@ -178,7 +176,7 @@ public class FulfilmentRequestReceiverTest {
     return event;
   }
 
-  private SmsTemplate setupTemplate() {
+  private SmsTemplate setupSmsTemplate() {
     String[] template =
         new String[] {
           "__pack_code__",
