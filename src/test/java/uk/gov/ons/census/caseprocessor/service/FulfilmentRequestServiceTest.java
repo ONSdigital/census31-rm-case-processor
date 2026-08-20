@@ -20,12 +20,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.ons.census.caseprocessor.cache.UacQidCache;
+import uk.gov.ons.census.caseprocessor.messaging.MessageSender;
 import uk.gov.ons.census.caseprocessor.model.dto.*;
 import uk.gov.ons.census.caseprocessor.model.repository.CaseRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.FulfilmentToProcessRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.SmsTemplateRepository;
 import uk.gov.ons.census.caseprocessor.utils.Constants;
-import uk.gov.ons.census.caseprocessor.utils.PubSubHelper;
 import uk.gov.ons.census.common.model.entity.Case;
 import uk.gov.ons.census.common.model.entity.CollectionExercise;
 import uk.gov.ons.census.common.model.entity.EventType;
@@ -44,7 +44,7 @@ class FulfilmentRequestServiceTest {
   @Mock private UacService uacService;
   @Mock private CaseService caseService;
   @Mock private FulfilmentToProcessRepository fulfilmentToProcessRepository;
-  @Mock private PubSubHelper pubSubHelper;
+  @Mock private MessageSender messageSender;
 
   @InjectMocks private FulfilmentRequestService fulfilmentRequestService;
 
@@ -123,7 +123,7 @@ class FulfilmentRequestServiceTest {
             smsRequestEnrichedEvent.getHeader().getOriginatingUser());
 
     // --- Assert ---
-    verify(pubSubHelper).publishAndConfirm(topic, smsRequestEnrichedEvent);
+    verify(messageSender).sendMessage(topic, smsRequestEnrichedEvent);
   }
 
   @Test

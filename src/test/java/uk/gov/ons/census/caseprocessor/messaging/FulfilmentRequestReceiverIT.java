@@ -31,7 +31,6 @@ import uk.gov.ons.census.caseprocessor.model.repository.*;
 import uk.gov.ons.census.caseprocessor.service.FulfilmentRequestService;
 import uk.gov.ons.census.caseprocessor.testutils.*;
 import uk.gov.ons.census.caseprocessor.utils.Constants;
-import uk.gov.ons.census.caseprocessor.utils.PubSubHelper;
 import uk.gov.ons.census.common.model.entity.*;
 
 @ContextConfiguration
@@ -49,8 +48,6 @@ public class FulfilmentRequestReceiverIT {
   @Autowired private DeleteDataHelper deleteDataHelper;
   @Autowired private JunkDataHelper junkDataHelper;
   @Autowired private FulfilmentToProcessRepository fulfilmentToProcessRepository;
-  @Autowired private PubSubTestHelper pubSubTestHelper;
-  @Autowired private PubSubHelper pubSubHelper;
   @Autowired private UacQidLinkRepository uacQidLinkRepository;
 
   private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -62,7 +59,7 @@ public class FulfilmentRequestReceiverIT {
       Map.of("TEST_COLLECTION_EXERCISE_UPDATE_METADATA", "TEST");
 
   private static final String TEST_SMS_REQUEST_ENRICHED_SUBSCRIPTION =
-      "sms-request-enriched_notify-service";
+      "rm-internal-sms-request-enriched_notify-service";
 
   @AfterEach
   public void tearDown() {
@@ -73,7 +70,7 @@ public class FulfilmentRequestReceiverIT {
   @Transactional
   public void setUp() {
     deleteDataHelper.deleteAllData();
-    pubSubTestHelper.purgeMessages(TEST_SMS_REQUEST_ENRICHED_SUBSCRIPTION, smsRequestEnrichedTopic);
+    pubsubHelper.purgeMessages(TEST_SMS_REQUEST_ENRICHED_SUBSCRIPTION, smsRequestEnrichedTopic);
   }
 
   @Test

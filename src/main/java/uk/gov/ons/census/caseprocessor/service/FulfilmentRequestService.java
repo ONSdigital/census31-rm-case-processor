@@ -10,13 +10,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import uk.gov.ons.census.caseprocessor.cache.UacQidCache;
+import uk.gov.ons.census.caseprocessor.messaging.MessageSender;
 import uk.gov.ons.census.caseprocessor.model.dto.*;
 import uk.gov.ons.census.caseprocessor.model.repository.CaseRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.ExportFileTemplateRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.FulfilmentToProcessRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.SmsTemplateRepository;
 import uk.gov.ons.census.caseprocessor.utils.Constants;
-import uk.gov.ons.census.caseprocessor.utils.PubSubHelper;
 import uk.gov.ons.census.common.model.entity.*;
 
 @Service
@@ -29,8 +29,7 @@ public class FulfilmentRequestService {
   private final CaseService caseService;
   private final FulfilmentToProcessRepository fulfilmentToProcessRepository;
   private static final Logger log = LoggerFactory.getLogger(FulfilmentRequestService.class);
-
-  private final PubSubHelper pubSubHelper;
+  private final MessageSender messageSender;
 
   public FulfilmentRequestService(
       UacQidCache uacQidCache,
@@ -40,7 +39,7 @@ public class FulfilmentRequestService {
       CaseService caseService,
       FulfilmentToProcessRepository fulfilmentToProcessRepository,
       ExportFileTemplateRepository exportFileTemplateRepository,
-      PubSubHelper pubSubHelper) {
+      MessageSender messageSender) {
     this.uacQidCache = uacQidCache;
     this.caseRepository = caseRepository;
     this.smsTemplateRepository = smsTemplateRepository;
@@ -48,7 +47,7 @@ public class FulfilmentRequestService {
     this.caseService = caseService;
     this.fulfilmentToProcessRepository = fulfilmentToProcessRepository;
     this.exportFileTemplateRepository = exportFileTemplateRepository;
-    this.pubSubHelper = pubSubHelper;
+    this.messageSender = messageSender;
   }
 
   public Case processPrintFulfilmentReceiver(EventDTO event) {
@@ -141,12 +140,7 @@ public class FulfilmentRequestService {
         smsRequestEnrichedEvent.getHeader().getCorrelationId(),
         smsRequestEnrichedEvent.getHeader().getOriginatingUser());
 
-    // Send the enriched SMS Request, now including the UAC/QID pair if required.
-    // This enriched message can then safely be retried multiple times without potentially
-    // generating and linking more, unnecessary UAC/QID pairs
-
-    pubSubHelper.publishAndConfirm(smsRequestEnrichedTopic, smsRequestEnrichedEvent);
-
+    messageSender.sendMessage(smsRequestEnrichedTopic, smsRequestEnrichedEvent);
     return caze;
   }
 
