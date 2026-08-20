@@ -20,6 +20,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import uk.gov.ons.census.caseprocessor.model.dto.CaseUpdateDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.EventHeaderDTO;
+import uk.gov.ons.census.caseprocessor.model.dto.FieldActionInstruction;
 import uk.gov.ons.census.caseprocessor.model.dto.NewCase;
 import uk.gov.ons.census.caseprocessor.model.dto.PayloadDTO;
 import uk.gov.ons.census.caseprocessor.model.repository.CaseRepository;
@@ -107,6 +108,8 @@ public class NewCaseReceiverIT {
       EventDTO actualEvent = outboundCaseQueueSpy.checkExpectedMessageReceived();
 
       CaseUpdateDTO emittedCase = actualEvent.getPayload().getCaseUpdate();
+      Assertions.assertThat(actualEvent.getHeader().getFieldActionInstruction())
+          .isEqualTo(FieldActionInstruction.CREATE);
       Assertions.assertThat(emittedCase.getCaseId()).isEqualTo(TEST_CASE_ID);
       Assertions.assertThat(emittedCase.getCollectionExerciseId())
           .isEqualTo(collectionExercise.getId());

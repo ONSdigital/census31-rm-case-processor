@@ -16,4 +16,5 @@ public class EventHeaderDTO {
   private UUID correlationId;
   private String originatingUser;
   private EventType messageType;
+  private FieldActionInstruction fieldActionInstruction;
 }

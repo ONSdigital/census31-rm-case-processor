@@ -28,6 +28,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import uk.gov.ons.census.caseprocessor.logging.EventLogger;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.EventHeaderDTO;
+import uk.gov.ons.census.caseprocessor.model.dto.FieldActionInstruction;
 import uk.gov.ons.census.caseprocessor.model.dto.NewCase;
 import uk.gov.ons.census.caseprocessor.model.dto.PayloadDTO;
 import uk.gov.ons.census.caseprocessor.model.repository.CaseRepository;
@@ -90,12 +91,21 @@ class NewCaseReceiverTest {
     ArgumentCaptor<Case> caseArgumentCaptor = ArgumentCaptor.forClass(Case.class);
     verify(caseService)
         .emitCaseUpdate(
-            caseArgumentCaptor.capture(), eq(TEST_CORRELATION_ID), eq(TEST_ORIGINATING_USER));
+            caseArgumentCaptor.capture(),
+            eq(TEST_CORRELATION_ID),
+            eq(TEST_ORIGINATING_USER),
+            eq(FieldActionInstruction.CREATE));
     Case actualCase = caseArgumentCaptor.getValue();
     assertThat(actualCase.getId()).isEqualTo(TEST_CASE_ID);
 
+    ArgumentCaptor<EventDTO> loggedEventCaptor = ArgumentCaptor.forClass(EventDTO.class);
     verify(eventLogger)
-        .logCaseEvent(actualCase, "New case created", EventType.NEW_CASE, event, eventMessage);
+        .logCaseEvent(
+            eq(actualCase),
+            eq("New case created"),
+            eq(EventType.NEW_CASE),
+            loggedEventCaptor.capture(),
+            eq(eventMessage));
   }
 
   @Test
@@ -123,7 +133,7 @@ class NewCaseReceiverTest {
     underTest.receiveNewCase(message);
 
     // Then
-    verify(caseService, never()).emitCaseUpdate(any(), any(UUID.class), anyString());
+    verify(caseService, never()).emitCaseUpdate(any(), any(UUID.class), anyString(), any());
     verifyNoInteractions(eventLogger);
   }
 
