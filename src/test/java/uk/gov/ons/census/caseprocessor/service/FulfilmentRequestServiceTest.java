@@ -108,7 +108,7 @@ class FulfilmentRequestServiceTest {
 
     // --- Act ---
     Case result =
-        fulfilmentRequestService.processSMSFulfilmentReceiptService(smsRequestEnrichedEvent, topic);
+        fulfilmentRequestService.processSMSFulfilmentService(smsRequestEnrichedEvent, topic);
 
     // --- Assert ---
     assertEquals(caze, result);

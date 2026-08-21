@@ -119,7 +119,7 @@ public class FulfilmentRequestService {
     return smsRequestEnrichedEvent;
   }
 
-  public Case processSMSFulfilmentReceiptService(
+  public Case processSMSFulfilmentService(
       EventDTO smsRequestEnrichedEvent, String smsRequestEnrichedTopic) {
     SmsRequestEnriched smsRequestEnriched =
         smsRequestEnrichedEvent.getPayload().getSmsRequestEnriched();

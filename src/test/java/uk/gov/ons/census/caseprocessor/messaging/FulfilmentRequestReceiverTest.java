@@ -1,5 +1,7 @@
 package uk.gov.ons.census.caseprocessor.messaging;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -100,8 +102,7 @@ public class FulfilmentRequestReceiverTest {
 
     when(fulfilmentRequestService.validatePhoneNumber(any())).thenReturn(true);
 
-    when(fulfilmentRequestService.processSMSFulfilmentReceiptService(any(), any()))
-        .thenReturn(caze);
+    when(fulfilmentRequestService.processSMSFulfilmentService(any(), any())).thenReturn(caze);
 
     underTest.receiveMessage(msg);
 
@@ -115,7 +116,7 @@ public class FulfilmentRequestReceiverTest {
   }
 
   @Test
-  void testReceiveMessage_noTemplate_noAction() throws Exception {
+  void testReceiveMessage_noTemplate_throws() throws Exception {
     UUID caseId = UUID.randomUUID();
     EventDTO event = buildEvent(caseId, "PACK1");
     Message<byte[]> msg = buildMessage(event);
@@ -127,7 +128,9 @@ public class FulfilmentRequestReceiverTest {
     when(fulfilmentRequestService.getSmsTemplate("PACK1")).thenReturn(Optional.empty());
     when(fulfilmentRequestService.getExportFileTemplate("PACK1")).thenReturn(Optional.empty());
 
-    underTest.receiveMessage(msg);
+    RuntimeException ex = assertThrows(RuntimeException.class, () -> underTest.receiveMessage(msg));
+
+    assertTrue(ex.getMessage().contains("Invalid pack code on fulfilment request message"));
 
     verify(fulfilmentRequestService, never()).processPrintFulfilmentReceiver(any());
     verify(fulfilmentRequestService, never()).processSMSRequestReceiver(any(), any());
