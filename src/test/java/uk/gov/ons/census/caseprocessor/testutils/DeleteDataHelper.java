@@ -15,6 +15,7 @@ import uk.gov.ons.census.caseprocessor.model.repository.ExportFileRowRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.ExportFileTemplateRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.FulfilmentNextTriggerRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.FulfilmentSurveyExportFileTemplateRepository;
+import uk.gov.ons.census.caseprocessor.model.repository.FulfilmentSurveySmsTemplateRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.FulfilmentToProcessRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.SmsTemplateRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.SurveyRepository;
@@ -43,12 +44,15 @@ public class DeleteDataHelper {
   @Autowired private ClusterLeaderRepository clusterLeaderRepository;
   @Autowired private ExportFileRowRepository exportFileRowRepository;
   @Autowired private SmsTemplateRepository smsTemplateRepository;
+  @Autowired private FulfilmentSurveySmsTemplateRepository fulfilmentSurveySmsTemplateRepository;
 
   @Transactional
   public void deleteAllData() {
     actionRuleRepository.deleteAllInBatch();
     fulfilmentNextTriggerRepository.deleteAllInBatch();
     caseToProcessRepository.deleteAllInBatch();
+    fulfilmentSurveySmsTemplateRepository.deleteAllInBatch();
+
     fulfilmentToProcessRepository.deleteAllInBatch();
     eventRepository.deleteAllInBatch();
     uacQidLinkRepository.deleteAllInBatch();

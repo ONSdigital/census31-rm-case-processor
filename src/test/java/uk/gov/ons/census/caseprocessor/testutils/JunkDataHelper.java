@@ -11,11 +11,13 @@ import uk.gov.ons.census.caseprocessor.model.repository.CaseRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.CollectionExerciseRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.ExportFileTemplateRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.FulfilmentSurveyExportFileTemplateRepository;
+import uk.gov.ons.census.caseprocessor.model.repository.SmsTemplateRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.SurveyRepository;
 import uk.gov.ons.census.common.model.entity.Case;
 import uk.gov.ons.census.common.model.entity.CollectionExercise;
 import uk.gov.ons.census.common.model.entity.ExportFileTemplate;
 import uk.gov.ons.census.common.model.entity.FulfilmentSurveyExportFileTemplate;
+import uk.gov.ons.census.common.model.entity.SmsTemplate;
 import uk.gov.ons.census.common.model.entity.Survey;
 
 @Component
@@ -27,6 +29,7 @@ public class JunkDataHelper {
   @Autowired private CollectionExerciseRepository collectionExerciseRepository;
   @Autowired private SurveyRepository surveyRepository;
   @Autowired private ExportFileTemplateRepository exportFileTemplateRepository;
+  @Autowired private SmsTemplateRepository smsTemplateRepository;
 
   @Autowired
   private FulfilmentSurveyExportFileTemplateRepository fulfilmentSurveyExportFileTemplateRepository;
@@ -126,5 +129,15 @@ public class JunkDataHelper {
     if (eventHeaderDTO.getDateTime() == null) {
       eventHeaderDTO.setDateTime(OffsetDateTime.now());
     }
+  }
+
+  public SmsTemplate setUpSMSTemplate(String[] template) {
+    SmsTemplate junkSmsTemplate = new SmsTemplate();
+    junkSmsTemplate.setPackCode("JUNK");
+    junkSmsTemplate.setTemplate(template);
+    junkSmsTemplate.setDescription("junk");
+    junkSmsTemplate.setQuestionnaireType(1);
+    smsTemplateRepository.saveAndFlush(junkSmsTemplate);
+    return junkSmsTemplate;
   }
 }

@@ -6,7 +6,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.PayloadDTO;
-import uk.gov.ons.census.caseprocessor.model.dto.SmsRequest;
+import uk.gov.ons.census.caseprocessor.model.dto.SmsRequestEnriched;
 import uk.gov.ons.census.common.model.entity.FulfilmentToProcess;
 
 class RedactHelperTest {
@@ -34,12 +34,12 @@ class RedactHelperTest {
   @Test
   void testRedactWorksForString() {
     // GIVEN
-    SmsRequest smsRequest = new SmsRequest();
+    SmsRequestEnriched smsRequest = new SmsRequestEnriched();
 
     smsRequest.setPhoneNumber("SUPER SECRET VALUE");
 
     PayloadDTO payloadDto = new PayloadDTO();
-    payloadDto.setSmsRequest(smsRequest);
+    payloadDto.setSmsRequestEnriched(smsRequest);
 
     EventDTO eventDto = new EventDTO();
     eventDto.setPayload(payloadDto);
@@ -49,10 +49,11 @@ class RedactHelperTest {
     EventDTO eventDeepCopy = (EventDTO) RedactHelper.redact(eventDto);
 
     // THEN
-    assertThat(eventDeepCopy.getPayload().getSmsRequest().getPhoneNumber()).isEqualTo("REDACTED");
+    assertThat(eventDeepCopy.getPayload().getSmsRequestEnriched().getPhoneNumber())
+        .isEqualTo("REDACTED");
 
     // Extra check to make sure the original object wasn't accidentally mutated
-    assertThat(eventDto.getPayload().getSmsRequest().getPhoneNumber())
+    assertThat(eventDto.getPayload().getSmsRequestEnriched().getPhoneNumber())
         .isEqualTo("SUPER SECRET VALUE");
   }
 }

@@ -5,9 +5,12 @@ import java.util.UUID;
 import lombok.Data;
 
 @Data
-public class PrintFulfilmentDTO {
+public class SmsRequestEnriched {
   private UUID caseId;
+  private String phoneNumber;
   private String packCode;
-  private Object uacMetadata;
+  private String uac;
+  private String qid;
+  private boolean scheduled;
   private Map<String, String> personalisation;
 }
