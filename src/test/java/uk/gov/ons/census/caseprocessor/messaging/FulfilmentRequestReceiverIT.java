@@ -98,7 +98,6 @@ public class FulfilmentRequestReceiverIT {
     contact.setTitle("Mr.");
     contact.setForename("Joe");
     contact.setSurname("Bloggs");
-    contact.setTelNo("+4477889900111");
     fulfilmentRequest.setContact(contact);
     fulfilmentRequestEvent.getPayload().setFulfilmentRequest(fulfilmentRequest);
 
@@ -146,10 +145,6 @@ public class FulfilmentRequestReceiverIT {
     fulfilmentRequest.setCaseId(caze.getId());
     fulfilmentRequest.setFulfilmentCode(exportFileTemplate.getPackCode());
     Contact contact = new Contact();
-    contact.setTitle("Mr.");
-    contact.setForename("Joe");
-    contact.setSurname("Bloggs");
-    contact.setTitle("+4477889900111");
     fulfilmentRequest.setContact(contact);
     fulfilmentRequestEvent.getPayload().setFulfilmentRequest(fulfilmentRequest);
 
@@ -226,9 +221,6 @@ public class FulfilmentRequestReceiverIT {
     fulfilmentRequest.setCaseId(testCase.getId());
     fulfilmentRequest.setFulfilmentCode("TEST_SMS_PACK_CODE");
     Contact contact = new Contact();
-    contact.setTitle("Mr.");
-    contact.setForename("Joe");
-    contact.setSurname("Bloggs");
     contact.setTelNo("07788660011");
     fulfilmentRequest.setContact(contact);
     fulfilmentRequestEvent.getPayload().setFulfilmentRequest(fulfilmentRequest);
@@ -279,9 +271,6 @@ public class FulfilmentRequestReceiverIT {
     smsTemplateRepository.saveAndFlush(smsTemplate);
 
     Contact contact = new Contact();
-    contact.setTitle("Mr.");
-    contact.setForename("Joe");
-    contact.setSurname("Bloggs");
     contact.setTelNo("+447788990011");
 
     EventDTO smsRequestEnrichedEvent = buildEventDTO(smsRequestEnrichedTopic);

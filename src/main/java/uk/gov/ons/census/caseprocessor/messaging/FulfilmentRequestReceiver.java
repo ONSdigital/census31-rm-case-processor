@@ -67,7 +67,7 @@ public class FulfilmentRequestReceiver {
           fulfilmentRequestService.processSMSRequestReceiver(event, smsRequestEnrichedTopic);
 
       caze =
-          fulfilmentRequestService.processSMSFulfilmentReceiptService(
+          fulfilmentRequestService.processSMSFulfilmentService(
               smsRequestEnrichedEvent, smsRequestEnrichedTopic);
 
       eventLogger.logCaseEvent(
@@ -78,8 +78,7 @@ public class FulfilmentRequestReceiver {
           message);
 
     } else {
-      // TODO: Need to check what should happen when the fulfilment code or pack code is not valid.
-      return;
+      throw new RuntimeException("Invalid pack code on fulfilment request message");
     }
   }
 
