@@ -53,11 +53,12 @@ public class FulfilmentRequestReceiverTest {
     Case caze = new Case();
     caze.setId(caseId);
 
+
     when(fulfilmentRequestService.getExportFileTemplate("PACK1")).thenReturn(Optional.of(eft));
 
     when(fulfilmentRequestService.getSmsTemplate("PACK1")).thenReturn(Optional.empty());
 
-    when(fulfilmentRequestService.processPrintFulfilmentReceiver(any())).thenReturn(caze);
+    when(fulfilmentRequestService.processPrintFulfilmentReceiver(event, caseId)).thenReturn(caze);
 
     underTest.receiveMessage(msg);
 
@@ -68,6 +69,8 @@ public class FulfilmentRequestReceiverTest {
             eq(EventType.PRINT_FULFILMENT),
             any(),
             eq(msg));
+
+      verify(fulfilmentRequestService, never()).processFulfilmentForIndividual(any());
   }
 
   @Test
@@ -97,12 +100,12 @@ public class FulfilmentRequestReceiverTest {
 
     when(fulfilmentRequestService.getSmsTemplate("PACK1")).thenReturn(Optional.of(smsTemplate));
 
-    when(fulfilmentRequestService.processSMSRequestReceiver(any(), any()))
+    when(fulfilmentRequestService.processSMSRequestReceiver(any(EventDTO.class), any(), any(UUID.class)))
         .thenReturn(smsRequestEnrichedEvent);
 
     when(fulfilmentRequestService.validatePhoneNumber(any())).thenReturn(true);
 
-    when(fulfilmentRequestService.processSMSFulfilmentService(any(), any())).thenReturn(caze);
+    when(fulfilmentRequestService.processSMSFulfilmentService(any(EventDTO.class), any())).thenReturn(caze);
 
     underTest.receiveMessage(msg);
 
@@ -112,7 +115,9 @@ public class FulfilmentRequestReceiverTest {
             eq("SMS fulfilment request received"),
             eq(EventType.SMS_FULFILMENT),
             eq(smsRequestEnrichedEvent),
-            (Message<byte[]>) any()); // TODO: Check warning and fix it.
+            any(Message.class)); // TODO: Check warning and fix it.
+
+      verify(fulfilmentRequestService, never()).processFulfilmentForIndividual(any());
   }
 
   @Test
@@ -132,9 +137,8 @@ public class FulfilmentRequestReceiverTest {
 
     assertTrue(ex.getMessage().contains("Invalid pack code on fulfilment request message"));
 
-    verify(fulfilmentRequestService, never()).processPrintFulfilmentReceiver(any());
-    verify(fulfilmentRequestService, never()).processSMSRequestReceiver(any(), any());
-    verify(fulfilmentRequestService, never()).processSMSRequestReceiver(any(), any());
+    verify(fulfilmentRequestService, never()).processPrintFulfilmentReceiver(any(), any());
+    verify(fulfilmentRequestService, never()).processSMSRequestReceiver(any(), any(), any());
 
     verify(eventLogger, never())
         .logCaseEvent(
@@ -145,7 +149,64 @@ public class FulfilmentRequestReceiverTest {
             (Message<byte[]>) any());
   }
 
-  private Message<byte[]> buildMessage(EventDTO event) throws JsonProcessingException {
+    @Test
+    void testReceiveMessage_print_fulfilment_for_individual_success() throws Exception {
+        UUID caseId = UUID.randomUUID();
+        EventDTO event = buildEvent(caseId, "P_OR_I1");
+        Message<byte[]> msg = buildMessage(event);
+
+        ExportFileTemplate eft = new ExportFileTemplate();
+        eft.setPackCode("P_OR_I1");
+
+        Case caze = new Case();
+        caze.setId(caseId);
+
+        Case childCase = new Case();
+        childCase.setId(UUID.randomUUID());
+        childCase.setCaseType("HI");
+
+        when(caseService.getCase(caseId)).thenReturn(caze);
+
+        when(fulfilmentRequestService.getExportFileTemplate("P_OR_I1")).thenReturn(Optional.of(eft));
+
+        when(fulfilmentRequestService.getSmsTemplate("P_OR_I1")).thenReturn(Optional.empty());
+
+        when(fulfilmentRequestService.processFulfilmentForIndividual(any(EventDTO.class))).thenReturn(childCase);
+
+        when(fulfilmentRequestService.processPrintFulfilmentReceiver(any(EventDTO.class), any())).thenReturn(childCase);
+
+
+        underTest.receiveMessage(msg);
+
+        verify(eventLogger)
+                .logCaseEvent(
+                        eq(caze),
+                        eq("Print fulfilment requested"),
+                        eq(EventType.PRINT_FULFILMENT),
+                        any(EventDTO.class),
+                        eq(msg));
+
+        verify(eventLogger)
+                .logCaseEvent(
+                        eq(childCase),
+                        eq("New case created"),
+                        eq(EventType.NEW_CASE),
+                        any(EventDTO.class),
+                        eq(msg));
+
+        verify(eventLogger)
+                .logCaseEvent(
+                        eq(childCase),
+                        eq("Print fulfilment requested"),
+                        eq(EventType.PRINT_FULFILMENT),
+                        any(EventDTO.class),
+                        eq(msg));
+
+
+    }
+
+
+    private Message<byte[]> buildMessage(EventDTO event) throws JsonProcessingException {
     ObjectMapper mapper = new ObjectMapper();
     byte[] payload = mapper.writeValueAsBytes(event);
     return MessageBuilder.withPayload(payload).build();
@@ -158,6 +219,7 @@ public class FulfilmentRequestReceiverTest {
     header.setOriginatingUser("test-user");
     header.setMessageType(EventType.FULFILMENT_REQUEST);
     header.setVersion(Constants.OUTBOUND_EVENT_SCHEMA_VERSION);
+    header.setTopic("topic");
 
     Contact contact = new Contact();
     contact.setTitle("Mr.");

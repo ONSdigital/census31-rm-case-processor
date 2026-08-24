@@ -3,6 +3,8 @@ package uk.gov.ons.census.caseprocessor.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static uk.gov.ons.census.caseprocessor.testutils.TestConstants.TEST_CORRELATION_ID;
+import static uk.gov.ons.census.caseprocessor.testutils.TestConstants.TEST_ORIGINATING_USER;
 import static uk.gov.ons.census.caseprocessor.utils.Constants.TEMPLATE_QID_KEY;
 import static uk.gov.ons.census.caseprocessor.utils.Constants.TEMPLATE_UAC_KEY;
 
@@ -145,7 +147,7 @@ class FulfilmentRequestServiceTest {
     when(uacQidCache.getUacQidPair(10)).thenReturn(uacQid);
 
     // --- Act ---
-    EventDTO enrichedEvent = fulfilmentRequestService.processSMSRequestReceiver(event, topic);
+    EventDTO enrichedEvent = fulfilmentRequestService.processSMSRequestReceiver(event, topic, caseId);
 
     SmsRequestEnriched enriched = enrichedEvent.getPayload().getSmsRequestEnriched();
 
@@ -171,7 +173,7 @@ class FulfilmentRequestServiceTest {
     RuntimeException ex =
         assertThrows(
             RuntimeException.class,
-            () -> fulfilmentRequestService.processSMSRequestReceiver(event, topic));
+            () -> fulfilmentRequestService.processSMSRequestReceiver(event, topic, caseId));
 
     assertTrue(ex.getMessage().contains("SMS Template not found"));
   }
@@ -182,15 +184,16 @@ class FulfilmentRequestServiceTest {
     UUID caseId = UUID.randomUUID();
     EventDTO event = setupFulfilmentRequestEvent(caseId);
     SmsTemplate template = setupSmsTemplate();
+    String packCode = event.getPayload().getFulfilmentRequest().getFulfilmentCode();
 
-    when(smsTemplateRepository.findById("PACK1")).thenReturn(Optional.of(template));
+    when(smsTemplateRepository.findById(packCode)).thenReturn(Optional.of(template));
 
     when(caseRepository.existsById(caseId)).thenReturn(false);
 
     RuntimeException ex =
         assertThrows(
             RuntimeException.class,
-            () -> fulfilmentRequestService.processSMSRequestReceiver(event, topic));
+            () -> fulfilmentRequestService.processSMSRequestReceiver(event, topic, caseId));
 
     assertTrue(ex.getMessage().contains("Case not found"));
   }
@@ -209,7 +212,7 @@ class FulfilmentRequestServiceTest {
     RuntimeException ex =
         assertThrows(
             RuntimeException.class,
-            () -> fulfilmentRequestService.processSMSRequestReceiver(event, topic));
+            () -> fulfilmentRequestService.processSMSRequestReceiver(event, topic, caseId));
 
     assertTrue(ex.getMessage().contains("Failed to fetch UAC/QID pair"));
   }
@@ -246,7 +249,7 @@ class FulfilmentRequestServiceTest {
     when(caseService.getCase(caseId)).thenReturn(caze);
 
     // --- Act ---
-    Case result = fulfilmentRequestService.processPrintFulfilmentReceiver(event);
+    Case result = fulfilmentRequestService.processPrintFulfilmentReceiver(event, caseId);
 
     // --- Assert ---
     assertEquals(caze, result);
@@ -280,7 +283,7 @@ class FulfilmentRequestServiceTest {
     when(fulfilmentToProcessRepository.existsByMessageId(event.getHeader().getMessageId()))
         .thenReturn(true);
 
-    Case result = fulfilmentRequestService.processPrintFulfilmentReceiver(event);
+    Case result = fulfilmentRequestService.processPrintFulfilmentReceiver(event, caseId);
 
     assertNull(result);
 
@@ -304,7 +307,7 @@ class FulfilmentRequestServiceTest {
     RuntimeException ex =
         assertThrows(
             RuntimeException.class,
-            () -> fulfilmentRequestService.processPrintFulfilmentReceiver(event));
+            () -> fulfilmentRequestService.processPrintFulfilmentReceiver(event, caseId));
 
     assertTrue(ex.getMessage().contains("Pack code P_CODE is not allowed"));
   }
@@ -320,15 +323,86 @@ class FulfilmentRequestServiceTest {
 
     when(caseService.getCase(caseId)).thenThrow(new RuntimeException("Case not found"));
 
-    RuntimeException ex =
-        assertThrows(
-            RuntimeException.class,
-            () -> fulfilmentRequestService.processPrintFulfilmentReceiver(event));
+      RuntimeException ex =
+              assertThrows(
+                      RuntimeException.class,
+                      () -> fulfilmentRequestService.processPrintFulfilmentReceiver(event, caseId));
 
-    assertTrue(ex.getMessage().contains("Case not found"));
+      assertTrue(ex.getMessage().contains("Case not found"));
   }
 
-  private EventDTO setupSmsRequestEnrichedEvent(UUID caseId) {
+    @Test
+    void testProcessFulfilmentForIndividual_MessageAlreadyExists_ReturnsNull() {
+        // Arrange
+        UUID caseId = UUID.randomUUID();
+        EventDTO event = setupPrintFulfilmentRequestEvent(caseId);
+        FulfilmentRequest fulfilmentRequest = event.getPayload().getFulfilmentRequest();
+
+        when(fulfilmentToProcessRepository.existsByMessageId(event.getHeader().getMessageId()))
+                .thenReturn(true);
+
+        // Act
+        Case result = fulfilmentRequestService.processFulfilmentForIndividual(event);
+
+        // Assert
+        assertNull(result);
+        verify(caseRepository, never()).saveAndFlush(any());
+        verify(caseService, never()).emitCaseUpdate(any(), any(), any());
+    }
+
+
+
+    @Test
+    void testProcessFulfilmentForIndividual_success() {
+        // --- Arrange ---
+        UUID caseId = UUID.randomUUID();
+
+        EventDTO event = setupPrintFulfilmentRequestEvent(caseId);
+
+        // Duplicate check → false
+        when(fulfilmentToProcessRepository.existsByMessageId(event.getHeader().getMessageId()))
+                .thenReturn(false);
+
+        // Build Case → CollectionExercise → Survey → FulfilmentSurveyExportFileTemplate
+        ExportFileTemplate exportFileTemplate = new ExportFileTemplate();
+        exportFileTemplate.setPackCode("P_CODE");
+
+        FulfilmentSurveyExportFileTemplate fset = new FulfilmentSurveyExportFileTemplate();
+        fset.setExportFileTemplate(exportFileTemplate);
+
+        Survey survey = new Survey();
+        survey.setName("Census");
+        survey.setFulfilmentExportFileTemplates(List.of(fset));
+
+        CollectionExercise collectionExercise = new CollectionExercise();
+        collectionExercise.setSurvey(survey);
+
+        Case parentCase = new Case();
+        parentCase.setId(caseId);
+        parentCase.setCollectionExercise(collectionExercise);
+
+        when(caseService.getCase(event.getPayload().getFulfilmentRequest().getCaseId())).thenReturn(parentCase);
+
+
+        // --- Act ---
+        fulfilmentRequestService.processFulfilmentForIndividual(event);
+
+        // Capture saved entity
+        ArgumentCaptor<Case> captor = ArgumentCaptor.forClass(Case.class);
+
+        verify(caseRepository).saveAndFlush(captor.capture());
+
+        Case childCase = captor.getValue();
+
+        // --- Assert ---
+        assertEquals("HI", childCase.getCaseType());
+        assertNull(childCase.getRefusalReceived());
+        assertFalse(childCase.isReceiptReceived());
+
+    }
+
+
+    private EventDTO setupSmsRequestEnrichedEvent(UUID caseId) {
     // --- Arrange ---
     String topic = "sms-request-enriched-topic";
     UUID correlationId = UUID.randomUUID();

@@ -51,7 +51,7 @@ public class FulfilmentRequestService {
   }
 
   public Case processPrintFulfilmentReceiver(EventDTO event, UUID caseId) {
-      if (isMessageAlreadyExists(event)) {
+    if (isMessageAlreadyExists(event)) {
       return null;
     }
     FulfilmentRequest printFulfilmentRequest = event.getPayload().getFulfilmentRequest();
@@ -78,11 +78,11 @@ public class FulfilmentRequestService {
     EventHeaderDTO fulfilmentRequestHeader = fulfilmentRequestEvent.getHeader();
     FulfilmentRequest fulfilmentRequest =
         fulfilmentRequestEvent.getPayload().getFulfilmentRequest();
-    fulfilmentRequest.setCaseId(caseId);
+     fulfilmentRequest.setCaseId(caseId);
 
     SmsTemplate smsTemplate =
         smsTemplateRepository
-            .findById(String.valueOf(caseId))
+            .findById(String.valueOf(fulfilmentRequest.getFulfilmentCode()))
             .orElseThrow(
                 () ->
                     new RuntimeException(
@@ -102,7 +102,7 @@ public class FulfilmentRequestService {
           .setMessage("Failed to fetch UAC QID pair for SMS request event")
           .addKeyValue("messageId", fulfilmentRequestHeader.getMessageId())
           .addKeyValue("correlationId", fulfilmentRequestHeader.getCorrelationId())
-          .addKeyValue("caseId", fulfilmentRequest.getCaseId())
+          .addKeyValue("caseId", caseId)
           .addKeyValue("packCode", smsTemplate.getPackCode())
           .log();
       throw new RuntimeException(
@@ -181,50 +181,45 @@ public class FulfilmentRequestService {
         Arrays.asList(template), List.of(TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY));
   }
 
-    public Case processFulfilmentForIndividual(EventDTO event, Optional<SmsTemplate> smsTemplate , Optional<ExportFileTemplate> printTemplate) {
+  public Case processFulfilmentForIndividual(
+      EventDTO event) {
 
-        EventHeaderDTO fulfilmentRequestHeader = event.getHeader();
-        FulfilmentRequest fulfilmentRequest =
-                event.getPayload().getFulfilmentRequest();
+    FulfilmentRequest fulfilmentRequest = event.getPayload().getFulfilmentRequest();
 
-        if (isMessageAlreadyExists(event)) {
-            return null;
-        }
-
-        Case caze = caseService.getCase(fulfilmentRequest.getCaseId());
-        Case childCase = createChildCase(caze);
-        childCase.setCaseType("HI");
-        childCase.setRefusalReceived(null);
-        childCase.setReceiptReceived(false);
-        childCase.setId(UUID.randomUUID());
-
-        Case newCase = caseRepository.saveAndFlush(childCase);
-
-        //should trigger the emitCaseUpdate or trigger the New Case Event?
-        caseService.emitCaseUpdate(
-                newCase, event.getHeader().getCorrelationId(), event.getHeader().getOriginatingUser());
-
-
-        return newCase;
-
-
-
+    if (isMessageAlreadyExists(event)) {
+      return null;
     }
 
-    private boolean isMessageAlreadyExists(EventDTO event){
-        if (fulfilmentToProcessRepository.existsByMessageId(event.getHeader().getMessageId())) {
-            log.atInfo()
-                    .setMessage(
-                            "Received duplicate fulfilment message ID, ignoring and acking the duplicate message")
-                    .addKeyValue("correlationId", event.getHeader().getCorrelationId())
-                    .addKeyValue("messageId", event.getHeader().getMessageId())
-                    .log();
-            return true;
-        }
-        return false;
-    }
+    Case caze = caseService.getCase(fulfilmentRequest.getCaseId());
+    Case childCase = createChildCase(caze);
+    childCase.setCaseType("HI");
+    childCase.setRefusalReceived(null);
+    childCase.setReceiptReceived(false);
+    childCase.setId(UUID.randomUUID());
 
-    private EventDTO buildSmsRequestEnrichedEvent(
+    Case newCase = caseRepository.saveAndFlush(childCase);
+
+    // should trigger the emitCaseUpdate or trigger the New Case Event?
+    caseService.emitCaseUpdate(
+            newCase, event.getHeader().getCorrelationId(), event.getHeader().getOriginatingUser());
+
+    return newCase;
+  }
+
+  private boolean isMessageAlreadyExists(EventDTO event) {
+    if (fulfilmentToProcessRepository.existsByMessageId(event.getHeader().getMessageId())) {
+      log.atInfo()
+          .setMessage(
+              "Received duplicate fulfilment message ID, ignoring and acking the duplicate message")
+          .addKeyValue("correlationId", event.getHeader().getCorrelationId())
+          .addKeyValue("messageId", event.getHeader().getMessageId())
+          .log();
+      return true;
+    }
+    return false;
+  }
+
+  private EventDTO buildSmsRequestEnrichedEvent(
       FulfilmentRequest smsRequest,
       EventHeaderDTO fulfilmentRequestHeader,
       Optional<UacQidDTO> uacQidPair,
@@ -272,42 +267,42 @@ public class FulfilmentRequestService {
     return exportFileTemplate;
   }
 
-  private Case createChildCase(Case caze){
-      Case childCase = new Case();
-      childCase.setCollectionExercise(caze.getCollectionExercise());
-      childCase.setInvalid(caze.isInvalid());
-      childCase.setAddressLevel(caze.getAddressLevel());
-      childCase.setAddressType(caze.getAddressType());
-      childCase.setUacQidLinks(caze.getUacQidLinks());//TODO: Check should this copied to child case
-      childCase.setAbpCode(caze.getAbpCode());
-      childCase.setAddressLine1(caze.getAddressLine1());
-      childCase.setAddressLine2(caze.getAddressLine2());
-      childCase.setAddressLine3(caze.getAddressLine3());
-      childCase.setCaseRef(caze.getCaseRef());
-      childCase.setCeExpectedCapacity(caze.getCeExpectedCapacity());
-      childCase.setEstabType(caze.getEstabType());
-      childCase.setEstabUprn(caze.getEstabUprn());
-      childCase.setFieldCoordinatorId(caze.getFieldCoordinatorId());
-      childCase.setFieldOfficerId(caze.getFieldOfficerId());
-      childCase.setHtcDigital(caze.getHtcDigital());
-      childCase.setHtcWillingness(caze.getHtcWillingness());
-      childCase.setLad(caze.getLad());
-      childCase.setLatitude(caze.getLatitude());
-      childCase.setLongitude(caze.getLongitude());
-      childCase.setLsoa(caze.getLsoa());
-      childCase.setMsoa(caze.getMsoa());
-      childCase.setOa(caze.getOa());
-      childCase.setOrganisationName(caze.getOrganisationName());
-      childCase.setPrintBatch(caze.getPrintBatch());
-      childCase.setPostcode(caze.getPostcode());
-      childCase.setRegion(caze.getRegion());
-      childCase.setSecureEstablishment(caze.isSecureEstablishment());
-      childCase.setSurveyLaunched(caze.isSurveyLaunched());
-      childCase.setSecretSequenceNumber(caze.getSecretSequenceNumber());
-      childCase.setTownName(caze.getTownName());
-      childCase.setTreatmentCode(caze.getTreatmentCode());
-      childCase.setUprn(caze.getUprn());
-      childCase.setId(UUID.randomUUID());
-      return childCase;
+  private Case createChildCase(Case caze) {
+    Case childCase = new Case();
+    childCase.setCollectionExercise(caze.getCollectionExercise());
+    childCase.setInvalid(caze.isInvalid());
+    childCase.setAddressLevel(caze.getAddressLevel());
+    childCase.setAddressType(caze.getAddressType());
+    childCase.setUacQidLinks(caze.getUacQidLinks()); // TODO: Check should this copied to child case
+    childCase.setAbpCode(caze.getAbpCode());
+    childCase.setAddressLine1(caze.getAddressLine1());
+    childCase.setAddressLine2(caze.getAddressLine2());
+    childCase.setAddressLine3(caze.getAddressLine3());
+    childCase.setCaseRef(caze.getCaseRef());
+    childCase.setCeExpectedCapacity(caze.getCeExpectedCapacity());
+    childCase.setEstabType(caze.getEstabType());
+    childCase.setEstabUprn(caze.getEstabUprn());
+    childCase.setFieldCoordinatorId(caze.getFieldCoordinatorId());
+    childCase.setFieldOfficerId(caze.getFieldOfficerId());
+    childCase.setHtcDigital(caze.getHtcDigital());
+    childCase.setHtcWillingness(caze.getHtcWillingness());
+    childCase.setLad(caze.getLad());
+    childCase.setLatitude(caze.getLatitude());
+    childCase.setLongitude(caze.getLongitude());
+    childCase.setLsoa(caze.getLsoa());
+    childCase.setMsoa(caze.getMsoa());
+    childCase.setOa(caze.getOa());
+    childCase.setOrganisationName(caze.getOrganisationName());
+    childCase.setPrintBatch(caze.getPrintBatch());
+    childCase.setPostcode(caze.getPostcode());
+    childCase.setRegion(caze.getRegion());
+    childCase.setSecureEstablishment(caze.isSecureEstablishment());
+    childCase.setSurveyLaunched(caze.isSurveyLaunched());
+    childCase.setSecretSequenceNumber(caze.getSecretSequenceNumber());
+    childCase.setTownName(caze.getTownName());
+    childCase.setTreatmentCode(caze.getTreatmentCode());
+    childCase.setUprn(caze.getUprn());
+    childCase.setId(UUID.randomUUID());
+    return childCase;
   }
 }
