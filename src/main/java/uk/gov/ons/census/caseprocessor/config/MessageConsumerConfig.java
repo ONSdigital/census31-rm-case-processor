@@ -26,8 +26,8 @@ public class MessageConsumerConfig {
   @Value("${queueconfig.new-case-subscription}")
   private String newCaseSubscription;
 
-  @Value("${queueconfig.print-fulfilment-subscription}")
-  private String printFulfilmentSubscription;
+  @Value("${queueconfig.fulfilment-request-subscription}")
+  private String fulfilmentRequestSubscription;
 
   @Value("${queueconfig.receipt-subscription}")
   private String receiptSubscription;
@@ -88,7 +88,7 @@ public class MessageConsumerConfig {
   }
 
   @Bean
-  public MessageChannel printFulfilmentInputChannel() {
+  public MessageChannel fulfilmentRequestInputChannel() {
     return new DirectChannel();
   }
 
@@ -155,10 +155,10 @@ public class MessageConsumerConfig {
   }
 
   @Bean
-  PubSubInboundChannelAdapter fulfilmentInbound(
-      @Qualifier("printFulfilmentInputChannel") MessageChannel channel) {
+  PubSubInboundChannelAdapter fulfilmentRequestInbound(
+      @Qualifier("fulfilmentRequestInputChannel") MessageChannel channel) {
     String subscription =
-        toProjectSubscriptionName(printFulfilmentSubscription, pubsubProject).toString();
+        toProjectSubscriptionName(fulfilmentRequestSubscription, pubsubProject).toString();
     return makeAdapter(channel, subscription);
   }
 
