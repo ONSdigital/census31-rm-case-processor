@@ -44,7 +44,7 @@ queueconfig:
   refusal-subscription: event_refusal_rm-case-processor
   invalid-case-subscription: event_invalid-case_rm-case-processor
   survey-launched-subscription: event_survey-launched_rm-case-processor
-  print-fulfilment-subscription: event_print-fulfilment_rm-case-processor
+  fulfilment-request-subscription: event_fulfilment-request_rm-case-processor
   deactivate-uac-subscription: event_deactivate-uac_rm-case-processor
   update-sample-subscription: event_update-sample_rm-case-processor
   update-sample-sensitive-subscription: event_update-sample-sensitive_rm-case-processor
@@ -54,6 +54,7 @@ queueconfig:
   uac-update-topic: event_uac-update
   deactivate-uac-topic: event_deactivate-uac
   cloud-task-queue-topic: cloud_task_queue
+  sms-request-enriched-topic: rm-internal-sms-request-enriched
   publishtimeout: 30  # In seconds
 
 healthcheck:

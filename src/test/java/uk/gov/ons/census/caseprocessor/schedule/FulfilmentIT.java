@@ -17,10 +17,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import uk.gov.ons.census.caseprocessor.model.dto.Contact;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.EventHeaderDTO;
+import uk.gov.ons.census.caseprocessor.model.dto.FulfilmentRequest;
 import uk.gov.ons.census.caseprocessor.model.dto.PayloadDTO;
-import uk.gov.ons.census.caseprocessor.model.dto.PrintFulfilmentDTO;
 import uk.gov.ons.census.caseprocessor.model.repository.ExportFileRowRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.ExportFileTemplateRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.FulfilmentNextTriggerRepository;
@@ -30,6 +31,7 @@ import uk.gov.ons.census.caseprocessor.testutils.JunkDataHelper;
 import uk.gov.ons.census.caseprocessor.testutils.PubsubHelper;
 import uk.gov.ons.census.caseprocessor.testutils.QueueSpy;
 import uk.gov.ons.census.common.model.entity.Case;
+import uk.gov.ons.census.common.model.entity.EventType;
 import uk.gov.ons.census.common.model.entity.ExportFileRow;
 import uk.gov.ons.census.common.model.entity.ExportFileTemplate;
 import uk.gov.ons.census.common.model.entity.FulfilmentNextTrigger;
@@ -40,7 +42,7 @@ import uk.gov.ons.census.common.model.entity.FulfilmentSurveyExportFileTemplate;
 @ActiveProfiles("test")
 @ExtendWith(SpringExtension.class)
 class FulfilmentIT {
-  private static final String FULFILMENT_TOPIC = "event_print-fulfilment";
+  private static final String FULFILMENT_TOPIC = "event_fulfilment-request";
 
   private static final String PACK_CODE = "test-pack-code";
   private static final String EXPORT_FILE_DESTINATION = "FOOBAR_EXPORT_FILE_DESTINATION";
@@ -73,7 +75,15 @@ class FulfilmentIT {
       ExportFileTemplate exportFileTemplate = new ExportFileTemplate();
       exportFileTemplate.setPackCode(PACK_CODE);
       exportFileTemplate.setExportFileDestination(EXPORT_FILE_DESTINATION);
-      exportFileTemplate.setTemplate(new String[] {"__caseref__", "ADDRESS_LINE1", "__uac__"});
+      exportFileTemplate.setTemplate(
+          new String[] {
+            "__caseref__",
+            "ADDRESS_LINE1",
+            "__uac__",
+            "__request__.title",
+            "__request__.forename",
+            "__request__.surname"
+          });
       exportFileTemplate.setDescription("Test description");
       exportFileTemplate.setQuestionnaireType(1);
       exportFileTemplateRepository.saveAndFlush(exportFileTemplate);
@@ -88,12 +98,17 @@ class FulfilmentIT {
       fulfilmentSurveyExportFileTemplateRepository.saveAndFlush(fulfilmentSurveyExportFileTemplate);
 
       // When
-      PrintFulfilmentDTO fulfilment = new PrintFulfilmentDTO();
+      FulfilmentRequest fulfilment = new FulfilmentRequest();
       fulfilment.setCaseId(caze.getId());
-      fulfilment.setPackCode(PACK_CODE);
+      fulfilment.setFulfilmentCode(PACK_CODE);
+      Contact contact = new Contact();
+      contact.setTitle("Mr.");
+      contact.setForename("Joe");
+      contact.setSurname("Blog");
+      fulfilment.setContact(contact);
 
       PayloadDTO payload = new PayloadDTO();
-      payload.setPrintFulfilment(fulfilment);
+      payload.setFulfilmentRequest(fulfilment);
 
       EventDTO event = new EventDTO();
       event.setPayload(payload);
@@ -101,6 +116,7 @@ class FulfilmentIT {
       EventHeaderDTO eventHeader = new EventHeaderDTO();
       eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
       eventHeader.setTopic(FULFILMENT_TOPIC);
+      eventHeader.setMessageType(EventType.FULFILMENT_REQUEST);
       junkDataHelper.junkify(eventHeader);
       event.setHeader(eventHeader);
 
@@ -114,6 +130,7 @@ class FulfilmentIT {
       fulfilmentNextTriggerRepository.saveAndFlush(fulfilmentNextTrigger);
 
       EventDTO rme = outboundUacQueue.getQueue().poll(20, TimeUnit.SECONDS);
+      Thread.sleep(3000);
       List<ExportFileRow> exportFileRows = exportFileRowRepository.findAll();
       ExportFileRow exportFileRow = exportFileRows.get(0);
 

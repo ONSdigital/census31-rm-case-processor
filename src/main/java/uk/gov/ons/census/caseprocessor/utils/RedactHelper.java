@@ -21,7 +21,11 @@ public class RedactHelper {
     new ThingToRedact("setUac", String.class),
     new ThingToRedact("setPhoneNumber", String.class),
     new ThingToRedact("setEmail", String.class),
-    new ThingToRedact("getPersonalisation", Map.class)
+    new ThingToRedact("getPersonalisation", Map.class),
+    new ThingToRedact("setForename", String.class),
+    new ThingToRedact("setSurname", String.class),
+    new ThingToRedact("setTelNo", String.class),
+    new ThingToRedact("setTitle", String.class),
   };
 
   public static Object redact(Object rootObjectToRedact) {
