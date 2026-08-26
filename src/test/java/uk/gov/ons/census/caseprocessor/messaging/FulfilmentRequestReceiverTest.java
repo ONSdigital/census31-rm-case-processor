@@ -194,13 +194,13 @@ public class FulfilmentRequestReceiverTest {
             any(EventDTO.class),
             eq(msg));
 
-    /*verify(eventLogger)
-    .logCaseEvent(
-        eq(childCase),
-        eq("Print fulfilment requested"),
-        eq(EventType.PRINT_FULFILMENT),
-        any(EventDTO.class),
-        eq(msg)); */
+    verify(eventLogger)
+        .logCaseEvent(
+            eq(childCase),
+            eq("Print fulfilment requested"),
+            eq(EventType.PRINT_FULFILMENT),
+            any(EventDTO.class),
+            eq(msg));
   }
 
   private Message<byte[]> buildMessage(EventDTO event) throws JsonProcessingException {
