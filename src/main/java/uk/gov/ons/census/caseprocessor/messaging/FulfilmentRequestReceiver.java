@@ -2,7 +2,9 @@ package uk.gov.ons.census.caseprocessor.messaging;
 
 import static uk.gov.ons.census.caseprocessor.utils.JsonHelper.convertJsonBytesToEvent;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
@@ -11,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 import uk.gov.ons.census.caseprocessor.logging.EventLogger;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.EventHeaderDTO;
+import uk.gov.ons.census.caseprocessor.model.dto.FulfilmentRequest;
+import uk.gov.ons.census.caseprocessor.service.CaseService;
 import uk.gov.ons.census.caseprocessor.service.FulfilmentRequestService;
 import uk.gov.ons.census.common.model.entity.*;
 
@@ -22,13 +26,17 @@ public class FulfilmentRequestReceiver {
 
   private final FulfilmentRequestService fulfilmentRequestService;
   private final EventLogger eventLogger;
+  private final CaseService caseService;
 
   private static final String SMS_FULFILMENT_DESCRIPTION = "SMS fulfilment request received";
 
   public FulfilmentRequestReceiver(
-      FulfilmentRequestService fulfilmentRequestService, EventLogger eventLogger) {
+      FulfilmentRequestService fulfilmentRequestService,
+      EventLogger eventLogger,
+      CaseService caseService) {
     this.fulfilmentRequestService = fulfilmentRequestService;
     this.eventLogger = eventLogger;
+    this.caseService = caseService;
   }
 
   @Transactional
@@ -38,23 +46,42 @@ public class FulfilmentRequestReceiver {
     if (!processEvent(receiptEvent)) {
       return;
     }
+    List<String> smsIndividualPackCodes =
+        List.of("UACIT1", "UACIT2", "UACIT2W", "UACIT3", "UACIT4");
+    List<String> printIndividualPackCodes = List.of("P_OR_I1", "P_OR_I2", "P_OR_I2W", "P_OR_IACR3");
 
     EventDTO event = convertJsonBytesToEvent(message.getPayload());
+    Case parentCase = null;
     Case caze;
+    UUID caseId;
     String packCode = event.getPayload().getFulfilmentRequest().getFulfilmentCode();
 
     Optional<SmsTemplate> smsTemplate = fulfilmentRequestService.getSmsTemplate(packCode);
     Optional<ExportFileTemplate> exportFileTemplate =
         fulfilmentRequestService.getExportFileTemplate(packCode);
 
+    FulfilmentRequest fulfilmentRequest = event.getPayload().getFulfilmentRequest();
+    caseId = fulfilmentRequest.getCaseId();
     if (exportFileTemplate.isPresent() && smsTemplate.isEmpty()) {
-      caze = fulfilmentRequestService.processPrintFulfilmentReceiver(event);
+      // For PRINT  Individual Fulfilment
+      if (printIndividualPackCodes.contains(fulfilmentRequest.getFulfilmentCode())) {
+        parentCase = caseService.getCase(caseId);
+        if (parentCase != null) {
+          eventLogger.logCaseEvent(
+              parentCase, "Print fulfilment requested", EventType.PRINT_FULFILMENT, event, message);
+        }
+        caze = fulfilmentRequestService.processFulfilmentForIndividual(event);
 
+        if (caze != null) {
+          eventLogger.logCaseEvent(caze, "New case created", EventType.NEW_CASE, event, message);
+          caseId = caze.getId();
+        }
+      }
+      caze = fulfilmentRequestService.processPrintFulfilmentReceiver(event, caseId);
       if (caze != null) {
         eventLogger.logCaseEvent(
             caze, "Print fulfilment requested", EventType.PRINT_FULFILMENT, event, message);
       }
-
     } else if (smsTemplate.isPresent() && exportFileTemplate.isEmpty()) {
 
       if (event.getPayload().getFulfilmentRequest().getContact().getTelNo() != null
@@ -63,12 +90,32 @@ public class FulfilmentRequestReceiver {
         throw new RuntimeException("Invalid phone number on SMS request message");
       }
 
+      // For SMS Individual Fulfilment
+      if (smsIndividualPackCodes.contains(fulfilmentRequest.getFulfilmentCode())) {
+        parentCase = caseService.getCase(fulfilmentRequest.getCaseId());
+        caze = fulfilmentRequestService.processFulfilmentForIndividual(event);
+        if (caze != null) {
+          eventLogger.logCaseEvent(caze, "New case created", EventType.NEW_CASE, event, message);
+          caseId = caze.getId();
+        }
+      }
+
       EventDTO smsRequestEnrichedEvent =
-          fulfilmentRequestService.processSMSRequestReceiver(event, smsRequestEnrichedTopic);
+          fulfilmentRequestService.processSMSRequestReceiver(
+              event, smsRequestEnrichedTopic, caseId);
 
       caze =
           fulfilmentRequestService.processSMSFulfilmentService(
               smsRequestEnrichedEvent, smsRequestEnrichedTopic);
+
+      if (parentCase != null) {
+        eventLogger.logCaseEvent(
+            parentCase,
+            SMS_FULFILMENT_DESCRIPTION,
+            EventType.SMS_FULFILMENT,
+            smsRequestEnrichedEvent,
+            message);
+      }
 
       eventLogger.logCaseEvent(
           caze,
