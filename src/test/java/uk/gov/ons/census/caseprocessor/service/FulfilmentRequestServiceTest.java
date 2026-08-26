@@ -3,8 +3,6 @@ package uk.gov.ons.census.caseprocessor.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static uk.gov.ons.census.caseprocessor.testutils.TestConstants.TEST_CORRELATION_ID;
-import static uk.gov.ons.census.caseprocessor.testutils.TestConstants.TEST_ORIGINATING_USER;
 import static uk.gov.ons.census.caseprocessor.utils.Constants.TEMPLATE_QID_KEY;
 import static uk.gov.ons.census.caseprocessor.utils.Constants.TEMPLATE_UAC_KEY;
 
