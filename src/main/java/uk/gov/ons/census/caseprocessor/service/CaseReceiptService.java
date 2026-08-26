@@ -1,6 +1,6 @@
 package uk.gov.ons.census.caseprocessor.service;
 
-import static uk.gov.ons.census.caseprocessor.utils.FormTypeHelper.mapQuestionnaireTypeToFormType;
+import static uk.gov.ons.census.caseprocessor.utils.QuestionnaireTypeHelper.mapQuestionnaireTypeToFormType;
 
 import java.util.HashMap;
 import java.util.Map;

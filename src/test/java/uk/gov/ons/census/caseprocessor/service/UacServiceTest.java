@@ -76,10 +76,11 @@ class UacServiceTest {
 
     UacUpdateDTO uacUpdateDto = actualEvent.getPayload().getUacUpdate();
     assertThat(uacUpdateDto.getUacHash()).isEqualTo("test hash");
-    assertThat(uacUpdateDto.getQid()).isEqualTo(uacUpdateDto.getQid());
+    assertThat(uacUpdateDto.getQid()).isEqualTo("01234");
     assertThat(uacUpdateDto.getCaseId()).isEqualTo(caze.getId());
     assertThat(uacUpdateDto.getSurveyId()).isEqualTo(survey.getId());
     assertThat(uacUpdateDto.getCollectionExerciseId()).isEqualTo(collectionExercise.getId());
+    assertThat(uacUpdateDto.getFormType()).isEqualTo("H");
   }
 
   @Test
@@ -119,7 +120,7 @@ class UacServiceTest {
     ReflectionTestUtils.setField(underTest, "uacUpdateTopic", "Test topic");
     ReflectionTestUtils.setField(underTest, "pubsubProject", "Test project");
 
-    String qid = "TEST_QID";
+    String qid = "0100000001";
     String uac = "TEST_UAC";
 
     Survey survey = new Survey();
@@ -164,6 +165,7 @@ class UacServiceTest {
     assertThat(uacUpdateDto.getUacHash()).isEqualTo(HashHelper.hash(uac));
     assertThat(uacUpdateDto.getQid()).isEqualTo(qid);
     assertThat(uacUpdateDto.getCaseId()).isEqualTo(testCase.getId());
+    assertThat(uacUpdateDto.getFormType()).isEqualTo("H");
   }
 
   @Test
@@ -172,7 +174,7 @@ class UacServiceTest {
     ReflectionTestUtils.setField(underTest, "uacUpdateTopic", "Test topic");
     ReflectionTestUtils.setField(underTest, "pubsubProject", "Test project");
 
-    String qid = "TEST_QID";
+    String qid = "0100000001";
     String uac = "TEST_UAC";
 
     UacQidLink expectedSavedUacQidLink = new UacQidLink();
