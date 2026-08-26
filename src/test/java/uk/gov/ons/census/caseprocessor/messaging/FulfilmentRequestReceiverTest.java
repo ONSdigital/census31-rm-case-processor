@@ -52,6 +52,7 @@ public class FulfilmentRequestReceiverTest {
 
     Case caze = new Case();
     caze.setId(caseId);
+    caze.setCaseType("HH");
 
     when(fulfilmentRequestService.getExportFileTemplate("PACK1")).thenReturn(Optional.of(eft));
 
@@ -93,6 +94,7 @@ public class FulfilmentRequestReceiverTest {
 
     Case caze = new Case();
     caze.setId(caseId);
+    caze.setCaseType("HH");
 
     // Given
     when(fulfilmentRequestService.getExportFileTemplate("PACK1")).thenReturn(Optional.empty());
@@ -159,6 +161,7 @@ public class FulfilmentRequestReceiverTest {
 
     Case caze = new Case();
     caze.setId(caseId);
+    caze.setCaseType("HH");
 
     Case childCase = new Case();
     childCase.setId(UUID.randomUUID());
@@ -201,6 +204,42 @@ public class FulfilmentRequestReceiverTest {
             eq(EventType.PRINT_FULFILMENT),
             any(EventDTO.class),
             eq(msg));
+  }
+
+  @Test
+  void testReceiveMessage_not_HH_throws() throws Exception {
+    UUID caseId = UUID.randomUUID();
+    EventDTO event = buildEvent(caseId, "P_OR_I1");
+    Message<byte[]> msg = buildMessage(event);
+
+    ExportFileTemplate eft = new ExportFileTemplate();
+    eft.setPackCode("P_OR_I1");
+
+    Case caze = new Case();
+    caze.setId(caseId);
+    caze.setCaseType("XX");
+
+    // Given
+
+    when(fulfilmentRequestService.getSmsTemplate("P_OR_I1")).thenReturn(Optional.empty());
+    when(fulfilmentRequestService.getExportFileTemplate("P_OR_I1")).thenReturn(Optional.of(eft));
+    when(caseService.getCase(caseId)).thenReturn(caze);
+
+    RuntimeException ex = assertThrows(RuntimeException.class, () -> underTest.receiveMessage(msg));
+
+    assertTrue(
+        ex.getMessage().contains("Case is not a House Hold Type on fulfilment request message"));
+
+    verify(fulfilmentRequestService, never()).processPrintFulfilmentReceiver(any(), any());
+    verify(fulfilmentRequestService, never()).processSMSRequestReceiver(any(), any(), any());
+
+    verify(eventLogger, never())
+        .logCaseEvent(
+            (Case) any(),
+            (String) any(),
+            (EventType) any(),
+            (EventDTO) any(),
+            (Message<byte[]>) any());
   }
 
   private Message<byte[]> buildMessage(EventDTO event) throws JsonProcessingException {

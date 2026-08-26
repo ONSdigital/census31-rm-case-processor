@@ -42,15 +42,14 @@ public class FulfilmentRequestReceiver {
   @Transactional
   @ServiceActivator(inputChannel = "fulfilmentRequestInputChannel", adviceChain = "retryAdvice")
   public void receiveMessage(Message<byte[]> message) {
-    EventDTO receiptEvent = convertJsonBytesToEvent(message.getPayload());
-    if (!processEvent(receiptEvent)) {
+    EventDTO event = convertJsonBytesToEvent(message.getPayload());
+    if (!processEvent(event)) {
       return;
     }
     List<String> smsIndividualPackCodes =
         List.of("UACIT1", "UACIT2", "UACIT2W", "UACIT3", "UACIT4");
     List<String> printIndividualPackCodes = List.of("P_OR_I1", "P_OR_I2", "P_OR_I2W", "P_OR_IACR3");
 
-    EventDTO event = convertJsonBytesToEvent(message.getPayload());
     Case parentCase = null;
     Case caze;
     UUID caseId;
@@ -63,9 +62,11 @@ public class FulfilmentRequestReceiver {
     FulfilmentRequest fulfilmentRequest = event.getPayload().getFulfilmentRequest();
     caseId = fulfilmentRequest.getCaseId();
     if (exportFileTemplate.isPresent() && smsTemplate.isEmpty()) {
-      // For PRINT  Individual Fulfilment
+      // For PRINT  Individual Fulfilment for HouseHold
       if (printIndividualPackCodes.contains(fulfilmentRequest.getFulfilmentCode())) {
         parentCase = caseService.getCase(caseId);
+        checkParentCaseHH(parentCase);
+
         if (parentCase != null) {
           eventLogger.logCaseEvent(
               parentCase, "Print fulfilment requested", EventType.PRINT_FULFILMENT, event, message);
@@ -90,9 +91,10 @@ public class FulfilmentRequestReceiver {
         throw new RuntimeException("Invalid phone number on SMS request message");
       }
 
-      // For SMS Individual Fulfilment
+      // For SMS Individual Fulfilment for HouseHold
       if (smsIndividualPackCodes.contains(fulfilmentRequest.getFulfilmentCode())) {
         parentCase = caseService.getCase(fulfilmentRequest.getCaseId());
+        checkParentCaseHH(parentCase);
         caze = fulfilmentRequestService.processFulfilmentForIndividual(event);
         if (caze != null) {
           eventLogger.logCaseEvent(caze, "New case created", EventType.NEW_CASE, event, message);
@@ -142,6 +144,13 @@ public class FulfilmentRequestReceiver {
         throw new RuntimeException(
             String.format(
                 "Event Type '%s' is invalid on this topic", eventHeader.getMessageType()));
+    }
+  }
+
+  void checkParentCaseHH(Case parentCase) {
+    if (parentCase != null
+        && (parentCase.getCaseType() == null || !("HH".equals(parentCase.getCaseType())))) {
+      throw new RuntimeException("Case is not a House Hold Type on fulfilment request message");
     }
   }
 }

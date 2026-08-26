@@ -272,7 +272,7 @@ public class FulfilmentRequestService {
     childCase.setInvalid(caze.isInvalid());
     childCase.setAddressLevel(caze.getAddressLevel());
     childCase.setAddressType(caze.getAddressType());
-    childCase.setUacQidLinks(caze.getUacQidLinks()); // TODO: Check should this copied to child case
+    childCase.setUacQidLinks(new ArrayList<>()); // TODO: Check should this copied to child case
     childCase.setAbpCode(caze.getAbpCode());
     childCase.setAddressLine1(caze.getAddressLine1());
     childCase.setAddressLine2(caze.getAddressLine2());
