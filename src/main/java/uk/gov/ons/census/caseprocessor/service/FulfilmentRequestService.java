@@ -193,7 +193,6 @@ public class FulfilmentRequestService {
     Case caze = caseService.getCase(fulfilmentRequest.getCaseId());
     Case childCase = createChildCase(caze);
     childCase.setCaseType("HI");
-    childCase.setSecretSequenceNumber(123);
 
     Case newCase = caseRepository.saveAndFlush(childCase);
 
