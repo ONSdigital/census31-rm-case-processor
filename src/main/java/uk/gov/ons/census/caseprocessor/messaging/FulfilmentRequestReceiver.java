@@ -24,11 +24,19 @@ public class FulfilmentRequestReceiver {
   @Value("${queueconfig.sms-request-enriched-topic}")
   private String smsRequestEnrichedTopic;
 
+  @Value("${caserefgeneratorkey}")
+  private byte[] caserefgeneratorkey;
+
   private final FulfilmentRequestService fulfilmentRequestService;
   private final EventLogger eventLogger;
   private final CaseService caseService;
 
   private static final String SMS_FULFILMENT_DESCRIPTION = "SMS fulfilment request received";
+  private static final String PRINT_FULFILMENT_DESCRIPTION = "Print fulfilment requested";
+  private static final List<String> smsIndividualPackCodes =
+      List.of("UACIT1", "UACIT2", "UACIT2W", "UACIT3", "UACIT4");
+  private static final List<String> printIndividualPackCodes =
+      List.of("P_OR_I1", "P_OR_I2", "P_OR_I2W", "P_OR_IACR3");
 
   public FulfilmentRequestReceiver(
       FulfilmentRequestService fulfilmentRequestService,
@@ -46,11 +54,8 @@ public class FulfilmentRequestReceiver {
     if (!processEvent(event)) {
       return;
     }
-    List<String> smsIndividualPackCodes =
-        List.of("UACIT1", "UACIT2", "UACIT2W", "UACIT3", "UACIT4");
-    List<String> printIndividualPackCodes = List.of("P_OR_I1", "P_OR_I2", "P_OR_I2W", "P_OR_IACR3");
 
-    Case parentCase = null;
+    Case parentCase;
     Case caze;
     UUID caseId;
     String packCode = event.getPayload().getFulfilmentRequest().getFulfilmentCode();
@@ -58,48 +63,43 @@ public class FulfilmentRequestReceiver {
     Optional<SmsTemplate> smsTemplate = fulfilmentRequestService.getSmsTemplate(packCode);
     Optional<ExportFileTemplate> exportFileTemplate =
         fulfilmentRequestService.getExportFileTemplate(packCode);
+    boolean isPrintFulfilment = (exportFileTemplate.isPresent() && smsTemplate.isEmpty());
+    boolean isSMSFulfilment = smsTemplate.isPresent() && exportFileTemplate.isEmpty();
 
     FulfilmentRequest fulfilmentRequest = event.getPayload().getFulfilmentRequest();
     caseId = fulfilmentRequest.getCaseId();
-    if (exportFileTemplate.isPresent() && smsTemplate.isEmpty()) {
-      // For PRINT  Individual Fulfilment for HouseHold
-      if (printIndividualPackCodes.contains(fulfilmentRequest.getFulfilmentCode())) {
-        parentCase = caseService.getCase(caseId);
-        checkParentCaseHH(parentCase);
 
-        if (parentCase != null) {
-          eventLogger.logCaseEvent(
-              parentCase, "Print fulfilment requested", EventType.PRINT_FULFILMENT, event, message);
-        }
-        caze = fulfilmentRequestService.processFulfilmentForIndividual(event);
-
-        if (caze != null) {
-          eventLogger.logCaseEvent(caze, "New case created", EventType.NEW_CASE, event, message);
-          caseId = caze.getId();
-        }
+    // Flow for child case if required for fulfilment
+    if (checkCreateChildCaseRequired(fulfilmentRequest.getFulfilmentCode())) {
+      parentCase = caseService.getCase(caseId);
+      checkParentCaseHH(parentCase);
+      if (parentCase != null && isPrintFulfilment) {
+        eventLogger.logCaseEvent(
+            parentCase, PRINT_FULFILMENT_DESCRIPTION, EventType.PRINT_FULFILMENT, event, message);
+      } else if (parentCase != null && isSMSFulfilment) {
+        eventLogger.logCaseEvent(
+            parentCase, SMS_FULFILMENT_DESCRIPTION, EventType.SMS_FULFILMENT, event, message);
       }
+      caze = fulfilmentRequestService.processFulfilmentForIndividual(event, caserefgeneratorkey);
+      if (caze != null) {
+        eventLogger.logCaseEvent(caze, "New case created", EventType.NEW_CASE, event, message);
+        caseId = caze.getId();
+      }
+    }
+
+    // Flow for Fulfilment
+    if (isPrintFulfilment) {
       caze = fulfilmentRequestService.processPrintFulfilmentReceiver(event, caseId);
       if (caze != null) {
         eventLogger.logCaseEvent(
-            caze, "Print fulfilment requested", EventType.PRINT_FULFILMENT, event, message);
+            caze, PRINT_FULFILMENT_DESCRIPTION, EventType.PRINT_FULFILMENT, event, message);
       }
-    } else if (smsTemplate.isPresent() && exportFileTemplate.isEmpty()) {
+    } else if (isSMSFulfilment) {
 
-      if (event.getPayload().getFulfilmentRequest().getContact().getTelNo() != null
+      if (fulfilmentRequest.getContact().getTelNo() != null
           && !fulfilmentRequestService.validatePhoneNumber(
-              event.getPayload().getFulfilmentRequest().getContact().getTelNo())) {
+              fulfilmentRequest.getContact().getTelNo())) {
         throw new RuntimeException("Invalid phone number on SMS request message");
-      }
-
-      // For SMS Individual Fulfilment for HouseHold
-      if (smsIndividualPackCodes.contains(fulfilmentRequest.getFulfilmentCode())) {
-        parentCase = caseService.getCase(fulfilmentRequest.getCaseId());
-        checkParentCaseHH(parentCase);
-        caze = fulfilmentRequestService.processFulfilmentForIndividual(event);
-        if (caze != null) {
-          eventLogger.logCaseEvent(caze, "New case created", EventType.NEW_CASE, event, message);
-          caseId = caze.getId();
-        }
       }
 
       EventDTO smsRequestEnrichedEvent =
@@ -110,21 +110,14 @@ public class FulfilmentRequestReceiver {
           fulfilmentRequestService.processSMSFulfilmentService(
               smsRequestEnrichedEvent, smsRequestEnrichedTopic);
 
-      if (parentCase != null) {
+      if (caze != null) {
         eventLogger.logCaseEvent(
-            parentCase,
+            caze,
             SMS_FULFILMENT_DESCRIPTION,
             EventType.SMS_FULFILMENT,
             smsRequestEnrichedEvent,
             message);
       }
-
-      eventLogger.logCaseEvent(
-          caze,
-          SMS_FULFILMENT_DESCRIPTION,
-          EventType.SMS_FULFILMENT,
-          smsRequestEnrichedEvent,
-          message);
 
     } else {
       throw new RuntimeException("Invalid pack code on fulfilment request message");
@@ -152,5 +145,12 @@ public class FulfilmentRequestReceiver {
         && (parentCase.getCaseType() == null || !("HH".equals(parentCase.getCaseType())))) {
       throw new RuntimeException("Case is not a House Hold Type on fulfilment request message");
     }
+  }
+
+  private boolean checkCreateChildCaseRequired(String packCode) {
+
+    if (smsIndividualPackCodes.contains(packCode) || printIndividualPackCodes.contains(packCode))
+      return true;
+    else return false;
   }
 }

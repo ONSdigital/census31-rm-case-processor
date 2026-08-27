@@ -70,7 +70,7 @@ public class FulfilmentRequestReceiverTest {
             any(),
             eq(msg));
 
-    verify(fulfilmentRequestService, never()).processFulfilmentForIndividual(any());
+    verify(fulfilmentRequestService, never()).processFulfilmentForIndividual(any(), any());
   }
 
   @Test
@@ -173,7 +173,7 @@ public class FulfilmentRequestReceiverTest {
 
     when(fulfilmentRequestService.getSmsTemplate("P_OR_I1")).thenReturn(Optional.empty());
 
-    when(fulfilmentRequestService.processFulfilmentForIndividual(any(EventDTO.class)))
+    when(fulfilmentRequestService.processFulfilmentForIndividual(any(EventDTO.class), any()))
         .thenReturn(childCase);
 
     when(fulfilmentRequestService.processPrintFulfilmentReceiver(any(EventDTO.class), any()))

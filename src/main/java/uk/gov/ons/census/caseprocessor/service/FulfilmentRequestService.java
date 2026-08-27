@@ -16,6 +16,7 @@ import uk.gov.ons.census.caseprocessor.model.repository.CaseRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.ExportFileTemplateRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.FulfilmentToProcessRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.SmsTemplateRepository;
+import uk.gov.ons.census.caseprocessor.utils.CaseRefGenerator;
 import uk.gov.ons.census.caseprocessor.utils.Constants;
 import uk.gov.ons.census.common.model.entity.*;
 
@@ -51,7 +52,7 @@ public class FulfilmentRequestService {
   }
 
   public Case processPrintFulfilmentReceiver(EventDTO event, UUID caseId) {
-    if (isMessageAlreadyExists(event)) {
+    if (doesFulfilmentMessageAlreadyExist(event)) {
       return null;
     }
     FulfilmentRequest printFulfilmentRequest = event.getPayload().getFulfilmentRequest();
@@ -181,22 +182,24 @@ public class FulfilmentRequestService {
         Arrays.asList(template), List.of(TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY));
   }
 
-  public Case processFulfilmentForIndividual(EventDTO event) {
+  public Case processFulfilmentForIndividual(EventDTO event, byte[] caserefgeneratorkey) {
 
     FulfilmentRequest fulfilmentRequest = event.getPayload().getFulfilmentRequest();
 
-    if (isMessageAlreadyExists(event)) {
+    if (doesFulfilmentMessageAlreadyExist(event)) {
       return null;
     }
 
     Case caze = caseService.getCase(fulfilmentRequest.getCaseId());
     Case childCase = createChildCase(caze);
     childCase.setCaseType("HI");
-    childCase.setRefusalReceived(null);
-    childCase.setReceiptReceived(false);
-    childCase.setId(UUID.randomUUID());
+    childCase.setSecretSequenceNumber(123);
 
     Case newCase = caseRepository.saveAndFlush(childCase);
+
+    newCase.setCaseRef(
+        CaseRefGenerator.getCaseRef(newCase.getSecretSequenceNumber(), caserefgeneratorkey));
+    newCase = caseRepository.saveAndFlush(newCase);
 
     // should trigger the emitCaseUpdate or trigger the New Case Event?
     caseService.emitCaseUpdate(
@@ -205,7 +208,7 @@ public class FulfilmentRequestService {
     return newCase;
   }
 
-  private boolean isMessageAlreadyExists(EventDTO event) {
+  private boolean doesFulfilmentMessageAlreadyExist(EventDTO event) {
     if (fulfilmentToProcessRepository.existsByMessageId(event.getHeader().getMessageId())) {
       log.atInfo()
           .setMessage(
@@ -269,15 +272,10 @@ public class FulfilmentRequestService {
   private Case createChildCase(Case caze) {
     Case childCase = new Case();
     childCase.setCollectionExercise(caze.getCollectionExercise());
-    childCase.setInvalid(caze.isInvalid());
-    childCase.setAddressLevel(caze.getAddressLevel());
-    childCase.setAddressType(caze.getAddressType());
-    childCase.setUacQidLinks(new ArrayList<>()); // TODO: Check should this copied to child case
     childCase.setAbpCode(caze.getAbpCode());
     childCase.setAddressLine1(caze.getAddressLine1());
     childCase.setAddressLine2(caze.getAddressLine2());
     childCase.setAddressLine3(caze.getAddressLine3());
-    childCase.setCaseRef(caze.getCaseRef());
     childCase.setCeExpectedCapacity(caze.getCeExpectedCapacity());
     childCase.setEstabType(caze.getEstabType());
     childCase.setEstabUprn(caze.getEstabUprn());
@@ -297,7 +295,6 @@ public class FulfilmentRequestService {
     childCase.setRegion(caze.getRegion());
     childCase.setSecureEstablishment(caze.isSecureEstablishment());
     childCase.setSurveyLaunched(caze.isSurveyLaunched());
-    childCase.setSecretSequenceNumber(caze.getSecretSequenceNumber());
     childCase.setTownName(caze.getTownName());
     childCase.setTreatmentCode(caze.getTreatmentCode());
     childCase.setUprn(caze.getUprn());

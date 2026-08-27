@@ -38,6 +38,9 @@ import uk.gov.ons.census.common.model.entity.Survey;
 @ExtendWith(MockitoExtension.class)
 class FulfilmentRequestServiceTest {
 
+  private static final byte[] caserefgeneratorkey =
+      new byte[] {0x10, 0x20, 0x10, 0x20, 0x10, 0x20, 0x10, 0x20};
+
   @Mock private UacQidCache uacQidCache;
   @Mock private CaseRepository caseRepository;
   @Mock private SmsTemplateRepository smsTemplateRepository;
@@ -341,7 +344,8 @@ class FulfilmentRequestServiceTest {
         .thenReturn(true);
 
     // Act
-    Case result = fulfilmentRequestService.processFulfilmentForIndividual(event);
+    Case result =
+        fulfilmentRequestService.processFulfilmentForIndividual(event, caserefgeneratorkey);
 
     // Assert
     assertNull(result);
@@ -381,20 +385,31 @@ class FulfilmentRequestServiceTest {
     when(caseService.getCase(event.getPayload().getFulfilmentRequest().getCaseId()))
         .thenReturn(parentCase);
 
+    when(caseRepository.saveAndFlush(any(Case.class)))
+        .then(
+            invocation -> {
+              Case caze = new Case();
+              caze.setSecretSequenceNumber(123);
+              caze.setCaseType("HI");
+              caze.setCaseRef(123L);
+              return caze;
+            });
+
     // --- Act ---
-    fulfilmentRequestService.processFulfilmentForIndividual(event);
+    fulfilmentRequestService.processFulfilmentForIndividual(event, caserefgeneratorkey);
 
-    // Capture saved entity
-    ArgumentCaptor<Case> captor = ArgumentCaptor.forClass(Case.class);
+    // Then
+    ArgumentCaptor<Case> caseArgumentCaptor = ArgumentCaptor.forClass(Case.class);
 
-    verify(caseRepository).saveAndFlush(captor.capture());
+    verify(caseService).emitCaseUpdate(caseArgumentCaptor.capture(), any(), any());
 
-    Case childCase = captor.getValue();
+    Case childCase = caseArgumentCaptor.getValue();
 
     // --- Assert ---
     assertEquals("HI", childCase.getCaseType());
     assertNull(childCase.getRefusalReceived());
     assertFalse(childCase.isReceiptReceived());
+    assertNotNull(childCase.getCaseRef());
   }
 
   private EventDTO setupSmsRequestEnrichedEvent(UUID caseId) {
