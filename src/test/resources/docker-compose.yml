@@ -2,14 +2,14 @@ version: '2.1'
 services:
   postgres-case-it:
     container_name: postgres-case-it
-    image: census-rm-dev-common-postgres:latest
+    image: europe-west2-docker.pkg.dev/c31-rm-ci-prod/rm-docker-snapshot/census-rm-dev-common-postgres:latest
     command: ["-c", "shared_buffers=256MB", "-c", "max_connections=500" ]
     ports:
       - "16432:5432"
 
   uac-qid-case-it:
     container_name: uac-qid-case-it
-    image: census-rm-uac-qid-service:latest
+    image: europe-west2-docker.pkg.dev/c31-rm-ci-prod/rm-docker-snapshot/census-rm-uac-qid-service:latest
     ports:
       - "18164:8164"
     environment:
