@@ -270,6 +270,8 @@ public class FulfilmentRequestService {
     childCase.setAddressLine1(caze.getAddressLine1());
     childCase.setAddressLine2(caze.getAddressLine2());
     childCase.setAddressLine3(caze.getAddressLine3());
+    childCase.setAddressLevel(caze.getAddressLevel());
+    childCase.setAddressType(caze.getAddressType());
     childCase.setCeExpectedCapacity(caze.getCeExpectedCapacity());
     childCase.setEstabType(caze.getEstabType());
     childCase.setEstabUprn(caze.getEstabUprn());
@@ -288,7 +290,6 @@ public class FulfilmentRequestService {
     childCase.setPostcode(caze.getPostcode());
     childCase.setRegion(caze.getRegion());
     childCase.setSecureEstablishment(caze.isSecureEstablishment());
-    childCase.setSurveyLaunched(caze.isSurveyLaunched());
     childCase.setTownName(caze.getTownName());
     childCase.setTreatmentCode(caze.getTreatmentCode());
     childCase.setUprn(caze.getUprn());
