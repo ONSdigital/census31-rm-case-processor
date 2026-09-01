@@ -65,7 +65,7 @@ public class FulfilmentRequestReceiver {
         fulfilmentRequestService.getExportFileTemplate(packCode);
     boolean isPrintFulfilment = (exportFileTemplate.isPresent() && smsTemplate.isEmpty());
     boolean isSMSFulfilment = smsTemplate.isPresent() && exportFileTemplate.isEmpty();
-    boolean logChildCaseEvent = false;
+    boolean isIndividualCase = false;
 
     FulfilmentRequest fulfilmentRequest = event.getPayload().getFulfilmentRequest();
     caseId = fulfilmentRequest.getCaseId();
@@ -73,17 +73,19 @@ public class FulfilmentRequestReceiver {
     eventCase = caze;
 
     // Flow for child case if required for fulfilment
-    if (checkCreateChildCaseRequired(fulfilmentRequest.getFulfilmentCode())) {
+    if (checkIndividualCaseRequired(fulfilmentRequest.getFulfilmentCode())) {
 
       checkParentCaseIsHH(eventCase);
 
-      Case childCase =
+      Case individualCase =
           fulfilmentRequestService.processFulfilmentForIndividual(
               event, eventCase, caserefgeneratorkey);
 
-      if (childCase != null) {
-        logChildCaseEvent = true;
-        caze = childCase;
+      eventLogger.logCaseEvent(
+          individualCase, "New case created", EventType.NEW_CASE, event, message);
+      if (individualCase != null) {
+        isIndividualCase = true;
+        caze = individualCase;
       }
     }
     // Flow for Fulfilment
@@ -91,9 +93,7 @@ public class FulfilmentRequestReceiver {
       caze = fulfilmentRequestService.processPrintFulfilmentReceiver(event, caze);
 
       // logEvents
-      if (logChildCaseEvent) {
-        eventLogger.logCaseEvent(caze, "New case created", EventType.NEW_CASE, event, message);
-
+      if (isIndividualCase) {
         if (caze != null && eventCase != null && eventCase.getId() != caze.getId()) {
           eventLogger.logCaseEvent(
               eventCase, PRINT_FULFILMENT_DESCRIPTION, EventType.PRINT_FULFILMENT, event, message);
@@ -121,9 +121,7 @@ public class FulfilmentRequestReceiver {
               smsRequestEnrichedEvent, smsRequestEnrichedTopic, caze);
 
       // logEvents
-      if (logChildCaseEvent) {
-        eventLogger.logCaseEvent(caze, "New case created", EventType.NEW_CASE, event, message);
-
+      if (isIndividualCase) {
         if (caze != null && eventCase != null && eventCase.getId() != caze.getId()) {
           eventLogger.logCaseEvent(
               eventCase, SMS_FULFILMENT_DESCRIPTION, EventType.SMS_FULFILMENT, event, message);
@@ -166,7 +164,7 @@ public class FulfilmentRequestReceiver {
     }
   }
 
-  private boolean checkCreateChildCaseRequired(String packCode) {
+  private boolean checkIndividualCaseRequired(String packCode) {
 
     if (smsIndividualPackCodes.contains(packCode) || printIndividualPackCodes.contains(packCode))
       return true;

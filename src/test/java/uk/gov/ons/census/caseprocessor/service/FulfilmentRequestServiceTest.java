@@ -302,8 +302,6 @@ class FulfilmentRequestServiceTest {
     // Case has template PACK1, but request is P_CODE
     Case caze = setupCase(caseId);
 
-    //    when(caseService.getCase(caseId)).thenReturn(caze);
-
     RuntimeException ex =
         assertThrows(
             RuntimeException.class,
