@@ -55,7 +55,7 @@ public class FulfilmentRequestReceiver {
       return;
     }
 
-    Case parentCase;
+    Case eventCase;
     Case caze;
     UUID caseId;
     String packCode = event.getPayload().getFulfilmentRequest().getFulfilmentCode();
@@ -65,35 +65,45 @@ public class FulfilmentRequestReceiver {
         fulfilmentRequestService.getExportFileTemplate(packCode);
     boolean isPrintFulfilment = (exportFileTemplate.isPresent() && smsTemplate.isEmpty());
     boolean isSMSFulfilment = smsTemplate.isPresent() && exportFileTemplate.isEmpty();
+    boolean logChildCaseEvent = false;
 
     FulfilmentRequest fulfilmentRequest = event.getPayload().getFulfilmentRequest();
     caseId = fulfilmentRequest.getCaseId();
+    caze = caseService.getCase(caseId);
+    eventCase = caze;
 
     // Flow for child case if required for fulfilment
     if (checkCreateChildCaseRequired(fulfilmentRequest.getFulfilmentCode())) {
-      parentCase = caseService.getCase(caseId);
-      checkParentCaseHH(parentCase);
-      if (parentCase != null && isPrintFulfilment) {
-        eventLogger.logCaseEvent(
-            parentCase, PRINT_FULFILMENT_DESCRIPTION, EventType.PRINT_FULFILMENT, event, message);
-      } else if (parentCase != null && isSMSFulfilment) {
-        eventLogger.logCaseEvent(
-            parentCase, SMS_FULFILMENT_DESCRIPTION, EventType.SMS_FULFILMENT, event, message);
-      }
-      caze = fulfilmentRequestService.processFulfilmentForIndividual(event, caserefgeneratorkey);
-      if (caze != null) {
-        eventLogger.logCaseEvent(caze, "New case created", EventType.NEW_CASE, event, message);
-        caseId = caze.getId();
+
+      checkParentCaseIsHH(eventCase);
+
+      Case childCase =
+          fulfilmentRequestService.processFulfilmentForIndividual(
+              event, eventCase, caserefgeneratorkey);
+
+      if (childCase != null) {
+        logChildCaseEvent = true;
+        caze = childCase;
       }
     }
-
     // Flow for Fulfilment
     if (isPrintFulfilment) {
-      caze = fulfilmentRequestService.processPrintFulfilmentReceiver(event, caseId);
+      caze = fulfilmentRequestService.processPrintFulfilmentReceiver(event, caze);
+
+      // logEvents
+      if (logChildCaseEvent) {
+        eventLogger.logCaseEvent(caze, "New case created", EventType.NEW_CASE, event, message);
+
+        if (caze != null && eventCase != null && eventCase.getId() != caze.getId()) {
+          eventLogger.logCaseEvent(
+              eventCase, PRINT_FULFILMENT_DESCRIPTION, EventType.PRINT_FULFILMENT, event, message);
+        }
+      }
       if (caze != null) {
         eventLogger.logCaseEvent(
             caze, PRINT_FULFILMENT_DESCRIPTION, EventType.PRINT_FULFILMENT, event, message);
       }
+
     } else if (isSMSFulfilment) {
 
       if (fulfilmentRequest.getContact().getTelNo() != null
@@ -104,12 +114,21 @@ public class FulfilmentRequestReceiver {
 
       EventDTO smsRequestEnrichedEvent =
           fulfilmentRequestService.processSMSRequestReceiver(
-              event, smsRequestEnrichedTopic, caseId);
+              event, smsRequestEnrichedTopic, caze.getId());
 
       caze =
           fulfilmentRequestService.processSMSFulfilmentService(
-              smsRequestEnrichedEvent, smsRequestEnrichedTopic);
+              smsRequestEnrichedEvent, smsRequestEnrichedTopic, caze);
 
+      // logEvents
+      if (logChildCaseEvent) {
+        eventLogger.logCaseEvent(caze, "New case created", EventType.NEW_CASE, event, message);
+
+        if (caze != null && eventCase != null && eventCase.getId() != caze.getId()) {
+          eventLogger.logCaseEvent(
+              eventCase, SMS_FULFILMENT_DESCRIPTION, EventType.SMS_FULFILMENT, event, message);
+        }
+      }
       if (caze != null) {
         eventLogger.logCaseEvent(
             caze,
@@ -140,9 +159,9 @@ public class FulfilmentRequestReceiver {
     }
   }
 
-  void checkParentCaseHH(Case parentCase) {
-    if (parentCase != null
-        && (parentCase.getCaseType() == null || !("HH".equals(parentCase.getCaseType())))) {
+  void checkParentCaseIsHH(Case eventCase) {
+    if (eventCase != null
+        && (eventCase.getCaseType() == null || !("HH".equals(eventCase.getCaseType())))) {
       throw new RuntimeException("Case is not a House Hold Type on fulfilment request message");
     }
   }

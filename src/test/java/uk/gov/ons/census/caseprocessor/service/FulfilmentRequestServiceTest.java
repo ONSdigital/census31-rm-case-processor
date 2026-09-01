@@ -107,11 +107,9 @@ class FulfilmentRequestServiceTest {
     Case caze = new Case();
     caze.setId(caseId);
 
-    when(caseService.getCase(caseId)).thenReturn(caze);
-
     // --- Act ---
     Case result =
-        fulfilmentRequestService.processSMSFulfilmentService(smsRequestEnrichedEvent, topic);
+        fulfilmentRequestService.processSMSFulfilmentService(smsRequestEnrichedEvent, topic, caze);
 
     // --- Assert ---
     assertEquals(caze, result);
@@ -248,10 +246,8 @@ class FulfilmentRequestServiceTest {
     caze.setId(caseId);
     caze.setCollectionExercise(collectionExercise);
 
-    when(caseService.getCase(caseId)).thenReturn(caze);
-
     // --- Act ---
-    Case result = fulfilmentRequestService.processPrintFulfilmentReceiver(event, caseId);
+    Case result = fulfilmentRequestService.processPrintFulfilmentReceiver(event, caze);
 
     // --- Assert ---
     assertEquals(caze, result);
@@ -281,11 +277,13 @@ class FulfilmentRequestServiceTest {
     // --- Arrange ---
     UUID caseId = UUID.randomUUID();
     EventDTO event = setupPrintFulfilmentRequestEvent(caseId);
+    Case caze = new Case();
+    caze.setId(caseId);
 
     when(fulfilmentToProcessRepository.existsByMessageId(event.getHeader().getMessageId()))
         .thenReturn(true);
 
-    Case result = fulfilmentRequestService.processPrintFulfilmentReceiver(event, caseId);
+    Case result = fulfilmentRequestService.processPrintFulfilmentReceiver(event, caze);
 
     assertNull(result);
 
@@ -304,33 +302,14 @@ class FulfilmentRequestServiceTest {
     // Case has template PACK1, but request is P_CODE
     Case caze = setupCase(caseId);
 
-    when(caseService.getCase(caseId)).thenReturn(caze);
+    //    when(caseService.getCase(caseId)).thenReturn(caze);
 
     RuntimeException ex =
         assertThrows(
             RuntimeException.class,
-            () -> fulfilmentRequestService.processPrintFulfilmentReceiver(event, caseId));
+            () -> fulfilmentRequestService.processPrintFulfilmentReceiver(event, caze));
 
     assertTrue(ex.getMessage().contains("Pack code P_CODE is not allowed"));
-  }
-
-  @Test
-  void testProcessPrintFulfilmentReceiver_caseNotFound_throws() {
-    // --- Arrange ---
-    UUID caseId = UUID.randomUUID();
-    EventDTO event = setupPrintFulfilmentRequestEvent(caseId);
-
-    when(fulfilmentToProcessRepository.existsByMessageId(event.getHeader().getMessageId()))
-        .thenReturn(false);
-
-    when(caseService.getCase(caseId)).thenThrow(new RuntimeException("Case not found"));
-
-    RuntimeException ex =
-        assertThrows(
-            RuntimeException.class,
-            () -> fulfilmentRequestService.processPrintFulfilmentReceiver(event, caseId));
-
-    assertTrue(ex.getMessage().contains("Case not found"));
   }
 
   @Test
@@ -338,14 +317,15 @@ class FulfilmentRequestServiceTest {
     // Arrange
     UUID caseId = UUID.randomUUID();
     EventDTO event = setupPrintFulfilmentRequestEvent(caseId);
-    FulfilmentRequest fulfilmentRequest = event.getPayload().getFulfilmentRequest();
+    Case caze = new Case();
+    caze.setId(caseId);
 
     when(fulfilmentToProcessRepository.existsByMessageId(event.getHeader().getMessageId()))
         .thenReturn(true);
 
     // Act
     Case result =
-        fulfilmentRequestService.processFulfilmentForIndividual(event, caserefgeneratorkey);
+        fulfilmentRequestService.processFulfilmentForIndividual(event, caze, caserefgeneratorkey);
 
     // Assert
     assertNull(result);
@@ -382,9 +362,6 @@ class FulfilmentRequestServiceTest {
     parentCase.setId(caseId);
     parentCase.setCollectionExercise(collectionExercise);
 
-    when(caseService.getCase(event.getPayload().getFulfilmentRequest().getCaseId()))
-        .thenReturn(parentCase);
-
     when(caseRepository.saveAndFlush(any(Case.class)))
         .then(
             invocation -> {
@@ -396,7 +373,7 @@ class FulfilmentRequestServiceTest {
             });
 
     // --- Act ---
-    fulfilmentRequestService.processFulfilmentForIndividual(event, caserefgeneratorkey);
+    fulfilmentRequestService.processFulfilmentForIndividual(event, parentCase, caserefgeneratorkey);
 
     // Then
     ArgumentCaptor<Case> caseArgumentCaptor = ArgumentCaptor.forClass(Case.class);

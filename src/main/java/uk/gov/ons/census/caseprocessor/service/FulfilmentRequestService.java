@@ -51,12 +51,11 @@ public class FulfilmentRequestService {
     this.messageSender = messageSender;
   }
 
-  public Case processPrintFulfilmentReceiver(EventDTO event, UUID caseId) {
+  public Case processPrintFulfilmentReceiver(EventDTO event, Case caze) {
     if (doesFulfilmentMessageAlreadyExist(event)) {
       return null;
     }
     FulfilmentRequest printFulfilmentRequest = event.getPayload().getFulfilmentRequest();
-    Case caze = caseService.getCase(caseId);
 
     ExportFileTemplate exportFileTemplate =
         getAllowedPrintTemplate(printFulfilmentRequest.getFulfilmentCode(), caze);
@@ -121,11 +120,9 @@ public class FulfilmentRequestService {
   }
 
   public Case processSMSFulfilmentService(
-      EventDTO smsRequestEnrichedEvent, String smsRequestEnrichedTopic) {
+      EventDTO smsRequestEnrichedEvent, String smsRequestEnrichedTopic, Case caze) {
     SmsRequestEnriched smsRequestEnriched =
         smsRequestEnrichedEvent.getPayload().getSmsRequestEnriched();
-
-    Case caze = caseService.getCase(smsRequestEnriched.getCaseId());
 
     uacService.createLinkAndEmitNewUacQid(
         caze,
@@ -182,15 +179,13 @@ public class FulfilmentRequestService {
         Arrays.asList(template), List.of(TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY));
   }
 
-  public Case processFulfilmentForIndividual(EventDTO event, byte[] caserefgeneratorkey) {
-
-    FulfilmentRequest fulfilmentRequest = event.getPayload().getFulfilmentRequest();
+  public Case processFulfilmentForIndividual(
+      EventDTO event, Case caze, byte[] caserefgeneratorkey) {
 
     if (doesFulfilmentMessageAlreadyExist(event)) {
       return null;
     }
 
-    Case caze = caseService.getCase(fulfilmentRequest.getCaseId());
     Case childCase = createChildCase(caze);
     childCase.setCaseType("HI");
 
