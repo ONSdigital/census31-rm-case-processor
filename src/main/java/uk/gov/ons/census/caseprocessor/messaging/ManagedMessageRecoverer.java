@@ -7,10 +7,11 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.AttributeAccessor;
+import org.springframework.integration.core.RecoveryCallback;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHandlingException;
 import org.springframework.messaging.MessagingException;
-import org.springframework.retry.RecoveryCallback;
 import org.springframework.retry.RetryContext;
 import org.springframework.stereotype.Component;
 import uk.gov.ons.census.caseprocessor.client.ExceptionManagerClient;
@@ -19,7 +20,8 @@ import uk.gov.ons.census.caseprocessor.model.dto.SkippedMessage;
 import uk.gov.ons.census.caseprocessor.utils.HashHelper;
 
 @Component
-public class ManagedMessageRecoverer implements RecoveryCallback<Object> {
+public class ManagedMessageRecoverer
+    implements RecoveryCallback<Object>, org.springframework.retry.RecoveryCallback<Object> {
   private static final Logger log = LoggerFactory.getLogger(ManagedMessageRecoverer.class);
   private static final String SERVICE_NAME = "Case Processor";
 
@@ -33,15 +35,22 @@ public class ManagedMessageRecoverer implements RecoveryCallback<Object> {
   }
 
   @Override
+  public Object recover(AttributeAccessor context, Throwable throwable) {
+    return recoverFromThrowable(throwable);
+  }
+
+  @Override
   public Object recover(RetryContext retryContext) {
-    if (!(retryContext.getLastThrowable() instanceof MessagingException)) {
-      log.error(
-          "Super duper unexpected kind of error, so going to fail very noisily",
-          retryContext.getLastThrowable());
-      throw new RuntimeException(retryContext.getLastThrowable());
+    return recoverFromThrowable(retryContext.getLastThrowable());
+  }
+
+  private Object recoverFromThrowable(Throwable throwable) {
+    MessagingException messagingException = findMessagingException(throwable);
+    if (messagingException == null) {
+      log.error("Super duper unexpected kind of error, so going to fail very noisily", throwable);
+      throw new RuntimeException(throwable);
     }
 
-    MessagingException messagingException = (MessagingException) retryContext.getLastThrowable();
     Message<?> message = messagingException.getFailedMessage();
     BasicAcknowledgeablePubsubMessage originalMessage =
         (BasicAcknowledgeablePubsubMessage)
@@ -53,14 +62,9 @@ public class ManagedMessageRecoverer implements RecoveryCallback<Object> {
 
     String messageHash = HashHelper.hash(rawMessageBody);
 
-    String stackTraceRootCause = findUsefulRootCauseInStackTrace(retryContext.getLastThrowable());
+    String stackTraceRootCause = findUsefulRootCauseInStackTrace(throwable);
 
-    Throwable cause = retryContext.getLastThrowable();
-    if (retryContext.getLastThrowable() != null
-        && retryContext.getLastThrowable().getCause() != null
-        && retryContext.getLastThrowable().getCause().getCause() != null) {
-      cause = retryContext.getLastThrowable().getCause().getCause();
-    }
+    Throwable cause = findReportableCause(messagingException);
 
     ExceptionReportResponse reportResult =
         getExceptionReportResponse(cause, messageHash, stackTraceRootCause, subscriptionName);
@@ -71,12 +75,36 @@ public class ManagedMessageRecoverer implements RecoveryCallback<Object> {
 
     peekMessage(reportResult, messageHash, rawMessageBody);
 
-    logMessage(
-        reportResult, retryContext.getLastThrowable().getCause(), messageHash, stackTraceRootCause);
+    logMessage(reportResult, cause, messageHash, stackTraceRootCause);
 
     // Reject the original message (auto nack'ed). It will be retried at some future point in time
     throw new MessageHandlingException(
         message, "Cannot process this message at this time, but it will be retried");
+  }
+
+  private MessagingException findMessagingException(Throwable throwable) {
+    Throwable current = throwable;
+    while (current != null) {
+      if (current instanceof MessagingException messagingException) {
+        return messagingException;
+      }
+      current = current.getCause();
+    }
+    return null;
+  }
+
+  private Throwable findReportableCause(MessagingException messagingException) {
+    Throwable cause = messagingException.getCause();
+
+    if (cause == null) {
+      return messagingException;
+    }
+
+    if (cause.getCause() != null) {
+      return cause.getCause();
+    }
+
+    return cause;
   }
 
   private ExceptionReportResponse getExceptionReportResponse(

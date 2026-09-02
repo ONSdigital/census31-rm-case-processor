@@ -8,7 +8,7 @@ public class FormTypeHelper {
     int questionnaireType = Integer.parseInt(qid.substring(0, 2));
 
     switch (questionnaireType) {
-        // Household
+      // Household
       case 1:
       case 2:
       case 3:
@@ -17,7 +17,7 @@ public class FormTypeHelper {
       case 6:
       case 7:
         return HH_FORM_TYPE;
-        // Individual
+      // Individual
       case 21:
       case 22:
       case 23:

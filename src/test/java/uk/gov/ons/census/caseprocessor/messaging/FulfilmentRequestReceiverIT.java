@@ -8,8 +8,6 @@ import static uk.gov.ons.census.caseprocessor.utils.Constants.*;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +24,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import uk.gov.ons.census.caseprocessor.model.dto.*;
 import uk.gov.ons.census.caseprocessor.model.repository.*;
 import uk.gov.ons.census.caseprocessor.service.FulfilmentRequestService;
@@ -236,7 +236,7 @@ public class FulfilmentRequestReceiverIT {
   }
 
   @Test
-  void testSmsRequestEnrichedReceiver() throws InterruptedException, JsonProcessingException {
+  void testSmsRequestEnrichedReceiver() throws InterruptedException, JacksonException {
     // Given
     // Set up all the data required
     Survey survey = new Survey();

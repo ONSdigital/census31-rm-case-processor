@@ -4,6 +4,14 @@ spring:
       pool:
         size: 30
 
+  jackson:
+    # Boot 4 migration: freeze the wire format at Jackson 2 behaviour so this
+    # release is a pure infrastructure change with no downstream coordination.
+    # Jackson 3's defaults flip property ordering to alphabetical and serialise
+    # java.time as ISO-8601 strings instead of epoch numbers.
+    # REMOVE in H2 2027 as its own announced change (ticket).
+    use-jackson2-defaults: true
+
   datasource:
     url: jdbc:postgresql://localhost:6432/rm
     username: appuser

@@ -1,7 +1,5 @@
 package uk.gov.ons.census.caseprocessor.utils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -10,6 +8,8 @@ import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.util.StringUtils;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 public class RedactHelper {
 
@@ -40,7 +40,7 @@ public class RedactHelper {
       recursivelyRedact(
           rootObjectToRedactDeepCopy, rootObjectToRedactDeepCopy.getClass().getPackageName());
       return rootObjectToRedactDeepCopy;
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new RuntimeException(REDACTION_FAILURE, e);
     }
   }

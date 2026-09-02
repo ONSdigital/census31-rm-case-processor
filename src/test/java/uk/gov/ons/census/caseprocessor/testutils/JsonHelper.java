@@ -1,7 +1,7 @@
 package uk.gov.ons.census.caseprocessor.testutils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import uk.gov.ons.census.caseprocessor.utils.ObjectMapperFactory;
 
 public class JsonHelper {
@@ -10,7 +10,7 @@ public class JsonHelper {
   public static <T> T convertJsonBytesToObject(byte[] bytes, Class<T> clazz) {
     try {
       return objectMapper.readValue(bytes, clazz);
-    } catch (IOException e) {
+    } catch (JacksonException e) {
       throw new RuntimeException(e);
     }
   }
