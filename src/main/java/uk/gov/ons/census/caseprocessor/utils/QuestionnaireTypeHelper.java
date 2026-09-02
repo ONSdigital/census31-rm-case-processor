@@ -1,39 +1,28 @@
 package uk.gov.ons.census.caseprocessor.utils;
 
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
 public class QuestionnaireTypeHelper {
   public static final String HH_FORM_TYPE = "H";
   public static final String IND_FORM_TYPE = "I";
 
   private QuestionnaireTypeHelper() {}
 
-  @SuppressWarnings("PMD.GuardLogStatement")
+  /**
+   * Derives the coarse receipting form type (household or individual) for a QID by delegating to
+   * {@link QidFormTypeHelper} for the detailed form type and collapsing it to HH_FORM_TYPE or
+   * IND_FORM_TYPE.
+   */
   public static String mapQuestionnaireTypeToFormType(String qid) {
-    if (qid == null || qid.length() < 2) {
-      log.warn("Unable to parse questionnaire type from QID: QID is null or too short");
+    String formType = QidFormTypeHelper.mapQidToFormType(qid);
+    if (formType == null) {
       return null;
     }
 
-    int questionnaireType;
-    try {
-      questionnaireType = Integer.parseInt(qid.substring(0, 2));
-    } catch (NumberFormatException e) {
-      log.warn(
-          "Unable to parse questionnaire type from QID: non-numeric prefix '{}'",
-          qid.substring(0, 2));
-      return null;
+    if (formType.startsWith(HH_FORM_TYPE)) {
+      return HH_FORM_TYPE;
     }
-
-    return switch (questionnaireType) {
-      case 1, 2, 3, 4, 5, 6, 7 -> HH_FORM_TYPE;
-      case 21, 22, 23, 24, 25, 26, 27 -> IND_FORM_TYPE;
-      default -> {
-        log.warn(
-            "Unable to parse questionnaire type from QID: unknown type '{}'", questionnaireType);
-        yield null;
-      }
-    };
+    if (formType.startsWith(IND_FORM_TYPE)) {
+      return IND_FORM_TYPE;
+    }
+    return null;
   }
 }
