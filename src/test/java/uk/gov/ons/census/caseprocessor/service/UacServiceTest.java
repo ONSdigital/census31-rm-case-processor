@@ -76,10 +76,10 @@ class UacServiceTest {
 
     UacUpdateDTO uacUpdateDto = actualEvent.getPayload().getUacUpdate();
     assertThat(uacUpdateDto.getUacHash()).isEqualTo("test hash");
-    assertThat(uacUpdateDto.getQid()).isEqualTo(uacUpdateDto.getQid());
+    assertThat(uacUpdateDto.getQuestionnaireId()).isEqualTo(uacUpdateDto.getQuestionnaireId());
     assertThat(uacUpdateDto.getCaseId()).isEqualTo(caze.getId());
-    assertThat(uacUpdateDto.getSurveyId()).isEqualTo(survey.getId());
-    assertThat(uacUpdateDto.getCollectionExerciseId()).isEqualTo(collectionExercise.getId());
+    // assertThat(uacUpdateDto.getSurveyId()).isEqualTo(survey.getId());
+    // assertThat(uacUpdateDto.getCollectionExerciseId()).isEqualTo(collectionExercise.getId());
   }
 
   @Test
@@ -162,7 +162,7 @@ class UacServiceTest {
 
     UacUpdateDTO uacUpdateDto = actualEvent.getPayload().getUacUpdate();
     assertThat(uacUpdateDto.getUacHash()).isEqualTo(HashHelper.hash(uac));
-    assertThat(uacUpdateDto.getQid()).isEqualTo(qid);
+    assertThat(uacUpdateDto.getQuestionnaireId()).isEqualTo(qid);
     assertThat(uacUpdateDto.getCaseId()).isEqualTo(testCase.getId());
   }
 
@@ -205,7 +205,7 @@ class UacServiceTest {
 
     UacUpdateDTO uacUpdateDto = actualEvent.getPayload().getUacUpdate();
     assertThat(uacUpdateDto.getUacHash()).isEqualTo(HashHelper.hash(uac));
-    assertThat(uacUpdateDto.getQid()).isEqualTo(qid);
+    assertThat(uacUpdateDto.getQuestionnaireId()).isEqualTo(qid);
     assertThat(uacUpdateDto.getCaseId()).isEqualTo(null);
   }
 }

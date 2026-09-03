@@ -102,7 +102,7 @@ class EmailFulfilmentReceiverIT {
       UacUpdateDTO uacUpdatedEvent = emittedEvent.getPayload().getUacUpdate();
       assertThat(uacUpdatedEvent.getCaseId()).isEqualTo(testCase.getId());
       assertThat(uacUpdatedEvent.getUacHash()).isEqualTo(HashHelper.hash(emailUacQid.getUac()));
-      assertThat(uacUpdatedEvent.getQid()).isEqualTo(emailUacQid.getQid());
+      assertThat(uacUpdatedEvent.getQuestionnaireId()).isEqualTo(emailUacQid.getQid());
     }
 
     List<UacQidLink> uacQidLinks = uacQidLinkRepository.findAll();

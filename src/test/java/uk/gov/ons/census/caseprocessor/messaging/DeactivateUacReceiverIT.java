@@ -90,7 +90,7 @@ public class DeactivateUacReceiverIT {
       EventDTO actualEvent = uacRhQueue.checkExpectedMessageReceived();
 
       UacUpdateDTO uac = actualEvent.getPayload().getUacUpdate();
-      assertThat(uac.getQid()).isEqualTo(TEST_QID);
+      assertThat(uac.getQuestionnaireId()).isEqualTo(TEST_QID);
       assertThat(uac.isActive()).isFalse();
 
       UacQidLink sentUacQidLinkUpdated = uacQidLinkRepository.findByQid(TEST_QID).get();
@@ -137,7 +137,7 @@ public class DeactivateUacReceiverIT {
       EventDTO actualEvent = uacRhQueue.checkExpectedMessageReceived();
 
       UacUpdateDTO uac = actualEvent.getPayload().getUacUpdate();
-      assertThat(uac.getQid()).isEqualTo(TEST_QID);
+      assertThat(uac.getQuestionnaireId()).isEqualTo(TEST_QID);
       assertThat(uac.isActive()).isFalse();
 
       UacQidLink sentUacQidLinkUpdated = uacQidLinkRepository.findByQid(TEST_QID).get();

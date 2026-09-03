@@ -10,14 +10,8 @@ import lombok.Data;
 public class UacUpdateDTO {
   private String uacHash;
   private boolean active;
-  private String qid;
+  private String questionnaireId;
 
   @JsonInclude(Include.ALWAYS)
   private UUID caseId;
-
-  private UUID collectionExerciseId;
-  private UUID surveyId;
-  private boolean receiptReceived;
-  private boolean surveyLaunched;
-  private String collectionInstrumentUrl;
 }

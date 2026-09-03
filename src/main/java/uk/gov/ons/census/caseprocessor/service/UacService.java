@@ -43,20 +43,20 @@ public class UacService {
             uacUpdateTopic, correlationId, originatingUser, EventType.UAC_UPDATE);
 
     UacUpdateDTO uac = new UacUpdateDTO();
-    uac.setQid(savedUacQidLink.getQid());
+    uac.setQuestionnaireId(savedUacQidLink.getQid());
     uac.setUacHash(savedUacQidLink.getUacHash());
     uac.setActive(savedUacQidLink.isActive());
-    uac.setReceiptReceived(savedUacQidLink.isReceiptReceived());
-    uac.setSurveyLaunched(savedUacQidLink.isSurveyLaunched());
+    // uac.setReceiptReceived(savedUacQidLink.isReceiptReceived());
+    // uac.setSurveyLaunched(savedUacQidLink.isSurveyLaunched());
 
     if (savedUacQidLink.getCaze() != null) {
       uac.setCaseId(savedUacQidLink.getCaze().getId());
-      uac.setCollectionExerciseId(savedUacQidLink.getCaze().getCollectionExercise().getId());
-      uac.setSurveyId(savedUacQidLink.getCaze().getCollectionExercise().getSurvey().getId());
+      //  uac.setCollectionExerciseId(savedUacQidLink.getCaze().getCollectionExercise().getId());
+      //  uac.setSurveyId(savedUacQidLink.getCaze().getCollectionExercise().getSurvey().getId());
     } else {
       uac.setCaseId(null);
-      uac.setCollectionExerciseId(null);
-      uac.setSurveyId(null);
+      //  uac.setCollectionExerciseId(null);
+      //  uac.setSurveyId(null);
     }
 
     PayloadDTO payloadDTO = new PayloadDTO();
