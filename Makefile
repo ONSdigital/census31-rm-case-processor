@@ -24,7 +24,7 @@ test:
 	CONTAINER_CLI=$(DOCKER) mvn clean verify jacoco:report
 
 docker-build:
-	$(DOCKER) build . --platform linux/amd64 -t europe-west2-docker.pkg.dev/c31-rm-ci-prod/rm-docker-snapshot/census31-rm-caseprocessor:latest
+	$(DOCKER) build . --platform linux/amd64 -t europe-west2-docker.pkg.dev/c31-rm-ci-prod/rm-docker-snapshot/census31-rm-case-processor:latest
 
 rebuild-java-healthcheck:
 	$(MAKE) -C src/test/resources/java_healthcheck rebuild-java-healthcheck
