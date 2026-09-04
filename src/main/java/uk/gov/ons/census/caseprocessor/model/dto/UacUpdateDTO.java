@@ -20,4 +20,5 @@ public class UacUpdateDTO {
   private boolean receiptReceived;
   private boolean surveyLaunched;
   private String collectionInstrumentUrl;
+  private String formType;
 }

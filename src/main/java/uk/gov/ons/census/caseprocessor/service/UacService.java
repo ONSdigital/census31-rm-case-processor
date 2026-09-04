@@ -14,6 +14,7 @@ import uk.gov.ons.census.caseprocessor.model.dto.UacUpdateDTO;
 import uk.gov.ons.census.caseprocessor.model.repository.UacQidLinkRepository;
 import uk.gov.ons.census.caseprocessor.utils.EventHelper;
 import uk.gov.ons.census.caseprocessor.utils.HashHelper;
+import uk.gov.ons.census.caseprocessor.utils.QidFormTypeHelper;
 import uk.gov.ons.census.common.model.entity.Case;
 import uk.gov.ons.census.common.model.entity.EventType;
 import uk.gov.ons.census.common.model.entity.UacQidLink;
@@ -48,6 +49,7 @@ public class UacService {
     uac.setActive(savedUacQidLink.isActive());
     uac.setReceiptReceived(savedUacQidLink.isReceiptReceived());
     uac.setSurveyLaunched(savedUacQidLink.isSurveyLaunched());
+    uac.setFormType(QidFormTypeHelper.mapQidToFormType(savedUacQidLink.getQid()));
 
     if (savedUacQidLink.getCaze() != null) {
       uac.setCaseId(savedUacQidLink.getCaze().getId());

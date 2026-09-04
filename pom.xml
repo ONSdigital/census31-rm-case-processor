@@ -212,8 +212,7 @@
                     <verbose>true</verbose>
                     <linkXRef>false</linkXRef>
                     <rulesets>
-                        <ruleset>/category/java/bestpractices.xml</ruleset>
-                        <ruleset>/category/java/security.xml</ruleset>
+                        <ruleset>${project.basedir}/pmd-ruleset.xml</ruleset>
                     </rulesets>
                 </configuration>
                 <executions>
