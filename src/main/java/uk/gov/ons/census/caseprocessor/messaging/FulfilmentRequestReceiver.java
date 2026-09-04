@@ -71,13 +71,20 @@ public class FulfilmentRequestReceiver {
     caseId = fulfilmentRequest.getCaseId();
     caze = caseService.getCase(caseId);
     eventCase = caze;
+    UUID individualCaseId = fulfilmentRequest.getIndividualCaseId();
 
-    // Flow for child case if required for fulfilment
-    if (checkIndividualCaseRequired(fulfilmentRequest.getFulfilmentCode())) {
+    if (individualCaseId != null
+        && !checkIndividualCaseRequired(fulfilmentRequest.getFulfilmentCode())) {
+      throw new RuntimeException(
+          String.format(
+              "Given pack_code %s does not belongs to Individual Fulfilment request for the case Id %s",
+              fulfilmentRequest.getFulfilmentCode(), fulfilmentRequest.getCaseId()));
+    }
 
-      checkParentCaseIsHH(eventCase);
+    // Flow for child case if required for fulfilment and parentCase should be HH
+    if (checkIndividualCaseRequired(fulfilmentRequest.getFulfilmentCode())
+        && checkParentCaseIsHH(eventCase)) {
 
-      UUID individualCaseId = fulfilmentRequest.getIndividualCaseId();
       if (individualCaseId != null
           && fulfilmentRequestService.isCaseAlreadyExists(individualCaseId)) {
         throw new RuntimeException(
@@ -95,6 +102,7 @@ public class FulfilmentRequestReceiver {
         caze = individualCase;
       }
     }
+
     // Flow for Fulfilment
     if (isPrintFulfilment) {
       caze = fulfilmentRequestService.processPrintFulfilmentReceiver(event, caze);
@@ -164,11 +172,12 @@ public class FulfilmentRequestReceiver {
     }
   }
 
-  void checkParentCaseIsHH(Case eventCase) {
+  boolean checkParentCaseIsHH(Case eventCase) {
     if (eventCase != null
-        && (eventCase.getCaseType() == null || !("HH".equals(eventCase.getCaseType())))) {
-      throw new RuntimeException("Case is not a House Hold Type on fulfilment request message");
-    }
+        && eventCase.getCaseType() != null
+        && "HH".equals(eventCase.getCaseType())) {
+      return true;
+    } else return false;
   }
 
   private boolean checkIndividualCaseRequired(String packCode) {

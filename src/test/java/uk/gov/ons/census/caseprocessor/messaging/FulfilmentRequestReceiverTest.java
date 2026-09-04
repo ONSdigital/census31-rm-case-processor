@@ -345,13 +345,14 @@ public class FulfilmentRequestReceiverTest {
   }
 
   @Test
-  void testReceiveMessage_not_HH_throws() throws Exception {
+  void testReceiveMessage_not_individual_packcode_has_individual_caseid_value_throws()
+      throws Exception {
     UUID caseId = UUID.randomUUID();
-    EventDTO event = buildEvent(caseId, "P_OR_I1");
+    EventDTO event = buildEvent(caseId, "XXX", UUID.randomUUID());
     Message<byte[]> msg = buildMessage(event);
 
     ExportFileTemplate eft = new ExportFileTemplate();
-    eft.setPackCode("P_OR_I1");
+    eft.setPackCode("XXX");
 
     Case caze = new Case();
     caze.setId(caseId);
@@ -359,14 +360,15 @@ public class FulfilmentRequestReceiverTest {
 
     // Given
 
-    when(fulfilmentRequestService.getSmsTemplate("P_OR_I1")).thenReturn(Optional.empty());
-    when(fulfilmentRequestService.getExportFileTemplate("P_OR_I1")).thenReturn(Optional.of(eft));
+    when(fulfilmentRequestService.getSmsTemplate("XXX")).thenReturn(Optional.empty());
+    when(fulfilmentRequestService.getExportFileTemplate("XXX")).thenReturn(Optional.of(eft));
     when(caseService.getCase(caseId)).thenReturn(caze);
 
     RuntimeException ex = assertThrows(RuntimeException.class, () -> underTest.receiveMessage(msg));
 
     assertTrue(
-        ex.getMessage().contains("Case is not a House Hold Type on fulfilment request message"));
+        ex.getMessage()
+            .contains("does not belongs to Individual Fulfilment request for the case Id"));
 
     verify(fulfilmentRequestService, never()).processPrintFulfilmentReceiver(any(), any());
     verify(fulfilmentRequestService, never()).processSMSRequestReceiver(any(), any(), any());
@@ -459,6 +461,55 @@ public class FulfilmentRequestReceiverTest {
             (EventType) any(),
             (EventDTO) any(),
             (Message<byte[]>) any());
+  }
+
+  @Test
+  void testReceiveMessage_sms_fulfilment_success_case_not_HH() throws Exception {
+    UUID caseId = UUID.randomUUID();
+    EventDTO event = buildEvent(caseId, "PACK1");
+    Message<byte[]> msg = buildMessage(event);
+
+    Case parentCase = new Case();
+    parentCase.setId(caseId);
+    parentCase.setCaseType("HI");
+
+    SmsTemplate smsTemplate = setupSmsTemplate();
+
+    SmsRequestEnriched smsRequestEnriched = buildSMSRequestEnriched(event);
+    PayloadDTO payload = new PayloadDTO();
+    payload.setSmsRequestEnriched(smsRequestEnriched);
+
+    EventDTO smsRequestEnrichedEvent = new EventDTO();
+    smsRequestEnrichedEvent.setHeader(event.getHeader());
+    smsRequestEnrichedEvent.setPayload(payload);
+
+    Case returnedCase = new Case();
+    returnedCase.setId(caseId);
+
+    when(caseService.getCase(caseId)).thenReturn(parentCase);
+
+    when(fulfilmentRequestService.getExportFileTemplate("PACK1")).thenReturn(Optional.empty());
+
+    when(fulfilmentRequestService.getSmsTemplate("PACK1")).thenReturn(Optional.of(smsTemplate));
+
+    when(fulfilmentRequestService.validatePhoneNumber(any())).thenReturn(true);
+
+    when(fulfilmentRequestService.processSMSRequestReceiver(eq(event), any(), eq(caseId)))
+        .thenReturn(smsRequestEnrichedEvent);
+
+    when(fulfilmentRequestService.processSMSFulfilmentService(
+            eq(smsRequestEnrichedEvent), any(), eq(parentCase)))
+        .thenReturn(returnedCase);
+
+    underTest.receiveMessage(msg);
+
+    verify(eventLogger)
+        .logCaseEvent(
+            eq(returnedCase),
+            eq("SMS fulfilment request received"),
+            eq(EventType.SMS_FULFILMENT),
+            eq(smsRequestEnrichedEvent),
+            eq(msg)); // TODO: Check warning and fix it.
   }
 
   private Message<byte[]> buildMessage(EventDTO event) throws JsonProcessingException {
