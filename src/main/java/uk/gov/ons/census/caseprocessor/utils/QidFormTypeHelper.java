@@ -27,7 +27,6 @@ public class QidFormTypeHelper {
 
   private QidFormTypeHelper() {}
 
-  @SuppressWarnings("PMD.GuardLogStatement")
   public static String mapQidToFormType(String qid) {
     Integer questionnaireType = parseQuestionnaireTypePrefix(qid);
     if (questionnaireType == null) {
@@ -45,7 +44,6 @@ public class QidFormTypeHelper {
     return formType;
   }
 
-  @SuppressWarnings("PMD.GuardLogStatement")
   private static Integer parseQuestionnaireTypePrefix(String qid) {
     if (qid == null || qid.length() < 2) {
       log.atWarn()
