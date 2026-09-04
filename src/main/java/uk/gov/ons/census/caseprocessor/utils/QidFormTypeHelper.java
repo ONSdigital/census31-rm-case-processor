@@ -36,8 +36,11 @@ public class QidFormTypeHelper {
 
     String formType = FORM_TYPE_MAP.get(questionnaireType);
     if (formType == null) {
-      log.warn(
-          "Unable to parse form type from QID: unknown questionnaire type '{}'", questionnaireType);
+      log.atWarn()
+          .setMessage("Unable to parse form type from QID: unknown questionnaire type")
+          .addKeyValue("qid", qid)
+          .addKeyValue("questionnaireType", questionnaireType)
+          .log();
     }
     return formType;
   }
@@ -45,13 +48,20 @@ public class QidFormTypeHelper {
   @SuppressWarnings("PMD.GuardLogStatement")
   private static Integer parseQuestionnaireTypePrefix(String qid) {
     if (qid == null || qid.length() < 2) {
-      log.warn("Unable to parse form type from QID: QID is null or too short");
+      log.atWarn()
+          .setMessage("Unable to parse form type from QID: QID is null or too short")
+          .addKeyValue("qid", qid)
+          .log();
       return null;
     }
 
     String prefix = qid.substring(0, 2);
     if (!prefix.chars().allMatch(Character::isDigit)) {
-      log.warn("Unable to parse form type from QID: non-numeric prefix '{}'", prefix);
+      log.atWarn()
+          .setMessage("Unable to parse form type from QID: non-numeric prefix")
+          .addKeyValue("qid", qid)
+          .addKeyValue("prefix", prefix)
+          .log();
       return null;
     }
 
