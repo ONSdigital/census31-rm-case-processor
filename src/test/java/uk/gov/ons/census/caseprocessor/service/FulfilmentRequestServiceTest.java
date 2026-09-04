@@ -222,7 +222,7 @@ class FulfilmentRequestServiceTest {
     // --- Arrange ---
     UUID caseId = UUID.randomUUID();
 
-    EventDTO event = setupPrintFulfilmentRequestEvent(caseId);
+    EventDTO event = setupPrintFulfilmentRequestEvent(caseId, null);
 
     // Duplicate check → false
     when(fulfilmentToProcessRepository.existsByMessageId(event.getHeader().getMessageId()))
@@ -276,7 +276,7 @@ class FulfilmentRequestServiceTest {
   void testProcessPrintFulfilmentReceiver_duplicateMessage_returnsNull() {
     // --- Arrange ---
     UUID caseId = UUID.randomUUID();
-    EventDTO event = setupPrintFulfilmentRequestEvent(caseId);
+    EventDTO event = setupPrintFulfilmentRequestEvent(caseId, null);
     Case caze = new Case();
     caze.setId(caseId);
 
@@ -294,7 +294,7 @@ class FulfilmentRequestServiceTest {
   void testProcessPrintFulfilmentReceiver_templateNotAllowed_throws() {
     // --- Arrange ---
     UUID caseId = UUID.randomUUID();
-    EventDTO event = setupPrintFulfilmentRequestEvent(caseId);
+    EventDTO event = setupPrintFulfilmentRequestEvent(caseId, null);
 
     when(fulfilmentToProcessRepository.existsByMessageId(event.getHeader().getMessageId()))
         .thenReturn(false);
@@ -314,7 +314,7 @@ class FulfilmentRequestServiceTest {
   void testProcessFulfilmentForIndividual_MessageAlreadyExists_ReturnsNull() {
     // Arrange
     UUID caseId = UUID.randomUUID();
-    EventDTO event = setupPrintFulfilmentRequestEvent(caseId);
+    EventDTO event = setupPrintFulfilmentRequestEvent(caseId, null);
     Case caze = new Case();
     caze.setId(caseId);
 
@@ -323,7 +323,8 @@ class FulfilmentRequestServiceTest {
 
     // Act
     Case result =
-        fulfilmentRequestService.processFulfilmentForIndividual(event, caze, caserefgeneratorkey);
+        fulfilmentRequestService.processFulfilmentForIndividual(
+            event, caze, caserefgeneratorkey, null);
 
     // Assert
     assertNull(result);
@@ -332,11 +333,70 @@ class FulfilmentRequestServiceTest {
   }
 
   @Test
+  void testProcessFulfilmentForIndividual_caseId_given_success() {
+    // --- Arrange ---
+    UUID caseId = UUID.randomUUID();
+    UUID individualCaseId = UUID.randomUUID();
+
+    EventDTO event = setupPrintFulfilmentRequestEvent(caseId, individualCaseId);
+
+    // Duplicate check → false
+    when(fulfilmentToProcessRepository.existsByMessageId(event.getHeader().getMessageId()))
+        .thenReturn(false);
+
+    // Build Case → CollectionExercise → Survey → FulfilmentSurveyExportFileTemplate
+    ExportFileTemplate exportFileTemplate = new ExportFileTemplate();
+    exportFileTemplate.setPackCode("P_CODE");
+
+    FulfilmentSurveyExportFileTemplate fset = new FulfilmentSurveyExportFileTemplate();
+    fset.setExportFileTemplate(exportFileTemplate);
+
+    Survey survey = new Survey();
+    survey.setName("Census");
+    survey.setFulfilmentExportFileTemplates(List.of(fset));
+
+    CollectionExercise collectionExercise = new CollectionExercise();
+    collectionExercise.setSurvey(survey);
+
+    Case parentCase = new Case();
+    parentCase.setId(caseId);
+    parentCase.setCollectionExercise(collectionExercise);
+
+    when(caseRepository.saveAndFlush(any(Case.class)))
+        .then(
+            invocation -> {
+              Case caze = new Case();
+              caze.setSecretSequenceNumber(123);
+              caze.setCaseType("HI");
+              caze.setCaseRef(123L);
+              caze.setId(individualCaseId);
+              return caze;
+            });
+
+    // --- Act ---
+    fulfilmentRequestService.processFulfilmentForIndividual(
+        event, parentCase, caserefgeneratorkey, individualCaseId);
+
+    // Then
+    ArgumentCaptor<Case> caseArgumentCaptor = ArgumentCaptor.forClass(Case.class);
+
+    verify(caseService).emitCaseUpdate(caseArgumentCaptor.capture(), any(), any());
+
+    Case childCase = caseArgumentCaptor.getValue();
+
+    // --- Assert ---
+    assertEquals("HI", childCase.getCaseType());
+    assertNull(childCase.getRefusalReceived());
+    assertFalse(childCase.isReceiptReceived());
+    assertNotNull(childCase.getCaseRef());
+  }
+
+  @Test
   void testProcessFulfilmentForIndividual_success() {
     // --- Arrange ---
     UUID caseId = UUID.randomUUID();
 
-    EventDTO event = setupPrintFulfilmentRequestEvent(caseId);
+    EventDTO event = setupPrintFulfilmentRequestEvent(caseId, null);
 
     // Duplicate check → false
     when(fulfilmentToProcessRepository.existsByMessageId(event.getHeader().getMessageId()))
@@ -371,7 +431,8 @@ class FulfilmentRequestServiceTest {
             });
 
     // --- Act ---
-    fulfilmentRequestService.processFulfilmentForIndividual(event, parentCase, caserefgeneratorkey);
+    fulfilmentRequestService.processFulfilmentForIndividual(
+        event, parentCase, caserefgeneratorkey, null);
 
     // Then
     ArgumentCaptor<Case> caseArgumentCaptor = ArgumentCaptor.forClass(Case.class);
@@ -496,7 +557,7 @@ class FulfilmentRequestServiceTest {
     return smsTemplate;
   }
 
-  private EventDTO setupPrintFulfilmentRequestEvent(UUID caseId) {
+  private EventDTO setupPrintFulfilmentRequestEvent(UUID caseId, UUID individualCaseId) {
     // --- Arrange ---
     UUID messageId = UUID.randomUUID();
     UUID correlationId = UUID.randomUUID();
@@ -517,6 +578,7 @@ class FulfilmentRequestServiceTest {
     FulfilmentRequest fulfilmentRequest = new FulfilmentRequest();
     fulfilmentRequest.setCaseId(caseId);
     fulfilmentRequest.setFulfilmentCode("P_CODE");
+    if (individualCaseId != null) fulfilmentRequest.setIndividualCaseId(individualCaseId);
     fulfilmentRequest.setContact(contact);
 
     PayloadDTO payload = new PayloadDTO();

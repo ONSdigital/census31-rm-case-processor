@@ -400,6 +400,60 @@ public class FulfilmentRequestReceiverIT {
     assertThat(childCase.get().getCaseType()).isEqualTo("HI");
   }
 
+  @Test
+  void testFulfilmentIndividualWithIndividualCaseIdRequestForExport() throws InterruptedException {
+
+    // Given
+    Case caze = junkDataHelper.setupJunkCase();
+    ExportFileTemplate exportFileTemplate =
+        junkDataHelper.setUpJunkExportFileTemplate(new String[] {"__request__.name"}, "P_OR_I1");
+    junkDataHelper.linkExportFileTemplateToSurveyFulfilment(
+        exportFileTemplate, caze.getCollectionExercise().getSurvey());
+    UUID individualCaseId = UUID.randomUUID();
+    EventDTO fulfilmentRequestEvent = new EventDTO();
+    fulfilmentRequestEvent.setHeader(new EventHeaderDTO());
+    junkDataHelper.junkify(fulfilmentRequestEvent.getHeader());
+    fulfilmentRequestEvent.getHeader().setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
+    fulfilmentRequestEvent.getHeader().setTopic(FULFILMENT_REQUEST_TOPIC);
+    fulfilmentRequestEvent.getHeader().setMessageType(EventType.FULFILMENT_REQUEST);
+    fulfilmentRequestEvent.getHeader().setMessageId(UUID.randomUUID());
+    fulfilmentRequestEvent.setPayload(new PayloadDTO());
+    FulfilmentRequest fulfilmentRequest = new FulfilmentRequest();
+    fulfilmentRequest.setCaseId(caze.getId());
+    fulfilmentRequest.setFulfilmentCode(exportFileTemplate.getPackCode());
+    Contact contact = new Contact();
+    contact.setTitle("Mr.");
+    contact.setForename("Joe");
+    contact.setSurname("Bloggs");
+    fulfilmentRequest.setContact(contact);
+    fulfilmentRequest.setIndividualCaseId(individualCaseId);
+    fulfilmentRequestEvent.getPayload().setFulfilmentRequest(fulfilmentRequest);
+
+    // When
+    pubsubHelper.sendMessageToPubsubProject(FULFILMENT_REQUEST_TOPIC, fulfilmentRequestEvent);
+
+    // Then
+    List<FulfilmentToProcess> fulfilmentsToProcess = getFulfilmentsToProcess();
+    assertThat(fulfilmentsToProcess).hasSize(1);
+    FulfilmentToProcess fulfilmentToProcess = fulfilmentsToProcess.get(0);
+
+    Optional<Case> childCase = Optional.ofNullable(fulfilmentToProcess.getCaze());
+    AssertionsForInterfaceTypes.assertThat(childCase.isPresent()).isTrue();
+    assertThat(childCase.get().getCaseType()).isEqualTo("HI");
+    AssertionsForInterfaceTypes.assertThat(childCase.get().getId()).isNotEqualTo(TEST_CASE_ID);
+
+    assertThat(fulfilmentToProcess.getCorrelationId())
+        .isEqualTo(fulfilmentRequestEvent.getHeader().getCorrelationId());
+    assertThat(fulfilmentToProcess.getExportFileTemplate()).isEqualTo(exportFileTemplate);
+    assertThat(fulfilmentToProcess.getPersonalisation()).isEqualTo(contact.toMap());
+    assertThat(fulfilmentToProcess.getMessageId())
+        .isEqualTo(fulfilmentRequestEvent.getHeader().getMessageId());
+
+    List<Case> caseList = caseRepository.findByUprn(childCase.get().getUprn());
+    AssertionsForInterfaceTypes.assertThat(caseList.size()).isGreaterThan(1);
+    assertThat(childCase.get().getId()).isEqualTo(individualCaseId);
+  }
+
   private List<FulfilmentToProcess> getFulfilmentsToProcess() throws InterruptedException {
     List<FulfilmentToProcess> fulfilmentsToProcess;
     for (int i = 0; i < 10; i++) {

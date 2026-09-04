@@ -77,9 +77,16 @@ public class FulfilmentRequestReceiver {
 
       checkParentCaseIsHH(eventCase);
 
+      UUID individualCaseId = fulfilmentRequest.getIndividualCaseId();
+      if (individualCaseId != null
+          && fulfilmentRequestService.isCaseAlreadyExists(individualCaseId)) {
+        throw new RuntimeException(
+            "Case already exists in the DB for the given individual case id");
+      }
+
       Case individualCase =
           fulfilmentRequestService.processFulfilmentForIndividual(
-              event, eventCase, caserefgeneratorkey);
+              event, eventCase, caserefgeneratorkey, individualCaseId);
 
       eventLogger.logCaseEvent(
           individualCase, "New case created", EventType.NEW_CASE, event, message);

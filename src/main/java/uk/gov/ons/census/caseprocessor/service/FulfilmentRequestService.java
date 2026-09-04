@@ -180,13 +180,13 @@ public class FulfilmentRequestService {
   }
 
   public Case processFulfilmentForIndividual(
-      EventDTO event, Case caze, byte[] caserefgeneratorkey) {
+      EventDTO event, Case caze, byte[] caserefgeneratorkey, UUID individualCaseId) {
 
     if (doesFulfilmentMessageAlreadyExist(event)) {
       return null;
     }
 
-    Case childCase = createChildCase(caze);
+    Case childCase = createChildCase(caze, individualCaseId);
     childCase.setCaseType("HI");
 
     Case newCase = caseRepository.saveAndFlush(childCase);
@@ -195,7 +195,6 @@ public class FulfilmentRequestService {
         CaseRefGenerator.getCaseRef(newCase.getSecretSequenceNumber(), caserefgeneratorkey));
     newCase = caseRepository.saveAndFlush(newCase);
 
-    // should trigger the emitCaseUpdate or trigger the New Case Event?
     caseService.emitCaseUpdate(
         newCase, event.getHeader().getCorrelationId(), event.getHeader().getOriginatingUser());
 
@@ -257,13 +256,17 @@ public class FulfilmentRequestService {
     return smsTemplate;
   }
 
+  public boolean isCaseAlreadyExists(UUID caseId) {
+    return caseRepository.existsById(caseId);
+  }
+
   public Optional<ExportFileTemplate> getExportFileTemplate(String packCode) {
     Optional<ExportFileTemplate> exportFileTemplate =
         exportFileTemplateRepository.findById(packCode);
     return exportFileTemplate;
   }
 
-  private Case createChildCase(Case caze) {
+  private Case createChildCase(Case caze, UUID individualCaseId) {
     Case childCase = new Case();
     childCase.setCollectionExercise(caze.getCollectionExercise());
     childCase.setAbpCode(caze.getAbpCode());
@@ -293,7 +296,8 @@ public class FulfilmentRequestService {
     childCase.setTownName(caze.getTownName());
     childCase.setTreatmentCode(caze.getTreatmentCode());
     childCase.setUprn(caze.getUprn());
-    childCase.setId(UUID.randomUUID());
+    if (individualCaseId == null) childCase.setId(UUID.randomUUID());
+    else childCase.setId(individualCaseId);
     return childCase;
   }
 }
