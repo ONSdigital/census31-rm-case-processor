@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="Census31 Code Quality Rules"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 http://pmd.sourceforge.net/ruleset_2_0_0.xsd">
+
+    <description>
+        Custom PMD ruleset for Census31 RM services.
+        Based on PMD's bestpractices and security rulesets with selective exclusions
+        for project-specific patterns and practices.
+    </description>
+
+    <!-- Best Practices Rules -->
+    <rule ref="category/java/bestpractices.xml">
+        <!-- GuardLogStatement: We use slf4j with structured logging (log.atLevel().addKeyValue())
+             which is more efficient than guard clauses for our logging patterns.
+             See: https://github.com/ONSdigital/census31-rm-case-processor/pull/29 -->
+        <exclude name="GuardLogStatement"/>
+    </rule>
+
+    <!-- Security Rules -->
+    <rule ref="category/java/security.xml"/>
+
+</ruleset>
