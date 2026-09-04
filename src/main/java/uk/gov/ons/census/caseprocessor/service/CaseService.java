@@ -10,6 +10,7 @@ import uk.gov.ons.census.caseprocessor.messaging.MessageSender;
 import uk.gov.ons.census.caseprocessor.model.dto.CaseUpdateDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.EventHeaderDTO;
+import uk.gov.ons.census.caseprocessor.model.dto.FieldActionInstruction;
 import uk.gov.ons.census.caseprocessor.model.dto.PayloadDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.RefusalTypeDTO;
 import uk.gov.ons.census.caseprocessor.model.repository.CaseRepository;
@@ -44,9 +45,21 @@ public class CaseService {
   }
 
   public void emitCaseUpdate(Case caze, UUID correlationId, String originatingUser) {
+    emitCaseUpdate(caze, correlationId, originatingUser, null);
+  }
+
+  public void emitCaseUpdate(
+      Case caze,
+      UUID correlationId,
+      String originatingUser,
+      FieldActionInstruction fieldActionInstruction) {
     EventHeaderDTO eventHeader =
         EventHelper.createEventDTO(
             caseUpdateTopic, correlationId, originatingUser, EventType.CASE_UPDATE);
+
+    if (fieldActionInstruction != null) {
+      eventHeader.setFieldActionInstruction(fieldActionInstruction);
+    }
 
     EventDTO event = prepareCaseEvent(caze, eventHeader);
 
