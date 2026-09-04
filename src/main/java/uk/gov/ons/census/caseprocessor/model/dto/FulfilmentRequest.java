@@ -7,5 +7,6 @@ import lombok.Data;
 public class FulfilmentRequest {
   private UUID caseId;
   private String fulfilmentCode;
+  private UUID individualCaseId;
   private Contact contact;
 }

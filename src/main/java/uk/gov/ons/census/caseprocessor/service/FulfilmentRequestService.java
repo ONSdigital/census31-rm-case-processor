@@ -16,6 +16,7 @@ import uk.gov.ons.census.caseprocessor.model.repository.CaseRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.ExportFileTemplateRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.FulfilmentToProcessRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.SmsTemplateRepository;
+import uk.gov.ons.census.caseprocessor.utils.CaseRefGenerator;
 import uk.gov.ons.census.caseprocessor.utils.Constants;
 import uk.gov.ons.census.common.model.entity.*;
 
@@ -50,19 +51,11 @@ public class FulfilmentRequestService {
     this.messageSender = messageSender;
   }
 
-  public Case processPrintFulfilmentReceiver(EventDTO event) {
-    if (fulfilmentToProcessRepository.existsByMessageId(event.getHeader().getMessageId())) {
-      log.atInfo()
-          .setMessage(
-              "Received duplicate fulfilment message ID, ignoring and acking the duplicate message")
-          .addKeyValue("correlationId", event.getHeader().getCorrelationId())
-          .addKeyValue("messageId", event.getHeader().getMessageId())
-          .log();
-
+  public Case processPrintFulfilmentReceiver(EventDTO event, Case caze) {
+    if (doesFulfilmentMessageAlreadyExist(event)) {
       return null;
     }
     FulfilmentRequest printFulfilmentRequest = event.getPayload().getFulfilmentRequest();
-    Case caze = caseService.getCase(printFulfilmentRequest.getCaseId());
 
     ExportFileTemplate exportFileTemplate =
         getAllowedPrintTemplate(printFulfilmentRequest.getFulfilmentCode(), caze);
@@ -81,21 +74,22 @@ public class FulfilmentRequestService {
   }
 
   public EventDTO processSMSRequestReceiver(
-      EventDTO fulfilmentRequestEvent, String smsRequestEnrichedTopic) {
+      EventDTO fulfilmentRequestEvent, String smsRequestEnrichedTopic, UUID caseId) {
     EventHeaderDTO fulfilmentRequestHeader = fulfilmentRequestEvent.getHeader();
     FulfilmentRequest fulfilmentRequest =
         fulfilmentRequestEvent.getPayload().getFulfilmentRequest();
+    fulfilmentRequest.setCaseId(caseId);
 
     SmsTemplate smsTemplate =
         smsTemplateRepository
-            .findById(fulfilmentRequest.getFulfilmentCode())
+            .findById(String.valueOf(fulfilmentRequest.getFulfilmentCode()))
             .orElseThrow(
                 () ->
                     new RuntimeException(
                         "SMS Template not found: " + fulfilmentRequest.getFulfilmentCode()));
 
-    if (!caseRepository.existsById(fulfilmentRequest.getCaseId())) {
-      throw new RuntimeException("Case not found with ID: " + fulfilmentRequest.getCaseId());
+    if (!caseRepository.existsById(caseId)) {
+      throw new RuntimeException("Case not found with ID: " + caseId);
     }
 
     Optional<UacQidDTO> newUacQidPair;
@@ -108,7 +102,7 @@ public class FulfilmentRequestService {
           .setMessage("Failed to fetch UAC QID pair for SMS request event")
           .addKeyValue("messageId", fulfilmentRequestHeader.getMessageId())
           .addKeyValue("correlationId", fulfilmentRequestHeader.getCorrelationId())
-          .addKeyValue("caseId", fulfilmentRequest.getCaseId())
+          .addKeyValue("caseId", caseId)
           .addKeyValue("packCode", smsTemplate.getPackCode())
           .log();
       throw new RuntimeException(
@@ -126,11 +120,9 @@ public class FulfilmentRequestService {
   }
 
   public Case processSMSFulfilmentService(
-      EventDTO smsRequestEnrichedEvent, String smsRequestEnrichedTopic) {
+      EventDTO smsRequestEnrichedEvent, String smsRequestEnrichedTopic, Case caze) {
     SmsRequestEnriched smsRequestEnriched =
         smsRequestEnrichedEvent.getPayload().getSmsRequestEnriched();
-
-    Case caze = caseService.getCase(smsRequestEnriched.getCaseId());
 
     uacService.createLinkAndEmitNewUacQid(
         caze,
@@ -187,6 +179,41 @@ public class FulfilmentRequestService {
         Arrays.asList(template), List.of(TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY));
   }
 
+  public Case processFulfilmentForIndividual(
+      EventDTO event, Case caze, byte[] caserefgeneratorkey, UUID individualCaseId) {
+
+    if (doesFulfilmentMessageAlreadyExist(event)) {
+      return null;
+    }
+
+    Case childCase = createChildCase(caze, individualCaseId);
+    childCase.setCaseType("HI");
+
+    Case newCase = caseRepository.saveAndFlush(childCase);
+
+    newCase.setCaseRef(
+        CaseRefGenerator.getCaseRef(newCase.getSecretSequenceNumber(), caserefgeneratorkey));
+    newCase = caseRepository.saveAndFlush(newCase);
+
+    caseService.emitCaseUpdate(
+        newCase, event.getHeader().getCorrelationId(), event.getHeader().getOriginatingUser());
+
+    return newCase;
+  }
+
+  private boolean doesFulfilmentMessageAlreadyExist(EventDTO event) {
+    if (fulfilmentToProcessRepository.existsByMessageId(event.getHeader().getMessageId())) {
+      log.atInfo()
+          .setMessage(
+              "Received duplicate fulfilment message ID, ignoring and acking the duplicate message")
+          .addKeyValue("correlationId", event.getHeader().getCorrelationId())
+          .addKeyValue("messageId", event.getHeader().getMessageId())
+          .log();
+      return true;
+    }
+    return false;
+  }
+
   private EventDTO buildSmsRequestEnrichedEvent(
       FulfilmentRequest smsRequest,
       EventHeaderDTO fulfilmentRequestHeader,
@@ -229,9 +256,48 @@ public class FulfilmentRequestService {
     return smsTemplate;
   }
 
+  public boolean isCaseAlreadyExists(UUID caseId) {
+    return caseRepository.existsById(caseId);
+  }
+
   public Optional<ExportFileTemplate> getExportFileTemplate(String packCode) {
     Optional<ExportFileTemplate> exportFileTemplate =
         exportFileTemplateRepository.findById(packCode);
     return exportFileTemplate;
+  }
+
+  private Case createChildCase(Case caze, UUID individualCaseId) {
+    Case childCase = new Case();
+    childCase.setCollectionExercise(caze.getCollectionExercise());
+    childCase.setAbpCode(caze.getAbpCode());
+    childCase.setAddressLine1(caze.getAddressLine1());
+    childCase.setAddressLine2(caze.getAddressLine2());
+    childCase.setAddressLine3(caze.getAddressLine3());
+    childCase.setAddressLevel(caze.getAddressLevel());
+    childCase.setAddressType(caze.getAddressType());
+    childCase.setCeExpectedCapacity(caze.getCeExpectedCapacity());
+    childCase.setEstabType(caze.getEstabType());
+    childCase.setEstabUprn(caze.getEstabUprn());
+    childCase.setFieldCoordinatorId(caze.getFieldCoordinatorId());
+    childCase.setFieldOfficerId(caze.getFieldOfficerId());
+    childCase.setHtcDigital(caze.getHtcDigital());
+    childCase.setHtcWillingness(caze.getHtcWillingness());
+    childCase.setLad(caze.getLad());
+    childCase.setLatitude(caze.getLatitude());
+    childCase.setLongitude(caze.getLongitude());
+    childCase.setLsoa(caze.getLsoa());
+    childCase.setMsoa(caze.getMsoa());
+    childCase.setOa(caze.getOa());
+    childCase.setOrganisationName(caze.getOrganisationName());
+    childCase.setPrintBatch(caze.getPrintBatch());
+    childCase.setPostcode(caze.getPostcode());
+    childCase.setRegion(caze.getRegion());
+    childCase.setSecureEstablishment(caze.isSecureEstablishment());
+    childCase.setTownName(caze.getTownName());
+    childCase.setTreatmentCode(caze.getTreatmentCode());
+    childCase.setUprn(caze.getUprn());
+    if (individualCaseId == null) childCase.setId(UUID.randomUUID());
+    else childCase.setId(individualCaseId);
+    return childCase;
   }
 }

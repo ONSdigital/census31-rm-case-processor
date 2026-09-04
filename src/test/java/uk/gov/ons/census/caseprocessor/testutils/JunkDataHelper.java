@@ -89,9 +89,13 @@ public class JunkDataHelper {
   }
 
   public ExportFileTemplate setUpJunkExportFileTemplate(String[] template) {
+    return setUpJunkExportFileTemplate(template, null);
+  }
+
+  public ExportFileTemplate setUpJunkExportFileTemplate(String[] template, String packCode) {
     ExportFileTemplate junkExportFileTemplate = new ExportFileTemplate();
     junkExportFileTemplate.setExportFileDestination("junk");
-    junkExportFileTemplate.setPackCode("JUNK");
+    junkExportFileTemplate.setPackCode((packCode == null ? "JUNK" : packCode));
     junkExportFileTemplate.setTemplate(template);
     junkExportFileTemplate.setDescription("junk");
     junkExportFileTemplate.setQuestionnaireType(1);

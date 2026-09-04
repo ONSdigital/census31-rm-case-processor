@@ -13,7 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import org.assertj.core.api.AssertionsForInterfaceTypes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,6 +51,8 @@ public class FulfilmentRequestReceiverIT {
   @Autowired private JunkDataHelper junkDataHelper;
   @Autowired private FulfilmentToProcessRepository fulfilmentToProcessRepository;
   @Autowired private UacQidLinkRepository uacQidLinkRepository;
+  @Autowired private EventRepository eventRepository;
+  private static final UUID TEST_CASE_ID = UUID.randomUUID();
 
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -297,6 +301,157 @@ public class FulfilmentRequestReceiverIT {
       assertThat(smsRequestEnrichedReceived.getQid()).isEqualTo("TEST_QID");
       assertThat(smsRequestEnrichedReceived.getUac()).isEqualTo("TEST_UAC");
     }
+  }
+
+  @Test
+  void testFulfilmentIndividualRequestForExport() throws InterruptedException {
+
+    // Given
+    Case caze = junkDataHelper.setupJunkCase();
+    ExportFileTemplate exportFileTemplate =
+        junkDataHelper.setUpJunkExportFileTemplate(new String[] {"__request__.name"}, "P_OR_I1");
+    junkDataHelper.linkExportFileTemplateToSurveyFulfilment(
+        exportFileTemplate, caze.getCollectionExercise().getSurvey());
+
+    EventDTO fulfilmentRequestEvent = new EventDTO();
+    fulfilmentRequestEvent.setHeader(new EventHeaderDTO());
+    junkDataHelper.junkify(fulfilmentRequestEvent.getHeader());
+    fulfilmentRequestEvent.getHeader().setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
+    fulfilmentRequestEvent.getHeader().setTopic(FULFILMENT_REQUEST_TOPIC);
+    fulfilmentRequestEvent.getHeader().setMessageType(EventType.FULFILMENT_REQUEST);
+    fulfilmentRequestEvent.getHeader().setMessageId(UUID.randomUUID());
+    fulfilmentRequestEvent.setPayload(new PayloadDTO());
+    FulfilmentRequest fulfilmentRequest = new FulfilmentRequest();
+    fulfilmentRequest.setCaseId(caze.getId());
+    fulfilmentRequest.setFulfilmentCode(exportFileTemplate.getPackCode());
+    Contact contact = new Contact();
+    contact.setTitle("Mr.");
+    contact.setForename("Joe");
+    contact.setSurname("Bloggs");
+    fulfilmentRequest.setContact(contact);
+    fulfilmentRequestEvent.getPayload().setFulfilmentRequest(fulfilmentRequest);
+
+    // When
+    pubsubHelper.sendMessageToPubsubProject(FULFILMENT_REQUEST_TOPIC, fulfilmentRequestEvent);
+
+    // Then
+    List<FulfilmentToProcess> fulfilmentsToProcess = getFulfilmentsToProcess();
+    assertThat(fulfilmentsToProcess).hasSize(1);
+    FulfilmentToProcess fulfilmentToProcess = fulfilmentsToProcess.get(0);
+
+    Optional<Case> childCase = Optional.ofNullable(fulfilmentToProcess.getCaze());
+    AssertionsForInterfaceTypes.assertThat(childCase.isPresent()).isTrue();
+    assertThat(childCase.get().getCaseType()).isEqualTo("HI");
+    AssertionsForInterfaceTypes.assertThat(childCase.get().getId()).isNotEqualTo(TEST_CASE_ID);
+
+    assertThat(fulfilmentToProcess.getCorrelationId())
+        .isEqualTo(fulfilmentRequestEvent.getHeader().getCorrelationId());
+    assertThat(fulfilmentToProcess.getExportFileTemplate()).isEqualTo(exportFileTemplate);
+    assertThat(fulfilmentToProcess.getPersonalisation()).isEqualTo(contact.toMap());
+    assertThat(fulfilmentToProcess.getMessageId())
+        .isEqualTo(fulfilmentRequestEvent.getHeader().getMessageId());
+
+    List<Case> caseList = caseRepository.findByUprn(childCase.get().getUprn());
+    AssertionsForInterfaceTypes.assertThat(caseList.size()).isGreaterThan(1);
+  }
+
+  @Test
+  void testFulfilmentIndividualRequestForSms() throws InterruptedException {
+    // Given
+    Case testCase = junkDataHelper.setupJunkCase();
+
+    SmsTemplate smsTemplate = new SmsTemplate();
+    smsTemplate.setPackCode("UACIT1");
+    smsTemplate.setTemplate(
+        new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY, REQUEST_PERSONALISATION_PREFIX + "name"});
+    smsTemplate.setNotifyTemplateId(UUID.randomUUID());
+    smsTemplate.setDescription("Test description");
+    smsTemplate.setNotifyServiceRef("test-service");
+    smsTemplate.setQuestionnaireType(99);
+    smsTemplateRepository.saveAndFlush(smsTemplate);
+
+    EventDTO fulfilmentRequestEvent = new EventDTO();
+    fulfilmentRequestEvent.setHeader(new EventHeaderDTO());
+    junkDataHelper.junkify(fulfilmentRequestEvent.getHeader());
+    fulfilmentRequestEvent.getHeader().setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
+    fulfilmentRequestEvent.getHeader().setTopic(FULFILMENT_REQUEST_TOPIC);
+    fulfilmentRequestEvent.getHeader().setMessageId(UUID.randomUUID());
+    fulfilmentRequestEvent.getHeader().setMessageType(EventType.FULFILMENT_REQUEST);
+    fulfilmentRequestEvent.setPayload(new PayloadDTO());
+    FulfilmentRequest fulfilmentRequest = new FulfilmentRequest();
+    fulfilmentRequest.setCaseId(testCase.getId());
+    fulfilmentRequest.setFulfilmentCode("UACIT1");
+    Contact contact = new Contact();
+    contact.setTelNo("07788660011");
+    fulfilmentRequest.setContact(contact);
+    fulfilmentRequestEvent.getPayload().setFulfilmentRequest(fulfilmentRequest);
+
+    // When
+    pubsubHelper.sendMessageToPubsubProject(FULFILMENT_REQUEST_TOPIC, fulfilmentRequestEvent);
+    sleep(3000);
+
+    // Then
+    List<UacQidLink> uacQidLinks = uacQidLinkRepository.findAll();
+    assertThat(uacQidLinks.size()).isEqualTo(1);
+    assertThat(uacQidLinks.get(0).getCaze().getId()).isNotEqualTo(testCase.getId());
+    Optional<Case> childCase = Optional.ofNullable(uacQidLinks.get(0).getCaze());
+
+    assertThat(childCase.get().getUprn()).isEqualTo(testCase.getUprn());
+    assertThat(childCase.get().getCaseType()).isEqualTo("HI");
+  }
+
+  @Test
+  void testFulfilmentIndividualWithIndividualCaseIdRequestForExport() throws InterruptedException {
+
+    // Given
+    Case caze = junkDataHelper.setupJunkCase();
+    ExportFileTemplate exportFileTemplate =
+        junkDataHelper.setUpJunkExportFileTemplate(new String[] {"__request__.name"}, "P_OR_I1");
+    junkDataHelper.linkExportFileTemplateToSurveyFulfilment(
+        exportFileTemplate, caze.getCollectionExercise().getSurvey());
+    UUID individualCaseId = UUID.randomUUID();
+    EventDTO fulfilmentRequestEvent = new EventDTO();
+    fulfilmentRequestEvent.setHeader(new EventHeaderDTO());
+    junkDataHelper.junkify(fulfilmentRequestEvent.getHeader());
+    fulfilmentRequestEvent.getHeader().setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
+    fulfilmentRequestEvent.getHeader().setTopic(FULFILMENT_REQUEST_TOPIC);
+    fulfilmentRequestEvent.getHeader().setMessageType(EventType.FULFILMENT_REQUEST);
+    fulfilmentRequestEvent.getHeader().setMessageId(UUID.randomUUID());
+    fulfilmentRequestEvent.setPayload(new PayloadDTO());
+    FulfilmentRequest fulfilmentRequest = new FulfilmentRequest();
+    fulfilmentRequest.setCaseId(caze.getId());
+    fulfilmentRequest.setFulfilmentCode(exportFileTemplate.getPackCode());
+    Contact contact = new Contact();
+    contact.setTitle("Mr.");
+    contact.setForename("Joe");
+    contact.setSurname("Bloggs");
+    fulfilmentRequest.setContact(contact);
+    fulfilmentRequest.setIndividualCaseId(individualCaseId);
+    fulfilmentRequestEvent.getPayload().setFulfilmentRequest(fulfilmentRequest);
+
+    // When
+    pubsubHelper.sendMessageToPubsubProject(FULFILMENT_REQUEST_TOPIC, fulfilmentRequestEvent);
+
+    // Then
+    List<FulfilmentToProcess> fulfilmentsToProcess = getFulfilmentsToProcess();
+    assertThat(fulfilmentsToProcess).hasSize(1);
+    FulfilmentToProcess fulfilmentToProcess = fulfilmentsToProcess.get(0);
+
+    Optional<Case> childCase = Optional.ofNullable(fulfilmentToProcess.getCaze());
+    AssertionsForInterfaceTypes.assertThat(childCase.isPresent()).isTrue();
+    assertThat(childCase.get().getCaseType()).isEqualTo("HI");
+    AssertionsForInterfaceTypes.assertThat(childCase.get().getId()).isNotEqualTo(TEST_CASE_ID);
+
+    assertThat(fulfilmentToProcess.getCorrelationId())
+        .isEqualTo(fulfilmentRequestEvent.getHeader().getCorrelationId());
+    assertThat(fulfilmentToProcess.getExportFileTemplate()).isEqualTo(exportFileTemplate);
+    assertThat(fulfilmentToProcess.getPersonalisation()).isEqualTo(contact.toMap());
+    assertThat(fulfilmentToProcess.getMessageId())
+        .isEqualTo(fulfilmentRequestEvent.getHeader().getMessageId());
+
+    List<Case> caseList = caseRepository.findByUprn(childCase.get().getUprn());
+    AssertionsForInterfaceTypes.assertThat(caseList.size()).isGreaterThan(1);
+    assertThat(childCase.get().getId()).isEqualTo(individualCaseId);
   }
 
   private List<FulfilmentToProcess> getFulfilmentsToProcess() throws InterruptedException {
