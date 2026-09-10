@@ -176,7 +176,7 @@ class NewCaseReceiverTest {
     NewCase newCase = new NewCase();
     newCase.setCaseId(TEST_CASE_ID);
     newCase.setCollectionExerciseId(TEST_CASE_COLLECTION_EXERCISE_ID);
-    newCase.setTreatmentCode("HH_OBXN");
+    newCase.setTreatmentCode("HH_ONS");
     newCase.setAddressType("H");
     newCase.setUprn("1234567890123456789");
     newCase.setEstabUprn("1234567890");
@@ -243,7 +243,7 @@ class NewCaseReceiverTest {
     newCase.setCaseId(TEST_CASE_ID);
     newCase.setCollectionExerciseId(TEST_CASE_COLLECTION_EXERCISE_ID);
 
-    newCase.setTreatmentCode("HH_OAXN");
+    newCase.setTreatmentCode("HH_ONS");
     newCase.setAddressType("H");
     newCase.setUprn("1234567890");
     newCase.setEstabUprn("1234567890");
