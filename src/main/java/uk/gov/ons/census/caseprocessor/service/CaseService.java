@@ -36,8 +36,16 @@ public class CaseService {
   }
 
   public void saveCaseAndEmitCaseUpdate(Case caze, UUID correlationId, String originatingUser) {
+    saveCaseAndEmitCaseUpdate(caze, correlationId, originatingUser, null);
+  }
+
+  public void saveCaseAndEmitCaseUpdate(
+      Case caze,
+      UUID correlationId,
+      String originatingUser,
+      FieldActionInstruction fieldActionInstruction) {
     saveCase(caze);
-    emitCaseUpdate(caze, correlationId, originatingUser);
+    emitCaseUpdate(caze, correlationId, originatingUser, fieldActionInstruction);
   }
 
   public void saveCase(Case caze) {

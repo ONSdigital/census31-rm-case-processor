@@ -184,7 +184,8 @@ class ActionRuleIT {
       assertThat(rme.getHeader().getTopic()).isEqualTo(uacUpdateTopic);
       assertThat(rme.getPayload().getUacUpdate().getCaseId()).isEqualTo(caze.getId());
       assertThat(rme.getPayload().getUacUpdate().isActive()).isFalse();
-      assertThat(rme.getPayload().getUacUpdate().getQid()).isEqualTo(uacQidLink.getQid());
+      assertThat(rme.getPayload().getUacUpdate().getQuestionnaireId())
+          .isEqualTo(uacQidLink.getQid());
 
       assertThat(uacQidLinkRepository.findByQid(uacQidLink.getQid()).get().isActive()).isFalse();
     }
