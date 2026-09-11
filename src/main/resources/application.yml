@@ -41,7 +41,7 @@ queueconfig:
   email-confirmation-subscription: rm-internal-email-confirmation_case-processor
   new-case-subscription: event_new-case_rm-case-processor
   receipt-subscription: event_receipt_rm-case-processor
-  refusal-subscription: event_refusal_rm-case-processor
+  refusal-subscription: event_refusal-received_rm-case-processor
   invalid-case-subscription: event_invalid-case_rm-case-processor
   survey-launched-subscription: event_survey-launched_rm-case-processor
   fulfilment-request-subscription: event_fulfilment-request_rm-case-processor
