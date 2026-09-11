@@ -107,7 +107,7 @@
         <dependency>
             <groupId>uk.gov.ons.census</groupId>
             <artifactId>census-rm-common-entity-model</artifactId>
-            <version>0.0.2-SNAPSHOT</version>
+            <version>0.0.2</version>
         </dependency>
         <dependency>
             <groupId>uk.gov.ons.census</groupId>
