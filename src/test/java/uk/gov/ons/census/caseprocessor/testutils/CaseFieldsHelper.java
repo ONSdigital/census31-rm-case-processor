@@ -6,7 +6,7 @@ public class CaseFieldsHelper {
 
   public static Case setDummyCaseFields(Case caseToUpdate) {
     caseToUpdate.setCaseRef(123L);
-    caseToUpdate.setTreatmentCode("HH_QP3E");
+    caseToUpdate.setTreatmentCode("HH_ONS");
     caseToUpdate.setAddressType("H");
     caseToUpdate.setUprn("1234567890");
     caseToUpdate.setEstabUprn("1234567890");
