@@ -17,6 +17,7 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import uk.gov.ons.census.caseprocessor.logging.EventLogger;
 import uk.gov.ons.census.caseprocessor.model.dto.*;
 import uk.gov.ons.census.caseprocessor.model.repository.FulfilmentToProcessRepository;
@@ -492,7 +493,7 @@ public class FulfilmentRequestReceiverTest {
   }
 
   private Message<byte[]> buildMessage(EventDTO event) throws JacksonException {
-    ObjectMapper mapper = new ObjectMapper();
+    final ObjectMapper mapper = JsonMapper.builder().build();
     byte[] payload = mapper.writeValueAsBytes(event);
     return MessageBuilder.withPayload(payload).build();
   }
