@@ -12,4 +12,6 @@ import lombok.NoArgsConstructor;
 public class RefusalDTO {
   private UUID caseId;
   private RefusalTypeDTO type;
+  private String agentId;
+  private String callId;
 }

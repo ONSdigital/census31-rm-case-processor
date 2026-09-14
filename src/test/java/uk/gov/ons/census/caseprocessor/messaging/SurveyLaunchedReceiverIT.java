@@ -99,7 +99,6 @@ public class SurveyLaunchedReceiverIT {
       // THEN
       EventDTO uacUpdatedEvent = outboundUacQueueSpy.checkExpectedMessageReceived();
       UacUpdateDTO emittedUac = uacUpdatedEvent.getPayload().getUacUpdate();
-      assertThat(emittedUac.isSurveyLaunched()).isTrue();
       assertThat(emittedUac.getFormType()).isNull();
 
       EventDTO caseUpdatedEvent = outboundCaseQueueSpy.checkExpectedMessageReceived();

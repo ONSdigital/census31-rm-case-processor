@@ -2,6 +2,7 @@ package uk.gov.ons.census.caseprocessor.messaging;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.ons.census.caseprocessor.testutils.MessageConstructor.constructMessage;
@@ -20,11 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.Message;
 import uk.gov.ons.census.caseprocessor.logging.EventLogger;
-import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
-import uk.gov.ons.census.caseprocessor.model.dto.EventHeaderDTO;
-import uk.gov.ons.census.caseprocessor.model.dto.PayloadDTO;
-import uk.gov.ons.census.caseprocessor.model.dto.RefusalDTO;
-import uk.gov.ons.census.caseprocessor.model.dto.RefusalTypeDTO;
+import uk.gov.ons.census.caseprocessor.model.dto.*;
 import uk.gov.ons.census.caseprocessor.service.CaseService;
 import uk.gov.ons.census.common.model.entity.Case;
 import uk.gov.ons.census.common.model.entity.EventType;
@@ -46,6 +43,8 @@ class RefusalReceiverTest {
     RefusalDTO refusalDTO = new RefusalDTO();
     refusalDTO.setCaseId(CASE_ID);
     refusalDTO.setType(RefusalTypeDTO.HARD_REFUSAL);
+    refusalDTO.setAgentId("0001");
+    refusalDTO.setCallId("0002");
 
     PayloadDTO payloadDTO = new PayloadDTO();
     payloadDTO.setRefusal(refusalDTO);
@@ -75,7 +74,10 @@ class RefusalReceiverTest {
     ArgumentCaptor<Case> caseArgumentCaptor = ArgumentCaptor.forClass(Case.class);
     verify(caseService)
         .saveCaseAndEmitCaseUpdate(
-            caseArgumentCaptor.capture(), eq(TEST_CORRELATION_ID), eq(TEST_ORIGINATING_USER));
+            caseArgumentCaptor.capture(),
+            eq(TEST_CORRELATION_ID),
+            eq(TEST_ORIGINATING_USER),
+            eq(FieldActionInstruction.CANCEL));
     Case actualCase = caseArgumentCaptor.getValue();
 
     assertThat(actualCase.getId()).isEqualTo(CASE_ID);
@@ -83,6 +85,64 @@ class RefusalReceiverTest {
 
     verify(eventLogger)
         .logCaseEvent(
-            eq(caze), eq("Refusal Received"), eq(EventType.REFUSAL), eq(event), eq(message));
+            eq(caze),
+            eq("Refusal Received"),
+            eq(EventType.REFUSAL_RECEIVED),
+            eq(event),
+            eq(message));
+  }
+
+  @Test
+  void testRefusalFromField() {
+    // Given
+    RefusalDTO refusalDTO = new RefusalDTO();
+    refusalDTO.setCaseId(CASE_ID);
+    refusalDTO.setType(RefusalTypeDTO.HARD_REFUSAL);
+
+    PayloadDTO payloadDTO = new PayloadDTO();
+    payloadDTO.setRefusal(refusalDTO);
+
+    EventHeaderDTO eventHeader = new EventHeaderDTO();
+    eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
+    eventHeader.setCorrelationId(TEST_CORRELATION_ID);
+    eventHeader.setOriginatingUser(TEST_ORIGINATING_USER);
+    eventHeader.setChannel("FIELD");
+    eventHeader.setTopic("Test topic");
+    eventHeader.setDateTime(OffsetDateTime.now(ZoneId.of("UTC")));
+
+    EventDTO event = new EventDTO();
+    event.setPayload(payloadDTO);
+    event.setHeader(eventHeader);
+    Message<byte[]> message = constructMessage(event);
+
+    Case caze = new Case();
+    caze.setId(CASE_ID);
+    caze.setRefusalReceived(null);
+
+    when(caseService.getCase(CASE_ID)).thenReturn(caze);
+
+    // When
+    underTest.receiveMessage(message);
+
+    // Then
+    ArgumentCaptor<Case> caseArgumentCaptor = ArgumentCaptor.forClass(Case.class);
+    verify(caseService)
+        .saveCaseAndEmitCaseUpdate(
+            caseArgumentCaptor.capture(),
+            eq(TEST_CORRELATION_ID),
+            eq(TEST_ORIGINATING_USER),
+            isNull());
+    Case actualCase = caseArgumentCaptor.getValue();
+
+    assertThat(actualCase.getId()).isEqualTo(CASE_ID);
+    assertThat(actualCase.getRefusalReceived()).isEqualTo(RefusalType.HARD_REFUSAL);
+
+    verify(eventLogger)
+        .logCaseEvent(
+            eq(caze),
+            eq("Refusal Received"),
+            eq(EventType.REFUSAL_RECEIVED),
+            eq(event),
+            eq(message));
   }
 }
