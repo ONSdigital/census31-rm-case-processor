@@ -14,11 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import uk.gov.ons.census.caseprocessor.model.dto.CaseUpdateDTO;
-import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
-import uk.gov.ons.census.caseprocessor.model.dto.EventHeaderDTO;
-import uk.gov.ons.census.caseprocessor.model.dto.InvalidAddress;
-import uk.gov.ons.census.caseprocessor.model.dto.PayloadDTO;
+import uk.gov.ons.census.caseprocessor.model.dto.*;
 import uk.gov.ons.census.caseprocessor.model.repository.EventRepository;
 import uk.gov.ons.census.caseprocessor.testutils.DeleteDataHelper;
 import uk.gov.ons.census.caseprocessor.testutils.JunkDataHelper;
@@ -60,7 +56,7 @@ public class InvalidAddressReceiverIT {
 
       InvalidAddress invalidAddress = new InvalidAddress();
       invalidAddress.setCaseId(caze.getId());
-      invalidAddress.setReason("Not found");
+      invalidAddress.setReason(InvalidAddressReason.CANT_FIND);
       PayloadDTO payloadDTO = new PayloadDTO();
       payloadDTO.setInvalidAddress(invalidAddress);
       EventDTO event = new EventDTO();
