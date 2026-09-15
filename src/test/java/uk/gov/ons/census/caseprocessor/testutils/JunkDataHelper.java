@@ -60,7 +60,7 @@ public class JunkDataHelper {
     junkCase.setOa("0000");
     junkCase.setMsoa("0000");
     junkCase.setPostcode("CFXX XXX");
-    junkCase.setTreatmentCode("BLJF_FEJG");
+    junkCase.setTreatmentCode("HH_ONS");
     junkCase.setUprn("000000");
     junkCase.setTownName("Best Town");
     caseRepository.save(junkCase);
