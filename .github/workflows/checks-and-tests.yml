@@ -1,0 +1,57 @@
+---
+name: Checks and Tests
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  java-checks-and-tests:
+    name: Java Checks and Tests
+    runs-on: ubuntu-latest
+
+    # Add "id-token" with the required permissions.
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      # Google auth allows maven to pull artifacts from our registry
+      # And acquire a token for authenticating with the docker registry
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          token_format: 'access_token'
+          workload_identity_provider: ${{ secrets.GCP_CI_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_CI_SERVICE_ACCOUNT }}
+
+      # Log docker in to GCP, to allow image pulls from our private registries
+      - name: Log in to Google Docker Artifact Registry
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: europe-west2-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
+
+      - name: Set Up JDK 21
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          java-version: 21
+          distribution: temurin
+          cache: maven
+
+      - name: Set Up Docker Network
+        run: docker network create censusrmdockerdev_default
+
+      - name: Maven Checks
+        run: make check
+
+      - name: Run Tests
+        run: make test

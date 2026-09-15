@@ -14,11 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import uk.gov.ons.census.caseprocessor.model.dto.CaseUpdateDTO;
-import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
-import uk.gov.ons.census.caseprocessor.model.dto.EventHeaderDTO;
-import uk.gov.ons.census.caseprocessor.model.dto.InvalidCase;
-import uk.gov.ons.census.caseprocessor.model.dto.PayloadDTO;
+import uk.gov.ons.census.caseprocessor.model.dto.*;
 import uk.gov.ons.census.caseprocessor.model.repository.EventRepository;
 import uk.gov.ons.census.caseprocessor.testutils.DeleteDataHelper;
 import uk.gov.ons.census.caseprocessor.testutils.JunkDataHelper;
@@ -32,8 +28,8 @@ import uk.gov.ons.census.common.model.entity.EventType;
 @ActiveProfiles("test")
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
-public class InvalidCaseReceiverIT {
-  private static final String INBOUND_INVALID_CASE_TOPIC = "event_invalid-case";
+public class InvalidAddressReceiverIT {
+  private static final String INBOUND_INVALID_CASE_TOPIC = "event_address-not-valid";
 
   @Value("${queueconfig.case-update-topic}")
   private String caseUpdateTopic;
@@ -58,18 +54,18 @@ public class InvalidCaseReceiverIT {
 
       Case caze = junkDataHelper.setupJunkCase();
 
-      InvalidCase invalidCase = new InvalidCase();
-      invalidCase.setCaseId(caze.getId());
-      invalidCase.setReason("Not found");
+      InvalidAddress invalidAddress = new InvalidAddress();
+      invalidAddress.setCaseId(caze.getId());
+      invalidAddress.setReason(InvalidAddressReason.CANT_FIND);
       PayloadDTO payloadDTO = new PayloadDTO();
-      payloadDTO.setInvalidCase(invalidCase);
+      payloadDTO.setInvalidAddress(invalidAddress);
       EventDTO event = new EventDTO();
       event.setPayload(payloadDTO);
 
       EventHeaderDTO eventHeader = new EventHeaderDTO();
       eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
       eventHeader.setTopic(INBOUND_INVALID_CASE_TOPIC);
-      eventHeader.setMessageType(EventType.INVALID_CASE);
+      eventHeader.setMessageType(EventType.ADDRESS_NOT_VALID);
       junkDataHelper.junkify(eventHeader);
       event.setHeader(eventHeader);
 
@@ -92,7 +88,7 @@ public class InvalidCaseReceiverIT {
       assertThat(eventRepository.findAll().size()).isEqualTo(1);
       Event databaseEvent = eventRepository.findAll().get(0);
       assertThat(databaseEvent.getCaze().getId()).isEqualTo(caze.getId());
-      assertThat(databaseEvent.getType()).isEqualTo(EventType.INVALID_CASE);
+      assertThat(databaseEvent.getType()).isEqualTo(EventType.ADDRESS_NOT_VALID);
     }
   }
 }

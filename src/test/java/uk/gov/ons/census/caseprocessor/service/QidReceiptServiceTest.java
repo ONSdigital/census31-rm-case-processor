@@ -92,12 +92,12 @@ public class QidReceiptServiceTest {
     receiptEvent.getHeader().setDateTime(OffsetDateTime.now(ZoneId.of("UTC")));
     receiptEvent.getHeader().setTopic("Test topic");
     receiptEvent.getHeader().setChannel(channel);
-    receiptEvent.getHeader().setMessageType(EventType.RECEIPT);
+    receiptEvent.getHeader().setMessageType(EventType.RESPONSE_RECEIVED);
 
-    ReceiptDTO receiptDTO = new ReceiptDTO();
-    receiptDTO.setQid(TEST_QID_ID);
+    ResponseDTO responseDTO = new ResponseDTO();
+    responseDTO.setQuestionnaireId(TEST_QID_ID);
     PayloadDTO payloadDTO = new PayloadDTO();
-    payloadDTO.setReceipt(receiptDTO);
+    payloadDTO.setResponse(responseDTO);
     receiptEvent.setPayload(payloadDTO);
 
     return receiptEvent;

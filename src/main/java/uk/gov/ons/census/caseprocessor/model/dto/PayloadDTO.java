@@ -7,14 +7,12 @@ import lombok.Data;
 @Data
 @JsonInclude(Include.NON_NULL)
 public class PayloadDTO {
-  private ReceiptDTO receipt;
+  private ResponseDTO response;
   private RefusalDTO refusal;
   private CaseUpdateDTO caseUpdate;
   private UacUpdateDTO uacUpdate;
-  private InvalidCase invalidCase;
+  private InvalidAddress invalidAddress;
   private DeactivateUacDTO deactivateUac;
-  private UpdateSampleSensitive updateSampleSensitive;
-  private UpdateSample updateSample;
   private SurveyLaunchedDTO surveyLaunched;
   private SmsConfirmation smsConfirmation;
   private EmailConfirmation emailConfirmation;

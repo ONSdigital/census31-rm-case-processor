@@ -4,7 +4,8 @@ import java.util.UUID;
 import lombok.Data;
 
 @Data
-public class InvalidCase {
+public class InvalidAddress {
   private UUID caseId;
-  private String reason;
+  private InvalidAddressReason reason;
+  private String notes;
 }

@@ -44,12 +44,12 @@ public class ReceiptReceiverTest {
     receiptEvent.getHeader().setDateTime(OffsetDateTime.now(ZoneId.of("UTC")));
     receiptEvent.getHeader().setTopic("Test topic");
     receiptEvent.getHeader().setChannel("RH");
-    receiptEvent.getHeader().setMessageType(EventType.RECEIPT);
+    receiptEvent.getHeader().setMessageType(EventType.RESPONSE_RECEIVED);
     receiptEvent.setPayload(new PayloadDTO());
 
-    ReceiptDTO receiptDTO = new ReceiptDTO();
-    receiptDTO.setQid(QID);
-    receiptEvent.getPayload().setReceipt(receiptDTO);
+    ResponseDTO responseDTO = new ResponseDTO();
+    responseDTO.setQuestionnaireId(QID);
+    receiptEvent.getPayload().setResponse(responseDTO);
 
     UacQidLink expectedUacQidLink = new UacQidLink();
     expectedUacQidLink.setQid(QID);
@@ -73,7 +73,7 @@ public class ReceiptReceiverTest {
         .logUacQidEvent(
             uacQidLinkCaptor.capture(),
             eq("Receipt received"),
-            eq(EventType.RECEIPT),
+            eq(EventType.RESPONSE_RECEIVED),
             eq(receiptEvent),
             eq(message));
 
@@ -99,9 +99,9 @@ public class ReceiptReceiverTest {
     receiptEvent.getHeader().setMessageType(EventType.CASE_UPDATE);
     receiptEvent.setPayload(new PayloadDTO());
 
-    ReceiptDTO receiptDTO = new ReceiptDTO();
-    receiptDTO.setQid(QID);
-    receiptEvent.getPayload().setReceipt(receiptDTO);
+    ResponseDTO responseDTO = new ResponseDTO();
+    responseDTO.setQuestionnaireId(QID);
+    receiptEvent.getPayload().setResponse(responseDTO);
 
     Message<byte[]> message = constructMessage(receiptEvent);
 

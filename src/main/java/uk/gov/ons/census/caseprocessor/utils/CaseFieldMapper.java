@@ -55,7 +55,6 @@ public class CaseFieldMapper {
     address.setAddressLevel(caze.getAddressLevel());
     address.setEstabType(caze.getEstabType());
     address.setOrganisationName(caze.getOrganisationName());
-    address.setSecureType(false);
 
     caseUpdate.setAddress(address);
 

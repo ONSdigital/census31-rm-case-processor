@@ -23,14 +23,14 @@ import org.springframework.messaging.Message;
 import uk.gov.ons.census.caseprocessor.logging.EventLogger;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.EventHeaderDTO;
-import uk.gov.ons.census.caseprocessor.model.dto.InvalidCase;
+import uk.gov.ons.census.caseprocessor.model.dto.InvalidAddress;
 import uk.gov.ons.census.caseprocessor.model.dto.PayloadDTO;
 import uk.gov.ons.census.caseprocessor.service.CaseService;
 import uk.gov.ons.census.common.model.entity.Case;
 import uk.gov.ons.census.common.model.entity.EventType;
 
 @ExtendWith(MockitoExtension.class)
-public class InvalidCaseReceiverTest {
+public class InvalidAddressReceiverTest {
 
   @Mock private CaseService caseService;
   @Mock private EventLogger eventLogger;
@@ -48,8 +48,8 @@ public class InvalidCaseReceiverTest {
     managementEvent.getHeader().setTopic("Test topic");
     managementEvent.getHeader().setChannel("CC");
     managementEvent.setPayload(new PayloadDTO());
-    managementEvent.getPayload().setInvalidCase(new InvalidCase());
-    managementEvent.getPayload().getInvalidCase().setCaseId(UUID.randomUUID());
+    managementEvent.getPayload().setInvalidAddress(new InvalidAddress());
+    managementEvent.getPayload().getInvalidAddress().setCaseId(UUID.randomUUID());
     Message<byte[]> message = constructMessage(managementEvent);
 
     // Given
@@ -72,8 +72,8 @@ public class InvalidCaseReceiverTest {
     verify(eventLogger)
         .logCaseEvent(
             eq(expectedCase),
-            eq("Invalid case"),
-            eq(EventType.INVALID_CASE),
+            eq("Invalid address"),
+            eq(EventType.ADDRESS_NOT_VALID),
             eq(managementEvent),
             eq(message));
   }

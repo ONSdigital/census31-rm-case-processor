@@ -18,7 +18,8 @@ public class QidReceiptService {
 
   public UacQidLink processReceiptEvent(EventDTO eventDTO) {
 
-    UacQidLink uacQidLink = uacService.findByQid(eventDTO.getPayload().getReceipt().getQid());
+    UacQidLink uacQidLink =
+        uacService.findByQid(eventDTO.getPayload().getResponse().getQuestionnaireId());
 
     if (!uacQidLink.isReceiptReceived()) {
       uacQidLink.setActive(false);
