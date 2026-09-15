@@ -72,7 +72,7 @@ public class InvalidAddressReceiverTest {
     verify(eventLogger)
         .logCaseEvent(
             eq(expectedCase),
-            eq("Invalid case"),
+            eq("Invalid address"),
             eq(EventType.ADDRESS_NOT_VALID),
             eq(managementEvent),
             eq(message));

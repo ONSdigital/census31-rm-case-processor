@@ -34,6 +34,6 @@ public class InvalidCaseReceiver {
     caseService.saveCaseAndEmitCaseUpdate(
         caze, event.getHeader().getCorrelationId(), event.getHeader().getOriginatingUser());
 
-    eventLogger.logCaseEvent(caze, "Invalid case", EventType.ADDRESS_NOT_VALID, event, message);
+    eventLogger.logCaseEvent(caze, "Invalid address", EventType.ADDRESS_NOT_VALID, event, message);
   }
 }
