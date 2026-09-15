@@ -22,6 +22,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.AttributeAccessor;
 import org.springframework.core.retry.RetryException;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHandlingException;
@@ -212,6 +213,50 @@ class ManagedMessageRecovererTest {
 
     MessageHandlingException thrownException =
         assertThrows(MessageHandlingException.class, () -> underTest.recover(retryContext));
+
+    ArgumentCaptor<Throwable> causeCaptor = ArgumentCaptor.forClass(Throwable.class);
+    verify(exceptionManagerClient)
+        .reportException(
+            eq(TEST_MESSAGE_HASH),
+            eq("Case Processor"),
+            eq("TEST SUBSCRIPTION"),
+            causeCaptor.capture(),
+            anyString());
+
+    assertThat(causeCaptor.getValue()).isInstanceOf(RuntimeException.class);
+    assertThat(causeCaptor.getValue().getMessage()).isEqualTo("qid '555555' not found!");
+    assertThat(thrownException.getMessage())
+        .isEqualTo("Cannot process this message at this time, but it will be retried");
+  }
+
+  @Test
+  void testRecoverWithAttributeAccessorUnwrapsRetryExceptionAndReportsUnderlyingCause() {
+    AttributeAccessor context = mock(AttributeAccessor.class);
+
+    ProjectSubscriptionName projectSubscriptionName = mock(ProjectSubscriptionName.class);
+    when(originalMessage.getProjectSubscriptionName()).thenReturn(projectSubscriptionName);
+    when(projectSubscriptionName.getSubscription()).thenReturn("TEST SUBSCRIPTION");
+
+    ByteString byteString = ByteString.copyFrom("TEST PAYLOAD".getBytes());
+    PubsubMessage pubsubMessage = PubsubMessage.newBuilder().setData(byteString).build();
+    when(originalMessage.getPubsubMessage()).thenReturn(pubsubMessage);
+
+    Message<byte[]> message =
+        MessageBuilder.withPayload("TEST PAYLOAD".getBytes())
+            .setHeader("gcp_pubsub_original_message", originalMessage)
+            .build();
+    MessagingException messagingException =
+        new MessageHandlingException(message, new RuntimeException("qid '555555' not found!"));
+
+    Throwable wrappedFailure = new RetryException("retry exhausted", messagingException);
+
+    when(exceptionManagerClient.reportException(
+            anyString(), anyString(), anyString(), any(Throwable.class), anyString()))
+        .thenReturn(new ExceptionReportResponse());
+
+    MessageHandlingException thrownException =
+        assertThrows(
+            MessageHandlingException.class, () -> underTest.recover(context, wrappedFailure));
 
     ArgumentCaptor<Throwable> causeCaptor = ArgumentCaptor.forClass(Throwable.class);
     verify(exceptionManagerClient)
