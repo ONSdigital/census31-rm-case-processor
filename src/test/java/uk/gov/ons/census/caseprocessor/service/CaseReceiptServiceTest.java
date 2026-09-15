@@ -20,7 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.EventHeaderDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.PayloadDTO;
-import uk.gov.ons.census.caseprocessor.model.dto.ReceiptDTO;
+import uk.gov.ons.census.caseprocessor.model.dto.ResponseDTO;
 import uk.gov.ons.census.common.model.entity.Case;
 import uk.gov.ons.census.common.model.entity.EventType;
 import uk.gov.ons.census.common.model.entity.UacQidLink;
@@ -111,12 +111,12 @@ class CaseReceiptServiceTest {
     receiptEvent.getHeader().setDateTime(OffsetDateTime.now(ZoneId.of("UTC")));
     receiptEvent.getHeader().setTopic("Test topic");
     receiptEvent.getHeader().setChannel("RH");
-    receiptEvent.getHeader().setMessageType(EventType.RECEIPT);
+    receiptEvent.getHeader().setMessageType(EventType.RESPONSE_RECEIVED);
 
-    ReceiptDTO receiptDTO = new ReceiptDTO();
-    receiptDTO.setQid(qid);
+    ResponseDTO responseDTO = new ResponseDTO();
+    responseDTO.setQuestionnaireId(qid);
     PayloadDTO payloadDTO = new PayloadDTO();
-    payloadDTO.setReceipt(receiptDTO);
+    payloadDTO.setResponse(responseDTO);
     receiptEvent.setPayload(payloadDTO);
     return receiptEvent;
   }

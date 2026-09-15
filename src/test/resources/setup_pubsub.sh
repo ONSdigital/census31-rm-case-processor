@@ -17,14 +17,14 @@ curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/subscriptions/rm-i
 curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/topics/event_new-case
 curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/subscriptions/event_new-case_rm-case-processor -H 'Content-Type: application/json' -d '{"topic": "projects/our-project/topics/event_new-case"}'
 
-curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/topics/event_receipt
-curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/subscriptions/event_receipt_rm-case-processor -H 'Content-Type: application/json' -d '{"topic": "projects/our-project/topics/event_receipt"}'
+curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/topics/event_response-received
+curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/subscriptions/event_response-received_rm-case-processor -H 'Content-Type: application/json' -d '{"topic": "projects/our-project/topics/event_response-received"}'
 
 curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/topics/event_refusal-received
 curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/subscriptions/event_refusal-received_rm-case-processor -H 'Content-Type: application/json' -d '{"topic": "projects/our-project/topics/event_refusal-received"}'
 
-curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/topics/event_invalid-case
-curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/subscriptions/event_invalid-case_rm-case-processor -H 'Content-Type: application/json' -d '{"topic": "projects/our-project/topics/event_invalid-case"}'
+curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/topics/event_address-not-valid
+curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/subscriptions/event_address-not-valid_rm-case-processor -H 'Content-Type: application/json' -d '{"topic": "projects/our-project/topics/event_address-not-valid"}'
 
 curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/topics/event_survey-launched
 curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/subscriptions/event_survey-launched_rm-case-processor -H 'Content-Type: application/json' -d '{"topic": "projects/our-project/topics/event_survey-launched"}'

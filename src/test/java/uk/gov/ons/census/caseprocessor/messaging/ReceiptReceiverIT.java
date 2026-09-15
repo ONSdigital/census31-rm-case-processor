@@ -18,7 +18,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.EventHeaderDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.PayloadDTO;
-import uk.gov.ons.census.caseprocessor.model.dto.ReceiptDTO;
+import uk.gov.ons.census.caseprocessor.model.dto.ResponseDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.UacUpdateDTO;
 import uk.gov.ons.census.caseprocessor.model.repository.EventRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.UacQidLinkRepository;
@@ -38,7 +38,7 @@ import uk.gov.ons.census.common.model.entity.UacQidLink;
 public class ReceiptReceiverIT {
   private static final String TEST_QID = "010000";
   private static final UUID TEST_UACLINK_ID = UUID.randomUUID();
-  private static final String INBOUND_RECEIPT_TOPIC = "event_receipt";
+  private static final String INBOUND_RECEIPT_TOPIC = "event_response-received";
 
   @Value("${queueconfig.uac-update-topic}")
   private String uacUpdateTopic;
@@ -75,17 +75,17 @@ public class ReceiptReceiverIT {
       uacQidLink.setSurveyLaunched(true);
       uacQidLinkRepository.saveAndFlush(uacQidLink);
 
-      ReceiptDTO receiptDTO = new ReceiptDTO();
-      receiptDTO.setQid(TEST_QID);
+      ResponseDTO responseDTO = new ResponseDTO();
+      responseDTO.setQuestionnaireId(TEST_QID);
       PayloadDTO payloadDTO = new PayloadDTO();
-      payloadDTO.setReceipt(receiptDTO);
+      payloadDTO.setResponse(responseDTO);
       EventDTO event = new EventDTO();
       event.setPayload(payloadDTO);
 
       EventHeaderDTO eventHeader = new EventHeaderDTO();
       eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
       eventHeader.setTopic(INBOUND_RECEIPT_TOPIC);
-      eventHeader.setMessageType(EventType.RECEIPT);
+      eventHeader.setMessageType(EventType.RESPONSE_RECEIVED);
       junkDataHelper.junkify(eventHeader);
       event.setHeader(eventHeader);
 
@@ -100,7 +100,7 @@ public class ReceiptReceiverIT {
       List<Event> storedEvents = eventRepository.findAll();
       assertThat(storedEvents.size()).isEqualTo(1);
       assertThat(storedEvents.get(0).getUacQidLink().getId()).isEqualTo(TEST_UACLINK_ID);
-      assertThat(storedEvents.get(0).getType()).isEqualTo(EventType.RECEIPT);
+      assertThat(storedEvents.get(0).getType()).isEqualTo(EventType.RESPONSE_RECEIVED);
     }
   }
 }

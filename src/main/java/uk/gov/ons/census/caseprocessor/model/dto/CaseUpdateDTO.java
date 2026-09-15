@@ -32,6 +32,7 @@ public class CaseUpdateDTO {
   private String fieldOfficerId;
   private String treatmentCode;
   private Integer ceExpectedCapacity;
+  private Integer ceActualResponse;
   private boolean secureEstablishment;
   private String printBatch;
 }

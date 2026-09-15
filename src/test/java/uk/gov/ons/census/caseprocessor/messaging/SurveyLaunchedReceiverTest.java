@@ -100,7 +100,7 @@ public class SurveyLaunchedReceiverTest {
     managementEvent.getHeader().setDateTime(OffsetDateTime.now(ZoneId.of("UTC")));
     managementEvent.getHeader().setTopic("Test topic");
     managementEvent.getHeader().setChannel("RH");
-    managementEvent.getHeader().setMessageType(EventType.RECEIPT);
+    managementEvent.getHeader().setMessageType(EventType.RESPONSE_RECEIVED);
     managementEvent.setPayload(new PayloadDTO());
 
     SurveyLaunchedDTO surveyLaunch = new SurveyLaunchedDTO();
@@ -116,7 +116,7 @@ public class SurveyLaunchedReceiverTest {
         assertThrows(RuntimeException.class, () -> underTest.receiveMessage(message));
 
     Assertions.assertThat(thrown.getMessage())
-        .isEqualTo("Event Type 'RECEIPT' is invalid on this topic");
+        .isEqualTo("Event Type 'RESPONSE_RECEIVED' is invalid on this topic");
   }
 
   @Test

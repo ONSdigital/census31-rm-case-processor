@@ -27,13 +27,13 @@ public class InvalidCaseReceiver {
   public void receiveMessage(Message<byte[]> message) {
     EventDTO event = convertJsonBytesToEvent(message.getPayload());
 
-    Case caze = caseService.getCase(event.getPayload().getInvalidCase().getCaseId());
+    Case caze = caseService.getCase(event.getPayload().getInvalidAddress().getCaseId());
 
     caze.setInvalid(true);
 
     caseService.saveCaseAndEmitCaseUpdate(
         caze, event.getHeader().getCorrelationId(), event.getHeader().getOriginatingUser());
 
-    eventLogger.logCaseEvent(caze, "Invalid case", EventType.INVALID_CASE, event, message);
+    eventLogger.logCaseEvent(caze, "Invalid address", EventType.ADDRESS_NOT_VALID, event, message);
   }
 }

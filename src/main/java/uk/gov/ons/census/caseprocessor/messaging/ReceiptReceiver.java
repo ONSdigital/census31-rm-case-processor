@@ -37,7 +37,7 @@ public class ReceiptReceiver {
     UacQidLink uacQidLink = qidReceiptService.processReceiptEvent(receiptEvent);
 
     eventLogger.logUacQidEvent(
-        uacQidLink, "Receipt received", EventType.RECEIPT, receiptEvent, message);
+        uacQidLink, "Receipt received", EventType.RESPONSE_RECEIVED, receiptEvent, message);
   }
 
   private boolean processEvent(EventDTO receiptEvent) {
@@ -45,7 +45,7 @@ public class ReceiptReceiver {
     EventHeaderDTO eventHeader = receiptEvent.getHeader();
 
     switch (eventHeader.getMessageType()) {
-      case RECEIPT:
+      case RESPONSE_RECEIVED:
         return true;
 
       default:

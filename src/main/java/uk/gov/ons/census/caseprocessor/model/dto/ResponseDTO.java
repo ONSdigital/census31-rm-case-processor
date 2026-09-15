@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @JsonInclude(Include.NON_NULL)
-public class ReceiptDTO {
-  private String qid;
+public class ResponseDTO {
+  private String questionnaireId;
+  private Boolean unreceipt;
 }
