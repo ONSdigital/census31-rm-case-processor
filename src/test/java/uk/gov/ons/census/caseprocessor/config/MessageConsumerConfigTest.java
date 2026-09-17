@@ -54,7 +54,7 @@ class MessageConsumerConfigTest {
             retryTemplate.execute(
                 () -> {
                   attempts.incrementAndGet();
-                  throw new IllegalStateException("boom");
+                  throw new IllegalStateException("test");
                 }));
 
     assertThat(attempts).hasValue(3);
