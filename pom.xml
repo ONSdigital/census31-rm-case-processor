@@ -14,7 +14,7 @@
         <maven.compiler.release>${java.version}</maven.compiler.release>
 
         <census-rm-common-entity-model.version>1.0.0</census-rm-common-entity-model.version>
-        <census-rm-shared-sample-validation.version>1.0.0</census-rm-shared-sample-validation.version>
+        <census-rm-shared-sample-validation.version>1.0.1</census-rm-shared-sample-validation.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <container.cli>docker</container.cli>
 
