@@ -81,7 +81,7 @@ public class NewCaseReceiverIT {
       newCase.setEstabType("HOUSEHOLD");
       newCase.setAddressLine1("123 Fake Street");
       newCase.setTownName("Testington");
-      newCase.setRegion("E");
+      newCase.setRegion("E12000009");
       newCase.setPostcode("NP10 111");
       newCase.setAddressType("HH");
       newCase.setAddressLevel("U");
@@ -121,7 +121,7 @@ public class NewCaseReceiverIT {
           .isEqualTo(newCase.getAddressType());
       Assertions.assertThat(emittedCase.getAddress().getPostcode())
           .isEqualTo(newCase.getPostcode());
-      Assertions.assertThat(emittedCase.getAddress().getRegion()).isEqualTo(newCase.getRegion());
+      Assertions.assertThat(emittedCase.getAddress().getRegion()).isEqualTo("E");
 
       Case actualCase = caseRepository.findById(TEST_CASE_ID).get();
 
