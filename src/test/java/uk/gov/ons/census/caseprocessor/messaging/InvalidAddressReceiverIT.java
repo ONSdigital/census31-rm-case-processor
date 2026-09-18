@@ -83,7 +83,8 @@ public class InvalidAddressReceiverIT {
       Assertions.assertThat(emittedCase.getAddress().getAddressType())
           .isEqualTo(caze.getAddressType());
       Assertions.assertThat(emittedCase.getAddress().getPostcode()).isEqualTo(caze.getPostcode());
-      Assertions.assertThat(emittedCase.getAddress().getRegion()).isEqualTo(caze.getRegion());
+      Assertions.assertThat(emittedCase.getAddress().getRegion()).isEqualTo("E");
+      Assertions.assertThat(caze.getRegion()).isEqualTo("EN");
 
       assertThat(eventRepository.findAll().size()).isEqualTo(1);
       Event databaseEvent = eventRepository.findAll().get(0);
