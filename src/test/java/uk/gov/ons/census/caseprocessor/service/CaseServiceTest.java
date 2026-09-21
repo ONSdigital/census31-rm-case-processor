@@ -53,6 +53,7 @@ class CaseServiceTest {
     caze.setCaseRef(1234567890L);
     caze.setCollectionExercise(collex);
     CaseFieldsHelper.setDummyCaseFields(caze);
+    caze.setRegion("E12000009");
     caze.setInvalid(true);
     caze.setRefusalReceived(RefusalType.HARD_REFUSAL);
 
@@ -79,7 +80,8 @@ class CaseServiceTest {
     assertThat(actualCaseUpdate.getAddress().getAddressType()).isEqualTo(caze.getAddressType());
     assertThat(actualCaseUpdate.getAddress().getTownName()).isEqualTo(caze.getTownName());
     assertThat(actualCaseUpdate.getAddress().getPostcode()).isEqualTo(caze.getPostcode());
-    assertThat(actualCaseUpdate.getAddress().getRegion()).isEqualTo(caze.getRegion());
+    assertThat(actualCaseUpdate.getAddress().getRegion()).isEqualTo("E");
+    assertThat(caze.getRegion()).isEqualTo("E12000009");
   }
 
   @Test

@@ -45,7 +45,7 @@ public class CaseFieldMapper {
     address.setAddressLine3(caze.getAddressLine3());
     address.setTownName(caze.getTownName());
     address.setPostcode(caze.getPostcode());
-    address.setRegion(caze.getRegion());
+    address.setRegion(getLeadingCharacter(caze.getRegion()));
     address.setLatitude(caze.getLatitude());
     address.setLongitude(caze.getLongitude());
     address.setUprn(caze.getUprn());
@@ -70,5 +70,9 @@ public class CaseFieldMapper {
     caseUpdate.setFieldOfficerId(caze.getFieldOfficerId());
     caseUpdate.setCaseType(caze.getCaseType());
     caseUpdate.setPrintBatch(caze.getPrintBatch());
+  }
+
+  private static String getLeadingCharacter(String value) {
+    return value == null || value.isEmpty() ? value : value.substring(0, 1);
   }
 }
