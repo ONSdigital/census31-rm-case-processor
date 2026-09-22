@@ -401,6 +401,51 @@ public class FulfilmentRequestReceiverIT {
   }
 
   @Test
+  void testFulfilmentIndividualRequestForSmsUacitaPackCode() throws InterruptedException {
+    // Given
+    Case testCase = junkDataHelper.setupJunkCase();
+
+    SmsTemplate smsTemplate = new SmsTemplate();
+    smsTemplate.setPackCode("UACITA1");
+    smsTemplate.setTemplate(
+        new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY, REQUEST_PERSONALISATION_PREFIX + "name"});
+    smsTemplate.setNotifyTemplateId(UUID.randomUUID());
+    smsTemplate.setDescription("Test description");
+    smsTemplate.setNotifyServiceRef("test-service");
+    smsTemplate.setQuestionnaireType(99);
+    smsTemplateRepository.saveAndFlush(smsTemplate);
+
+    EventDTO fulfilmentRequestEvent = new EventDTO();
+    fulfilmentRequestEvent.setHeader(new EventHeaderDTO());
+    junkDataHelper.junkify(fulfilmentRequestEvent.getHeader());
+    fulfilmentRequestEvent.getHeader().setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
+    fulfilmentRequestEvent.getHeader().setTopic(FULFILMENT_REQUEST_TOPIC);
+    fulfilmentRequestEvent.getHeader().setMessageId(UUID.randomUUID());
+    fulfilmentRequestEvent.getHeader().setMessageType(EventType.FULFILMENT_REQUEST);
+    fulfilmentRequestEvent.setPayload(new PayloadDTO());
+    FulfilmentRequest fulfilmentRequest = new FulfilmentRequest();
+    fulfilmentRequest.setCaseId(testCase.getId());
+    fulfilmentRequest.setFulfilmentCode("UACITA1");
+    Contact contact = new Contact();
+    contact.setTelNo("07788660011");
+    fulfilmentRequest.setContact(contact);
+    fulfilmentRequestEvent.getPayload().setFulfilmentRequest(fulfilmentRequest);
+
+    // When
+    pubsubHelper.sendMessageToPubsubProject(FULFILMENT_REQUEST_TOPIC, fulfilmentRequestEvent);
+    sleep(3000);
+
+    // Then
+    List<UacQidLink> uacQidLinks = uacQidLinkRepository.findAll();
+    assertThat(uacQidLinks.size()).isEqualTo(1);
+    assertThat(uacQidLinks.get(0).getCaze().getId()).isNotEqualTo(testCase.getId());
+    Optional<Case> childCase = Optional.ofNullable(uacQidLinks.get(0).getCaze());
+
+    assertThat(childCase.get().getUprn()).isEqualTo(testCase.getUprn());
+    assertThat(childCase.get().getCaseType()).isEqualTo("HI");
+  }
+
+  @Test
   void testFulfilmentIndividualWithIndividualCaseIdRequestForExport() throws InterruptedException {
 
     // Given
