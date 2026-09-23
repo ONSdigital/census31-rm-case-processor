@@ -13,11 +13,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 import org.assertj.core.api.AssertionsForInterfaceTypes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -178,8 +181,9 @@ public class FulfilmentRequestReceiverIT {
     assertThat(logsList.get(0).getMessage()).isEqualTo(expectedLogMessage);
   }
 
-  @Test
-  void testFulfilmentRequestForSms() throws InterruptedException {
+  @ParameterizedTest
+  @MethodSource("householdSmsPackCodes")
+  void testFulfilmentRequestForSms(String packCode) throws InterruptedException {
     // Given
     // Set up all the data required
     Survey survey = new Survey();
@@ -204,7 +208,7 @@ public class FulfilmentRequestReceiverIT {
     testCase = caseRepository.saveAndFlush(testCase);
 
     SmsTemplate smsTemplate = new SmsTemplate();
-    smsTemplate.setPackCode("TEST_SMS_PACK_CODE");
+    smsTemplate.setPackCode(packCode);
     smsTemplate.setTemplate(
         new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY, REQUEST_PERSONALISATION_PREFIX + "name"});
     smsTemplate.setNotifyTemplateId(UUID.randomUUID());
@@ -223,7 +227,7 @@ public class FulfilmentRequestReceiverIT {
     fulfilmentRequestEvent.setPayload(new PayloadDTO());
     FulfilmentRequest fulfilmentRequest = new FulfilmentRequest();
     fulfilmentRequest.setCaseId(testCase.getId());
-    fulfilmentRequest.setFulfilmentCode("TEST_SMS_PACK_CODE");
+    fulfilmentRequest.setFulfilmentCode(packCode);
     Contact contact = new Contact();
     contact.setTelNo("07788660011");
     fulfilmentRequest.setContact(contact);
@@ -303,13 +307,14 @@ public class FulfilmentRequestReceiverIT {
     }
   }
 
-  @Test
-  void testFulfilmentIndividualRequestForExport() throws InterruptedException {
+  @ParameterizedTest
+  @MethodSource("individualPrintPackCodes")
+  void testFulfilmentIndividualRequestForExport(String packCode) throws InterruptedException {
 
     // Given
     Case caze = junkDataHelper.setupJunkCase();
     ExportFileTemplate exportFileTemplate =
-        junkDataHelper.setUpJunkExportFileTemplate(new String[] {"__request__.name"}, "P_OR_I1");
+        junkDataHelper.setUpJunkExportFileTemplate(new String[] {"__request__.name"}, packCode);
     junkDataHelper.linkExportFileTemplateToSurveyFulfilment(
         exportFileTemplate, caze.getCollectionExercise().getSurvey());
 
@@ -355,13 +360,14 @@ public class FulfilmentRequestReceiverIT {
     AssertionsForInterfaceTypes.assertThat(caseList.size()).isGreaterThan(1);
   }
 
-  @Test
-  void testFulfilmentIndividualRequestForSms() throws InterruptedException {
+  @ParameterizedTest
+  @MethodSource("individualSmsPackCodes")
+  void testFulfilmentIndividualRequestForSms(String packCode) throws InterruptedException {
     // Given
     Case testCase = junkDataHelper.setupJunkCase();
 
     SmsTemplate smsTemplate = new SmsTemplate();
-    smsTemplate.setPackCode("UACIT1");
+    smsTemplate.setPackCode(packCode);
     smsTemplate.setTemplate(
         new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY, REQUEST_PERSONALISATION_PREFIX + "name"});
     smsTemplate.setNotifyTemplateId(UUID.randomUUID());
@@ -380,7 +386,7 @@ public class FulfilmentRequestReceiverIT {
     fulfilmentRequestEvent.setPayload(new PayloadDTO());
     FulfilmentRequest fulfilmentRequest = new FulfilmentRequest();
     fulfilmentRequest.setCaseId(testCase.getId());
-    fulfilmentRequest.setFulfilmentCode("UACIT1");
+    fulfilmentRequest.setFulfilmentCode(packCode);
     Contact contact = new Contact();
     contact.setTelNo("07788660011");
     fulfilmentRequest.setContact(contact);
@@ -452,6 +458,27 @@ public class FulfilmentRequestReceiverIT {
     List<Case> caseList = caseRepository.findByUprn(childCase.get().getUprn());
     AssertionsForInterfaceTypes.assertThat(caseList.size()).isGreaterThan(1);
     assertThat(childCase.get().getId()).isEqualTo(individualCaseId);
+  }
+
+  private static Stream<String> individualSmsPackCodes() {
+    return Stream.of(
+        "UACIT1",
+        "UACIT2",
+        "UACIT2W",
+        "UACIT3",
+        "UACIT4",
+        "UACITA1",
+        "UACITA2B",
+        "UACITA3",
+        "UACITA4");
+  }
+
+  private static Stream<String> householdSmsPackCodes() {
+    return Stream.of("UACHHT1", "UACHHT2", "UACHHT2W", "UACHHT3", "UACHHT4");
+  }
+
+  private static Stream<String> individualPrintPackCodes() {
+    return Stream.of("P_OR_I1", "P_OR_I2", "P_OR_I2W", "P_OR_IACR3");
   }
 
   private List<FulfilmentToProcess> getFulfilmentsToProcess() throws InterruptedException {

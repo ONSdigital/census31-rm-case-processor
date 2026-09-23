@@ -34,7 +34,16 @@ public class FulfilmentRequestReceiver {
   private static final String SMS_FULFILMENT_DESCRIPTION = "SMS fulfilment request received";
   private static final String PRINT_FULFILMENT_DESCRIPTION = "Print fulfilment requested";
   private static final List<String> smsIndividualPackCodes =
-      List.of("UACIT1", "UACIT2", "UACIT2W", "UACIT3", "UACIT4");
+      List.of(
+          "UACIT1",
+          "UACIT2",
+          "UACIT2W",
+          "UACIT3",
+          "UACIT4",
+          "UACITA1",
+          "UACITA2B",
+          "UACITA3",
+          "UACITA4");
   private static final List<String> printIndividualPackCodes =
       List.of("P_OR_I1", "P_OR_I2", "P_OR_I2W", "P_OR_IACR3");
 
