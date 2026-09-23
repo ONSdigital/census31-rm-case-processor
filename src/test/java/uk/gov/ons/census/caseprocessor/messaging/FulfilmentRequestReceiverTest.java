@@ -8,8 +8,11 @@ import static org.mockito.Mockito.*;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -82,17 +85,18 @@ public class FulfilmentRequestReceiverTest {
         .processFulfilmentForIndividual(any(), any(), any(), any());
   }
 
-  @Test
-  void testReceiveMessage_sms_fulfilment_success() throws Exception {
+  @ParameterizedTest
+  @MethodSource("householdSmsPackCodes")
+  void testReceiveMessage_sms_fulfilment_success(String packCode) throws Exception {
     UUID caseId = UUID.randomUUID();
-    EventDTO event = buildEvent(caseId, "PACK1");
+    EventDTO event = buildEvent(caseId, packCode);
     Message<byte[]> msg = buildMessage(event);
 
     Case parentCase = new Case();
     parentCase.setId(caseId);
     parentCase.setCaseType("HH");
 
-    SmsTemplate smsTemplate = setupSmsTemplate();
+    SmsTemplate smsTemplate = setupSmsTemplate(packCode);
 
     SmsRequestEnriched smsRequestEnriched = buildSMSRequestEnriched(event);
     PayloadDTO payload = new PayloadDTO();
@@ -107,9 +111,9 @@ public class FulfilmentRequestReceiverTest {
 
     when(caseService.getCase(caseId)).thenReturn(parentCase);
 
-    when(fulfilmentRequestService.getExportFileTemplate("PACK1")).thenReturn(Optional.empty());
+    when(fulfilmentRequestService.getExportFileTemplate(packCode)).thenReturn(Optional.empty());
 
-    when(fulfilmentRequestService.getSmsTemplate("PACK1")).thenReturn(Optional.of(smsTemplate));
+    when(fulfilmentRequestService.getSmsTemplate(packCode)).thenReturn(Optional.of(smsTemplate));
 
     when(fulfilmentRequestService.validatePhoneNumber(any())).thenReturn(true);
 
@@ -129,6 +133,9 @@ public class FulfilmentRequestReceiverTest {
             eq(EventType.SMS_FULFILMENT),
             eq(smsRequestEnrichedEvent),
             eq(msg)); // TODO: Check warning and fix it.
+
+    verify(fulfilmentRequestService, never())
+        .processFulfilmentForIndividual(any(), any(), any(), any());
   }
 
   @Test
@@ -160,14 +167,16 @@ public class FulfilmentRequestReceiverTest {
             (Message<byte[]>) any());
   }
 
-  @Test
-  void testReceiveMessage_print_fulfilment_for_individual_success() throws Exception {
+  @ParameterizedTest
+  @MethodSource("individualPrintPackCodes")
+  void testReceiveMessage_print_fulfilment_for_individual_success(String packCode)
+      throws Exception {
     UUID caseId = UUID.randomUUID();
-    EventDTO event = buildEvent(caseId, "P_OR_I1");
+    EventDTO event = buildEvent(caseId, packCode);
     Message<byte[]> msg = buildMessage(event);
 
     ExportFileTemplate eft = new ExportFileTemplate();
-    eft.setPackCode("P_OR_I1");
+    eft.setPackCode(packCode);
 
     Case caze = new Case();
     caze.setId(caseId);
@@ -179,9 +188,9 @@ public class FulfilmentRequestReceiverTest {
 
     when(caseService.getCase(caseId)).thenReturn(caze);
 
-    when(fulfilmentRequestService.getExportFileTemplate("P_OR_I1")).thenReturn(Optional.of(eft));
+    when(fulfilmentRequestService.getExportFileTemplate(packCode)).thenReturn(Optional.of(eft));
 
-    when(fulfilmentRequestService.getSmsTemplate("P_OR_I1")).thenReturn(Optional.empty());
+    when(fulfilmentRequestService.getSmsTemplate(packCode)).thenReturn(Optional.empty());
 
     when(fulfilmentRequestService.processFulfilmentForIndividual(eq(event), eq(caze), any(), any()))
         .thenReturn(childCase);
@@ -209,10 +218,11 @@ public class FulfilmentRequestReceiverTest {
             eq(msg));
   }
 
-  @Test
-  void testReceiveMessage_sms_fulfilment_for_individual_success() throws Exception {
+  @ParameterizedTest
+  @MethodSource("individualSmsPackCodes")
+  void testReceiveMessage_sms_fulfilment_for_individual_success(String packCode) throws Exception {
     UUID caseId = UUID.randomUUID();
-    EventDTO event = buildEvent(caseId, "P_OR_I1");
+    EventDTO event = buildEvent(caseId, packCode);
     Message<byte[]> msg = buildMessage(event);
 
     SmsRequestEnriched smsRequestEnriched = buildSMSRequestEnriched(event);
@@ -223,7 +233,7 @@ public class FulfilmentRequestReceiverTest {
     smsRequestEnrichedEvent.setHeader(event.getHeader());
     smsRequestEnrichedEvent.setPayload(payload);
 
-    SmsTemplate smsTemplate = setupSmsTemplate();
+    SmsTemplate smsTemplate = setupSmsTemplate(packCode);
 
     Case caze = new Case();
     caze.setId(caseId);
@@ -235,9 +245,9 @@ public class FulfilmentRequestReceiverTest {
 
     when(caseService.getCase(caseId)).thenReturn(caze);
 
-    when(fulfilmentRequestService.getExportFileTemplate("P_OR_I1")).thenReturn(Optional.empty());
+    when(fulfilmentRequestService.getExportFileTemplate(packCode)).thenReturn(Optional.empty());
 
-    when(fulfilmentRequestService.getSmsTemplate("P_OR_I1")).thenReturn(Optional.of(smsTemplate));
+    when(fulfilmentRequestService.getSmsTemplate(packCode)).thenReturn(Optional.of(smsTemplate));
 
     when(fulfilmentRequestService.processFulfilmentForIndividual(eq(event), eq(caze), any(), any()))
         .thenReturn(childCase);
@@ -492,6 +502,27 @@ public class FulfilmentRequestReceiverTest {
             eq(msg)); // TODO: Check warning and fix it.
   }
 
+  private static Stream<String> individualSmsPackCodes() {
+    return Stream.of(
+        "UACIT1",
+        "UACIT2",
+        "UACIT2W",
+        "UACIT3",
+        "UACIT4",
+        "UACITA1",
+        "UACITA2B",
+        "UACITA3",
+        "UACITA4");
+  }
+
+  private static Stream<String> householdSmsPackCodes() {
+    return Stream.of("UACHHT1", "UACHHT2", "UACHHT2W", "UACHHT3", "UACHHT4");
+  }
+
+  private static Stream<String> individualPrintPackCodes() {
+    return Stream.of("P_OR_I1", "P_OR_I2", "P_OR_I2W", "P_OR_IACR3");
+  }
+
   private Message<byte[]> buildMessage(EventDTO event) throws JacksonException {
     final ObjectMapper mapper = JsonMapper.builder().build();
     byte[] payload = mapper.writeValueAsBytes(event);
@@ -530,6 +561,10 @@ public class FulfilmentRequestReceiverTest {
   }
 
   private SmsTemplate setupSmsTemplate() {
+    return setupSmsTemplate("PACK1");
+  }
+
+  private SmsTemplate setupSmsTemplate(String packCode) {
     String[] template =
         new String[] {
           "__pack_code__",
@@ -545,7 +580,7 @@ public class FulfilmentRequestReceiverTest {
 
     // Mock SMS Template
     SmsTemplate smsTemplate = new SmsTemplate();
-    smsTemplate.setPackCode("PACK1");
+    smsTemplate.setPackCode(packCode);
     smsTemplate.setQuestionnaireType(10);
     smsTemplate.setTemplate(template);
 
