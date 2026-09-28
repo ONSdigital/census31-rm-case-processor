@@ -15,9 +15,7 @@ public class PayloadDTO {
   private DeactivateUacDTO deactivateUac;
   private SurveyLaunchedDTO surveyLaunched;
   private SmsConfirmation smsConfirmation;
-  private EmailConfirmation emailConfirmation;
   private NewCase newCase;
-  private EmailRequest emailRequest;
   private ExportFileDTO exportFile;
   private RespondentAuthenticatedDTO respondentAuthenticated;
   private SmsRequestEnriched smsRequestEnriched;

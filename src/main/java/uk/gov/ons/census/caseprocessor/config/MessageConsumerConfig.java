@@ -60,9 +60,6 @@ public class MessageConsumerConfig {
   @Value("${queueconfig.sms-confirmation-subscription}")
   private String smsConfirmationSubscription;
 
-  @Value("${queueconfig.email-confirmation-subscription}")
-  private String emailConfirmationSubscription;
-
   public MessageConsumerConfig(
       ManagedMessageRecoverer managedMessageRecoverer, PubSubTemplate pubSubTemplate) {
     this.managedMessageRecoverer = managedMessageRecoverer;
@@ -116,11 +113,6 @@ public class MessageConsumerConfig {
 
   @Bean
   public MessageChannel smsConfirmationInputChannel() {
-    return new DirectChannel();
-  }
-
-  @Bean
-  public MessageChannel emailConfirmationInputChannel() {
     return new DirectChannel();
   }
 
@@ -197,12 +189,6 @@ public class MessageConsumerConfig {
   PubSubInboundChannelAdapter smsConfirmationInbound(
       @Qualifier("smsConfirmationInputChannel") MessageChannel channel) {
     return makeAdapter(channel, smsConfirmationSubscription);
-  }
-
-  @Bean
-  PubSubInboundChannelAdapter emailConfirmationInbound(
-      @Qualifier("emailConfirmationInputChannel") MessageChannel channel) {
-    return makeAdapter(channel, emailConfirmationSubscription);
   }
 
   private PubSubInboundChannelAdapter makeAdapter(MessageChannel channel, String subscriptionName) {
