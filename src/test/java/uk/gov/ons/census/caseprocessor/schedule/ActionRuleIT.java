@@ -21,7 +21,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
 import uk.gov.ons.census.caseprocessor.model.repository.ActionRuleRepository;
-import uk.gov.ons.census.caseprocessor.model.repository.EmailTemplateRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.EventRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.ExportFileRowRepository;
 import uk.gov.ons.census.caseprocessor.model.repository.ExportFileTemplateRepository;
@@ -37,7 +36,6 @@ import uk.gov.ons.census.common.model.entity.ActionRuleStatus;
 import uk.gov.ons.census.common.model.entity.ActionRuleType;
 import uk.gov.ons.census.common.model.entity.Case;
 import uk.gov.ons.census.common.model.entity.CollectionExercise;
-import uk.gov.ons.census.common.model.entity.EmailTemplate;
 import uk.gov.ons.census.common.model.entity.ExportFileRow;
 import uk.gov.ons.census.common.model.entity.ExportFileTemplate;
 import uk.gov.ons.census.common.model.entity.SmsTemplate;
@@ -66,7 +64,6 @@ class ActionRuleIT {
   @Autowired private ActionRuleRepository actionRuleRepository;
   @Autowired private ExportFileRowRepository exportFileRowRepository;
   @Autowired private SmsTemplateRepository smsTemplateRepository;
-  @Autowired private EmailTemplateRepository emailTemplateRepository;
   @Autowired private EventRepository eventRepository;
   @Autowired private ActionRulePoller actionRulePoller;
 
@@ -86,12 +83,7 @@ class ActionRuleIT {
 
       // When
       setUpActionRule(
-          ActionRuleType.EXPORT_FILE,
-          caze.getCollectionExercise(),
-          exportFileTemplate,
-          null,
-          null,
-          null);
+          ActionRuleType.EXPORT_FILE, caze.getCollectionExercise(), exportFileTemplate, null, null);
       EventDTO rme = outboundUacQueue.getQueue().poll(20, TimeUnit.SECONDS);
       List<ExportFileRow> exportFileRows = exportFileRowRepository.findAll();
       ExportFileRow exportFileRow = exportFileRows.get(0);
@@ -120,12 +112,7 @@ class ActionRuleIT {
 
       // When
       setUpActionRule(
-          ActionRuleType.EXPORT_FILE,
-          caze.getCollectionExercise(),
-          exportFileTemplate,
-          null,
-          null,
-          null);
+          ActionRuleType.EXPORT_FILE, caze.getCollectionExercise(), exportFileTemplate, null, null);
       EventDTO rme = outboundUacQueue.getQueue().poll(20, TimeUnit.SECONDS);
       List<ExportFileRow> exportFileRows = exportFileRowRepository.findAll();
       ExportFileRow exportFileRow = exportFileRows.get(0);
@@ -152,7 +139,6 @@ class ActionRuleIT {
             caze.getCollectionExercise(),
             exportFileTemplate,
             null,
-            null,
             "NoneExistantColumn = 'Throw A SQL Exception");
 
     actionRulePoller.getTriggeredActionRule(actionRule.getId());
@@ -176,7 +162,7 @@ class ActionRuleIT {
 
       // When
       setUpActionRule(
-          ActionRuleType.DEACTIVATE_UAC, caze.getCollectionExercise(), null, null, null, null);
+          ActionRuleType.DEACTIVATE_UAC, caze.getCollectionExercise(), null, null, null);
       EventDTO rme = outboundUacQueue.getQueue().poll(20, TimeUnit.SECONDS);
 
       // Then
@@ -202,7 +188,6 @@ class ActionRuleIT {
             ActionRuleType.EXPORT_FILE,
             caze.getCollectionExercise(),
             exportFileTemplate,
-            null,
             null,
             "NoneExistantColumn = 'Throw A SQL Exception");
 
@@ -242,7 +227,6 @@ class ActionRuleIT {
       CollectionExercise collectionExercise,
       ExportFileTemplate exportFileTemplate,
       SmsTemplate smsTemplate,
-      EmailTemplate emailTemplate,
       String classifiers) {
     ActionRule actionRule = new ActionRule();
     actionRule.setId(UUID.randomUUID());

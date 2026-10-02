@@ -46,7 +46,6 @@ spring:
 
 queueconfig:
   sms-confirmation-subscription: rm-internal-sms-confirmation_case-processor
-  email-confirmation-subscription: rm-internal-email-confirmation_case-processor
   new-case-subscription: event_new-case_rm-case-processor
   receipt-subscription: event_response-received_rm-case-processor
   refusal-subscription: event_refusal-received_rm-case-processor
@@ -57,7 +56,6 @@ queueconfig:
   update-sample-subscription: event_update-sample_rm-case-processor
   update-sample-sensitive-subscription: event_update-sample-sensitive_rm-case-processor
   sms-request-topic: rm-internal-sms-request
-  email-request-topic: rm-internal-email-request
   case-update-topic: event_case-update
   uac-update-topic: event_uac-update
   deactivate-uac-topic: event_deactivate-uac

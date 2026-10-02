@@ -8,12 +8,6 @@ curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/topics/rm-internal
 curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/topics/rm-internal-sms-confirmation
 curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/subscriptions/rm-internal-sms-confirmation_case-processor -H 'Content-Type: application/json' -d '{"topic": "projects/our-project/topics/rm-internal-sms-confirmation"}'
 
-curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/topics/rm-internal-email-request
-curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/subscriptions/rm-internal-email-request-enriched_notify-service -H 'Content-Type: application/json' -d '{"topic": "projects/our-project/topics/rm-internal-email-request"}'
-
-curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/topics/rm-internal-email-confirmation
-curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/subscriptions/rm-internal-email-confirmation_case-processor -H 'Content-Type: application/json' -d '{"topic": "projects/our-project/topics/rm-internal-email-confirmation"}'
-
 curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/topics/event_new-case
 curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/subscriptions/event_new-case_rm-case-processor -H 'Content-Type: application/json' -d '{"topic": "projects/our-project/topics/event_new-case"}'
 
