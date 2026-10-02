@@ -22,7 +22,6 @@ import uk.gov.ons.census.caseprocessor.messaging.MessageSender;
 import uk.gov.ons.census.caseprocessor.model.dto.CaseUpdateDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.FieldActionInstruction;
-import uk.gov.ons.census.caseprocessor.model.dto.RefusalTypeDTO;
 import uk.gov.ons.census.caseprocessor.model.repository.CaseRepository;
 import uk.gov.ons.census.caseprocessor.testutils.CaseFieldsHelper;
 import uk.gov.ons.census.common.model.entity.Case;
@@ -75,7 +74,7 @@ class CaseServiceTest {
     assertThat(actualCaseUpdate.getCollectionExerciseId()).isEqualTo(collex.getId());
     assertThat(actualCaseUpdate.getSurveyId()).isEqualTo(survey.getId());
     assertThat(actualCaseUpdate.isInvalid()).isTrue();
-    assertThat(actualCaseUpdate.getRefusalReceived()).isEqualTo(RefusalTypeDTO.HARD_REFUSAL);
+    assertThat(actualCaseUpdate.isRefusalReceived()).isTrue();
     assertThat(actualCaseUpdate.getAddress().getAddressLine1()).isEqualTo(caze.getAddressLine1());
     assertThat(actualCaseUpdate.getAddress().getAddressType()).isEqualTo(caze.getAddressType());
     assertThat(actualCaseUpdate.getAddress().getTownName()).isEqualTo(caze.getTownName());
@@ -130,8 +129,7 @@ class CaseServiceTest {
     assertThat(actualCaseUpdate.getCollectionExerciseId()).isEqualTo(collex.getId());
     assertThat(actualCaseUpdate.getSurveyId()).isEqualTo(survey.getId());
     assertThat(actualCaseUpdate.isInvalid()).isTrue();
-    assertThat(actualCaseUpdate.getRefusalReceived())
-        .isEqualTo(RefusalTypeDTO.EXTRAORDINARY_REFUSAL);
+    assertThat(actualCaseUpdate.isRefusalReceived()).isTrue();
     assertThat(actualCaseUpdate.getCreatedAt()).isEqualTo(caze.getCreatedAt());
     assertThat(actualCaseUpdate.getLastUpdatedAt()).isEqualTo(caze.getLastUpdatedAt());
     assertThat(actualCaseUpdate.getAddress().getAddressLine1()).isEqualTo(caze.getAddressLine1());
