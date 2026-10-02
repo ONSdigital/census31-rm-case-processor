@@ -45,6 +45,9 @@ public class SurveyLaunchedReceiverIT {
   @Value("${queueconfig.uac-update-topic}")
   private String uacUpdateTopic;
 
+  @Value("${queueconfig.case-update-topic}")
+  private String caseUpdateTopic;
+
   @Autowired private PubsubHelper pubsubHelper;
   @Autowired private DeleteDataHelper deleteDataHelper;
   @Autowired private JunkDataHelper junkDataHelper;
@@ -56,6 +59,8 @@ public class SurveyLaunchedReceiverIT {
   public void setUp() {
     pubsubHelper.purgePubsubProjectMessages(OUTBOUND_UAC_SUBSCRIPTION, uacUpdateTopic);
     deleteDataHelper.deleteAllData();
+
+    pubsubHelper.purgePubsubProjectMessages(OUTBOUND_CASE_SUBSCRIPTION, caseUpdateTopic);
   }
 
   @Test
