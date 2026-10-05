@@ -87,7 +87,7 @@ public class CaseService {
     caseUpdate.setSurveyLaunched(caze.isSurveyLaunched());
     caseUpdate.setInvalid(caze.isInvalid());
 
-    if (caze.getRefusalReceived() != null) {
+    if (caze.getRefusalReceived() != null && !caze.getRefusalReceived().name().isEmpty()) {
       caseUpdate.setRefusalReceived(true);
     } else {
       caseUpdate.setRefusalReceived(false);
