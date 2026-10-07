@@ -10,4 +10,6 @@ import lombok.NoArgsConstructor;
 @JsonInclude(Include.NON_NULL)
 public class SurveyLaunchedDTO {
   private String questionnaireId;
+  private String agentId;
+  private String callId;
 }
