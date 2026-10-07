@@ -217,4 +217,53 @@ class CaseServiceTest {
 
     assertThat(thrown.getMessage()).isEqualTo(expectedErrorMessage);
   }
+
+  @Test
+  void emitCaseUpdateWithNoRefusal() {
+    ReflectionTestUtils.setField(underTest, "caseUpdateTopic", "Test topic");
+    ReflectionTestUtils.setField(underTest, "pubsubProject", "Test project");
+
+    Survey survey = new Survey();
+    survey.setId(UUID.randomUUID());
+    CollectionExercise collex = new CollectionExercise();
+    collex.setId(UUID.randomUUID());
+    collex.setSurvey(survey);
+
+    Case caze = new Case();
+    caze.setId(UUID.randomUUID());
+    caze.setCaseRef(1234567890L);
+    caze.setCollectionExercise(collex);
+    CaseFieldsHelper.setDummyCaseFields(caze);
+
+    caze.setInvalid(false);
+    caze.setRefusalReceived(null);
+    caze.setCreatedAt(OffsetDateTime.now().minusSeconds(10));
+    caze.setLastUpdatedAt(OffsetDateTime.now());
+
+    underTest.emitCaseUpdate(caze, TEST_CORRELATION_ID, TEST_ORIGINATING_USER);
+
+    ArgumentCaptor<EventDTO> eventArgumentCaptor = ArgumentCaptor.forClass(EventDTO.class);
+
+    verify(messageSender).sendMessage(any(), eventArgumentCaptor.capture());
+    EventDTO actualEvent = eventArgumentCaptor.getValue();
+
+    assertThat(actualEvent.getHeader().getTopic()).isEqualTo("Test topic");
+    assertThat(actualEvent.getHeader().getCorrelationId()).isEqualTo(TEST_CORRELATION_ID);
+    assertThat(actualEvent.getHeader().getOriginatingUser()).isEqualTo(TEST_ORIGINATING_USER);
+
+    CaseUpdateDTO actualCaseUpdate = actualEvent.getPayload().getCaseUpdate();
+    assertThat(actualCaseUpdate.getCaseId()).isEqualTo(caze.getId());
+    assertThat(actualCaseUpdate.getCaseRef()).isEqualTo(caze.getCaseRef().toString());
+    assertThat(actualCaseUpdate.getCollectionExerciseId()).isEqualTo(collex.getId());
+    assertThat(actualCaseUpdate.getSurveyId()).isEqualTo(survey.getId());
+    assertThat(actualCaseUpdate.isInvalid()).isFalse();
+    assertThat(actualCaseUpdate.isRefusalReceived()).isFalse();
+    assertThat(actualCaseUpdate.getCreatedAt()).isEqualTo(caze.getCreatedAt());
+    assertThat(actualCaseUpdate.getLastUpdatedAt()).isEqualTo(caze.getLastUpdatedAt());
+    assertThat(actualCaseUpdate.getAddress().getAddressLine1()).isEqualTo(caze.getAddressLine1());
+    assertThat(actualCaseUpdate.getAddress().getAddressType()).isEqualTo(caze.getAddressType());
+    assertThat(actualCaseUpdate.getAddress().getTownName()).isEqualTo(caze.getTownName());
+    assertThat(actualCaseUpdate.getAddress().getPostcode()).isEqualTo(caze.getPostcode());
+    assertThat(actualCaseUpdate.getAddress().getRegion()).isEqualTo(caze.getRegion());
+  }
 }
