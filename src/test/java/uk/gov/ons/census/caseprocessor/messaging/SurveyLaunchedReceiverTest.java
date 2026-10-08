@@ -55,6 +55,8 @@ public class SurveyLaunchedReceiverTest {
 
     SurveyLaunchedDTO surveyLaunch = new SurveyLaunchedDTO();
     surveyLaunch.setQuestionnaireId(TEST_QID_ID);
+    surveyLaunch.setCallId("12345");
+    surveyLaunch.setAgentId("XYZ");
     managementEvent.getPayload().setSurveyLaunched(surveyLaunch);
 
     UacQidLink expectedUacQidLink = new UacQidLink();
