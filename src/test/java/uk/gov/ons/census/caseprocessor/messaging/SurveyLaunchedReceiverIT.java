@@ -94,6 +94,8 @@ public class SurveyLaunchedReceiverIT {
 
       SurveyLaunchedDTO surveyLaunch = new SurveyLaunchedDTO();
       surveyLaunch.setQuestionnaireId(uacQidLink.getQid());
+      surveyLaunch.setCallId("12345");
+      surveyLaunch.setAgentId("XYZ");
       PayloadDTO payloadDTO = new PayloadDTO();
       payloadDTO.setSurveyLaunched(surveyLaunch);
       surveyLaunchedEvent.setPayload(payloadDTO);
@@ -117,6 +119,7 @@ public class SurveyLaunchedReceiverIT {
       UacQidLink actualUacQidLink = event.getUacQidLink();
       assertThat(actualUacQidLink.getQid()).isEqualTo(TEST_QID);
       assertThat(actualUacQidLink.getCaze().getId()).isEqualTo(caze.getId());
+      assertThat(event.getPayload()).contains("agentId");
     }
   }
 
