@@ -1,6 +1,7 @@
 package uk.gov.ons.census.caseprocessor.messaging;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static uk.gov.ons.census.caseprocessor.testutils.TestConstants.OUTBOUND_CASE_SUBSCRIPTION;
 import static uk.gov.ons.census.caseprocessor.testutils.TestConstants.OUTBOUND_UAC_SUBSCRIPTION;
 import static uk.gov.ons.census.caseprocessor.utils.Constants.OUTBOUND_EVENT_SCHEMA_VERSION;
@@ -120,6 +121,7 @@ public class SurveyLaunchedReceiverIT {
       assertThat(actualUacQidLink.getQid()).isEqualTo(TEST_QID);
       assertThat(actualUacQidLink.getCaze().getId()).isEqualTo(caze.getId());
       assertThat(event.getPayload()).contains("agentId");
+      assertThat(event.getPayload()).contains("callId");
     }
   }
 
@@ -171,6 +173,67 @@ public class SurveyLaunchedReceiverIT {
       UacQidLink actualUacQidLink = event.getUacQidLink();
       assertThat(actualUacQidLink.getQid()).isEqualTo(TEST_QID);
       assertThat(actualUacQidLink.getCaze().getId()).isEqualTo(caze.getId());
+    }
+  }
+
+  @Test
+  public void
+      testSurveyLaunchedLogsEventSetsFlagAndEmitsCorrectUACUpdatedEventWithoutAgentAndCallId()
+          throws Exception {
+    // GIVEN
+
+    try (QueueSpy<EventDTO> outboundUacQueueSpy =
+            pubsubHelper.pubsubProjectListen(OUTBOUND_UAC_SUBSCRIPTION, EventDTO.class);
+        QueueSpy<EventDTO> outboundCaseQueueSpy =
+            pubsubHelper.pubsubProjectListen(OUTBOUND_CASE_SUBSCRIPTION, EventDTO.class)) {
+      Case caze = junkDataHelper.setupJunkCase();
+
+      UacQidLink uacQidLink = new UacQidLink();
+      uacQidLink.setId(UUID.randomUUID());
+      uacQidLink.setCaze(caze);
+      uacQidLink.setUac("Junk");
+      uacQidLink.setUacHash("junkHash");
+      uacQidLink.setQid(TEST_QID);
+      uacQidLink.setCaze(caze);
+      uacQidLink.setSurveyLaunched(false);
+      uacQidLinkRepository.saveAndFlush(uacQidLink);
+
+      EventDTO surveyLaunchedEvent = new EventDTO();
+      EventHeaderDTO eventHeader = new EventHeaderDTO();
+      eventHeader.setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
+      eventHeader.setTopic(INBOUND_TOPIC);
+      eventHeader.setChannel("RH");
+      eventHeader.setMessageType(EventType.SURVEY_LAUNCHED);
+      junkDataHelper.junkify(eventHeader);
+      surveyLaunchedEvent.setHeader(eventHeader);
+
+      SurveyLaunchedDTO surveyLaunch = new SurveyLaunchedDTO();
+      surveyLaunch.setQuestionnaireId(uacQidLink.getQid());
+      PayloadDTO payloadDTO = new PayloadDTO();
+      payloadDTO.setSurveyLaunched(surveyLaunch);
+      surveyLaunchedEvent.setPayload(payloadDTO);
+
+      // WHEN
+      pubsubHelper.sendMessageToPubsubProject(INBOUND_TOPIC, surveyLaunchedEvent);
+
+      // THEN
+      EventDTO uacUpdatedEvent = outboundUacQueueSpy.checkExpectedMessageReceived();
+      UacUpdateDTO emittedUac = uacUpdatedEvent.getPayload().getUacUpdate();
+      assertThat(emittedUac.getFormType()).isNull();
+
+      EventDTO caseUpdatedEvent = outboundCaseQueueSpy.checkExpectedMessageReceived();
+      CaseUpdateDTO emittedCase = caseUpdatedEvent.getPayload().getCaseUpdate();
+      assertThat(emittedCase.isSurveyLaunched()).isTrue();
+
+      List<Event> events = eventRepository.findAll();
+      assertThat(events.size()).isEqualTo(1);
+      Event event = events.get(0);
+      assertThat(event.getDescription()).isEqualTo("Survey launched");
+      UacQidLink actualUacQidLink = event.getUacQidLink();
+      assertThat(actualUacQidLink.getQid()).isEqualTo(TEST_QID);
+      assertThat(actualUacQidLink.getCaze().getId()).isEqualTo(caze.getId());
+      assertFalse(event.getPayload().contains("agentId"));
+      assertFalse(event.getPayload().contains("callId"));
     }
   }
 }
