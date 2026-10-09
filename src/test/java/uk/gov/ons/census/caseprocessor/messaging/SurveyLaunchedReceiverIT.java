@@ -120,8 +120,8 @@ public class SurveyLaunchedReceiverIT {
       UacQidLink actualUacQidLink = event.getUacQidLink();
       assertThat(actualUacQidLink.getQid()).isEqualTo(TEST_QID);
       assertThat(actualUacQidLink.getCaze().getId()).isEqualTo(caze.getId());
-      assertThat(event.getPayload()).contains("agentId");
-      assertThat(event.getPayload()).contains("callId");
+      assertThat(event.getPayload()).contains("\"agentId\": \"XYZ\"");
+      assertThat(event.getPayload()).contains("\"callId\": \"12345\"");
     }
   }
 
@@ -232,8 +232,8 @@ public class SurveyLaunchedReceiverIT {
       UacQidLink actualUacQidLink = event.getUacQidLink();
       assertThat(actualUacQidLink.getQid()).isEqualTo(TEST_QID);
       assertThat(actualUacQidLink.getCaze().getId()).isEqualTo(caze.getId());
-      assertFalse(event.getPayload().contains("agentId"));
-      assertFalse(event.getPayload().contains("callId"));
+      assertFalse(event.getPayload().contains("\"agentId\": \"XYZ\""));
+      assertFalse(event.getPayload().contains("\"callId\": \"12345\""));
     }
   }
 }
