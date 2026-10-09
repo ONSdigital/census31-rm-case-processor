@@ -11,7 +11,7 @@ public class CaseUpdateDTO {
   private UUID collectionExerciseId;
   private UUID surveyId;
   private boolean invalid;
-  private RefusalTypeDTO refusalReceived;
+  private boolean refusalReceived;
   private boolean surveyLaunched;
   private boolean receiptReceived;
   private OffsetDateTime createdAt;

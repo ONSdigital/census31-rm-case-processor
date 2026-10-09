@@ -12,7 +12,6 @@ import uk.gov.ons.census.caseprocessor.model.dto.EventDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.EventHeaderDTO;
 import uk.gov.ons.census.caseprocessor.model.dto.FieldActionInstruction;
 import uk.gov.ons.census.caseprocessor.model.dto.PayloadDTO;
-import uk.gov.ons.census.caseprocessor.model.dto.RefusalTypeDTO;
 import uk.gov.ons.census.caseprocessor.model.repository.CaseRepository;
 import uk.gov.ons.census.caseprocessor.utils.CaseFieldMapper;
 import uk.gov.ons.census.caseprocessor.utils.EventHelper;
@@ -88,10 +87,10 @@ public class CaseService {
     caseUpdate.setSurveyLaunched(caze.isSurveyLaunched());
     caseUpdate.setInvalid(caze.isInvalid());
 
-    if (caze.getRefusalReceived() != null) {
-      caseUpdate.setRefusalReceived(RefusalTypeDTO.valueOf(caze.getRefusalReceived().name()));
+    if (caze.getRefusalReceived() != null && !caze.getRefusalReceived().name().isEmpty()) {
+      caseUpdate.setRefusalReceived(true);
     } else {
-      caseUpdate.setRefusalReceived(null);
+      caseUpdate.setRefusalReceived(false);
     }
 
     CaseFieldMapper.mapCaseSampleFieldsToCaseUpdateDTO(caze, caseUpdate);
