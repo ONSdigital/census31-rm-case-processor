@@ -2,16 +2,15 @@ package uk.gov.ons.census.caseprocessor.messaging;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-import static uk.gov.ons.census.caseprocessor.testutils.MessageConstructor.constructMessage;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static uk.gov.ons.census.caseprocessor.testutils.TestConstants.TEST_CORRELATION_ID;
 import static uk.gov.ons.census.caseprocessor.testutils.TestConstants.TEST_ORIGINATING_USER;
 import static uk.gov.ons.census.caseprocessor.utils.Constants.OUTBOUND_EVENT_SCHEMA_VERSION;
 
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -19,23 +18,22 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.Message;
-import uk.gov.ons.census.caseprocessor.logging.EventLogger;
+import org.springframework.messaging.support.MessageBuilder;
 import uk.gov.ons.census.caseprocessor.model.dto.*;
-import uk.gov.ons.census.caseprocessor.service.QidReceiptService;
+import uk.gov.ons.census.caseprocessor.service.ReceiptService;
+import uk.gov.ons.census.caseprocessor.utils.JsonHelper;
 import uk.gov.ons.census.common.model.entity.EventType;
-import uk.gov.ons.census.common.model.entity.UacQidLink;
 
 @ExtendWith(MockitoExtension.class)
 public class ReceiptReceiverTest {
   private final String QID = "1234567890123456";
 
-  @Mock private EventLogger eventLogger;
-  @Mock private QidReceiptService qidReceiptService;
+  @Mock private ReceiptService receiptService;
 
   @InjectMocks ReceiptReceiver underTest;
 
   @Test
-  public void testReceiptReceivedEventFromRH() {
+  public void forwardsResponseReceivedEventToReceiptServiceWithMessageTimestamp() {
     EventDTO receiptEvent = new EventDTO();
     receiptEvent.setHeader(new EventHeaderDTO());
     receiptEvent.getHeader().setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
@@ -51,43 +49,25 @@ public class ReceiptReceiverTest {
     responseDTO.setQuestionnaireId(QID);
     receiptEvent.getPayload().setResponse(responseDTO);
 
-    UacQidLink expectedUacQidLink = new UacQidLink();
-    expectedUacQidLink.setQid(QID);
-    expectedUacQidLink.setReceiptReceived(true);
-    expectedUacQidLink.setActive(false);
-
-    Message<byte[]> message = constructMessage(receiptEvent);
-
-    // Given
-    when(qidReceiptService.processReceiptEvent(receiptEvent)).thenReturn(expectedUacQidLink);
+    Message<byte[]> message =
+        MessageBuilder.withPayload(
+                JsonHelper.convertObjectToJson(receiptEvent).getBytes(StandardCharsets.UTF_8))
+            .build();
 
     // when
     underTest.receiveMessage(message);
 
     // then
-    verify(qidReceiptService).processReceiptEvent(receiptEvent);
-
-    ArgumentCaptor<UacQidLink> uacQidLinkCaptor = ArgumentCaptor.forClass(UacQidLink.class);
-
-    verify(eventLogger)
-        .logUacQidEvent(
-            uacQidLinkCaptor.capture(),
-            eq("Receipt received"),
-            eq(EventType.RESPONSE_RECEIVED),
-            eq(receiptEvent),
-            eq(message));
-
-    UacQidLink actualUacQidLink = uacQidLinkCaptor.getValue();
-    assertThat(actualUacQidLink.getQid()).isEqualTo(QID);
-    assertThat(actualUacQidLink.isReceiptReceived()).isTrue();
-    assertThat(actualUacQidLink.isActive()).isFalse();
-
-    verifyNoMoreInteractions(eventLogger);
-    verifyNoMoreInteractions(qidReceiptService);
+    ArgumentCaptor<EventDTO> captor = ArgumentCaptor.forClass(EventDTO.class);
+    verify(receiptService).processReceiptEvent(captor.capture());
+    assertThat(captor.getValue().getPayload().getResponse().getQuestionnaireId()).isEqualTo(QID);
+    assertThat(captor.getValue().getHeader().getCorrelationId()).isEqualTo(TEST_CORRELATION_ID);
+    assertThat(captor.getValue().getMessageTimestamp().toInstant().toEpochMilli())
+        .isEqualTo(message.getHeaders().getTimestamp());
   }
 
   @Test
-  void testReceiptEventFromRHWrongEventType() {
+  void rejectsNonResponseReceivedEventTypeBeforeCallingReceiptService() {
     EventDTO receiptEvent = new EventDTO();
     receiptEvent.setHeader(new EventHeaderDTO());
     receiptEvent.getHeader().setVersion(OUTBOUND_EVENT_SCHEMA_VERSION);
@@ -103,12 +83,15 @@ public class ReceiptReceiverTest {
     responseDTO.setQuestionnaireId(QID);
     receiptEvent.getPayload().setResponse(responseDTO);
 
-    Message<byte[]> message = constructMessage(receiptEvent);
+    Message<byte[]> message =
+        MessageBuilder.withPayload(
+                JsonHelper.convertObjectToJson(receiptEvent).getBytes(StandardCharsets.UTF_8))
+            .build();
 
     RuntimeException thrown =
         assertThrows(RuntimeException.class, () -> underTest.receiveMessage(message));
 
-    Assertions.assertThat(thrown.getMessage())
-        .isEqualTo("Event Type 'CASE_UPDATE' is invalid on this topic");
+    assertThat(thrown.getMessage()).isEqualTo("Event Type 'CASE_UPDATE' is invalid on this topic");
+    verifyNoInteractions(receiptService);
   }
 }
