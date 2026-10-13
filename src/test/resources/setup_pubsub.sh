@@ -14,6 +14,9 @@ curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/subscriptions/even
 curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/topics/event_response-received
 curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/subscriptions/event_response-received_rm-case-processor -H 'Content-Type: application/json' -d '{"topic": "projects/our-project/topics/event_response-received"}'
 
+curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/dummy-eq-project/topics/eq_receipt
+curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/dummy-eq-project/subscriptions/receipting-subscription -H 'Content-Type: application/json' -d '{"topic": "projects/dummy-eq-project/topics/eq_receipt"}'
+
 curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/topics/event_refusal-received
 curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/subscriptions/event_refusal-received_rm-case-processor -H 'Content-Type: application/json' -d '{"topic": "projects/our-project/topics/event_refusal-received"}'
 

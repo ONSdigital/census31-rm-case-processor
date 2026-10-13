@@ -48,6 +48,8 @@ queueconfig:
   sms-confirmation-subscription: rm-internal-sms-confirmation_case-processor
   new-case-subscription: event_new-case_rm-case-processor
   receipt-subscription: event_response-received_rm-case-processor
+  eq-receipt-project: ${spring.cloud.gcp.pubsub.project-id}
+  eq-receipt-subscription: receipting-subscription
   refusal-subscription: event_refusal-received_rm-case-processor
   invalid-case-subscription: event_address-not-valid_rm-case-processor
   survey-launched-subscription: event_survey-launched_rm-case-processor

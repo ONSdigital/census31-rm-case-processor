@@ -39,6 +39,12 @@ public class MessageConsumerConfig {
   @Value("${queueconfig.receipt-subscription}")
   private String receiptSubscription;
 
+  @Value("${queueconfig.eq-receipt-project}")
+  private String eqReceiptProject;
+
+  @Value("${queueconfig.eq-receipt-subscription}")
+  private String eqReceiptSubscription;
+
   @Value("${queueconfig.refusal-subscription}")
   private String refusalSubscription;
 
@@ -73,6 +79,11 @@ public class MessageConsumerConfig {
 
   @Bean
   public MessageChannel receiptInputChannel() {
+    return new DirectChannel();
+  }
+
+  @Bean
+  public MessageChannel eqReceiptInputChannel() {
     return new DirectChannel();
   }
 
@@ -127,6 +138,14 @@ public class MessageConsumerConfig {
   public PubSubInboundChannelAdapter receiptInbound(
       @Qualifier("receiptInputChannel") MessageChannel channel) {
     String subscription = toProjectSubscriptionName(receiptSubscription, pubsubProject).toString();
+    return makeAdapter(channel, subscription);
+  }
+
+  @Bean
+  public PubSubInboundChannelAdapter eqReceiptInbound(
+      @Qualifier("eqReceiptInputChannel") MessageChannel channel) {
+    String subscription =
+        toProjectSubscriptionName(eqReceiptSubscription, eqReceiptProject).toString();
     return makeAdapter(channel, subscription);
   }
 

@@ -68,10 +68,19 @@ public class EventLogger {
       EventDTO event,
       Message<byte[]> message) {
 
+    logUacQidEvent(uacQidLink, eventDescription, eventType, event, getMessageTimeStamp(message));
+  }
+
+  public void logUacQidEvent(
+      UacQidLink uacQidLink,
+      String eventDescription,
+      EventType eventType,
+      EventDTO event,
+      OffsetDateTime messageTimestamp) {
+
     EventHeaderDTO eventHeader = event.getHeader();
     OffsetDateTime eventDate = eventHeader.getDateTime();
     Object eventPayload = event.getPayload();
-    OffsetDateTime messageTimestamp = getMessageTimeStamp(message);
 
     Event loggedEvent =
         buildEvent(

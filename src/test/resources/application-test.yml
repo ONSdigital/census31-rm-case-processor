@@ -8,6 +8,9 @@ spring:
         emulator-host: localhost:18538
         project-id: our-project
 
+queueconfig:
+  eq-receipt-project: dummy-eq-project
+
 uacservice:
   connection:
     port: 18164
