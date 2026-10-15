@@ -36,10 +36,10 @@ curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/topics/event_updat
 curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/subscriptions/event_update-sample-sensitive_rm-case-processor -H 'Content-Type: application/json' -d '{"topic": "projects/our-project/topics/event_update-sample-sensitive"}'
 
 curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/topics/event_case-update
-curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/subscriptions/event_case-update_rh -H 'Content-Type: application/json' -d '{"topic": "projects/our-project/topics/event_case-update"}'
+curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/subscriptions/event_case-update_respondent-home -H 'Content-Type: application/json' -d '{"topic": "projects/our-project/topics/event_case-update"}'
 
 curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/topics/event_uac-update
-curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/subscriptions/event_uac-update_rh -H 'Content-Type: application/json' -d '{"topic": "projects/our-project/topics/event_uac-update"}'
+curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/subscriptions/event_uac-update_respondent-home -H 'Content-Type: application/json' -d '{"topic": "projects/our-project/topics/event_uac-update"}'
 
 curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/topics/event_fulfilment-request
 curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/our-project/subscriptions/event_fulfilment-request_rm-case-processor -H 'Content-Type: application/json' -d '{"topic": "projects/our-project/topics/event_fulfilment-request"}'
