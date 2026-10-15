@@ -5,8 +5,8 @@ import java.util.UUID;
 
 public class TestConstants {
   public static final String OUR_PUBSUB_PROJECT = "our-project";
-  public static final String OUTBOUND_UAC_SUBSCRIPTION = "event_uac-update_rh";
-  public static final String OUTBOUND_CASE_SUBSCRIPTION = "event_case-update_rh";
+  public static final String OUTBOUND_UAC_SUBSCRIPTION = "event_uac-update_respondent-home";
+  public static final String OUTBOUND_CASE_SUBSCRIPTION = "event_case-update_respondent-home";
   public static final String NEW_CASE_TOPIC = "event_new-case";
   public static final String FULFILMENT_REQUEST_TOPIC = "event_fulfilment-request";
 
